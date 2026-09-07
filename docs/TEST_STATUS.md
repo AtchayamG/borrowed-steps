@@ -1,4 +1,7 @@
 # TEST_STATUS
+## M2A dispatch
+Documentation diff check PASS. No M2A implementation or inference has been tested yet. Worker checks and independent integration remain pending. Prior M1 acceptance below is retained.
+
 TASK_ID: BS-M1-INTEGRATION
 WORKER: Codex/Astra
 EFFORT: MEDIUM, user-confirmed

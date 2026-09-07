@@ -1,6 +1,7 @@
 # Milestones and judging evidence
 M1 BS-001 Claude API/domain/persistence + BS-002 AGY UI; parallel frozen contract. Codex integrates and real local full-stack smoke. Not final Strands/live proof.
 M2 real Strands interpretation/clarification/tools, human boundary, persisted pickup/due tasks and idempotent background processing, truthful provider failure.
+M2A: BS-003 Claude real local Strands intake/API; BS-004 AGY review-and-edit UI, parallel under docs/M2A_CONTRACT.md. M2B: persisted pickup/due processing follows acceptance; M2A alone does not complete M2.
 M3 ₹0 hosting/provider feasibility decision, persistent public deployment, abuse/session protections, fresh-browser E2E and LIVE_RELEASE_REPORT PASS. Availability through Oct 9 2026 05:30 IST.
 M4 MAX product/repo/security/privacy/tests/Strands/AgentCore-claim audit; public MIT repo and architecture diagram; Claude real-live video using LumaLoad process; Astra MAX acceptance <=300s/public YouTube/Vimeo.
 M5 accurate Devpost draft and optional qualifying Builder posts, explicit final submission authorization, MAX review and read-back. Then Benchbook, then Schoolbag.

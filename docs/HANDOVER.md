@@ -1,4 +1,17 @@
 # HANDOVER
+## Current checkpoint - M2A manual dispatch (2026-09-07)
+TASK_ID: BS-M2A-DESIGN
+WORKER: Codex/Astra
+EFFORT: ASTRA_HIGH, user-confirmed
+STATUS: COMPLETED (contract/decomposition only; implementation pending)
+M1: accepted at 0f6f6eb on integration/m1; all prior verification remains in docs/M1_ACCEPTANCE.md.
+DECISION: docs/M2A_CONTRACT.md freezes real local Strands/Ollama read-only suggestions plus human review UI. M2B persistent pickup/due processing remains outstanding.
+TASKS: BS-003 Claude backend; BS-004 AGY frontend. Separate new worktrees, manual execution only; no workers invoked.
+PROVIDER: installed Ollama + llama3.2:3b observed; real inference NOT YET VERIFIED. No cloud/paid API/provisioning. Default assistant disabled; public hosting/provider unresolved.
+TESTS: documentation/diff/worktree checks only this dispatch; worker implementation/evidence and Codex acceptance pending.
+REVIEW: On return read four checkpoint docs, unique report and diff; initial triage LIGHT, substantive review MEDIUM with switch gate, changed architecture HIGH.
+NEXT_SAFE_ACTION: User manually runs both saved task prompts in parallel. Codex stops; recommend ASTRA_LIGHT for return triage.
+
 TASK_ID: BS-M1-INTEGRATION
 WORKER: Codex/Astra
 EFFORT: MEDIUM, user-confirmed

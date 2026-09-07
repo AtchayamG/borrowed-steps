@@ -1,4 +1,9 @@
 # REVIEW_QUEUE
+## M2A pending review
+BS-003: real Strands/tool provenance, grounded output, read-only isolation, bounded execution/cancellation, provider failures and regression tests.
+BS-004: explicit human draft review, nullable fields/date conversion, stale responses, truthful modes/errors and M1 regression preservation.
+Review only returned task scope first. M2B persisted tasks, public provider/hosting, release security and final MAX audits remain open.
+
 TASK_ID: BS-M1-INTEGRATION
 WORKER: Codex/Astra
 EFFORT: MEDIUM, user-confirmed

@@ -1,4 +1,5 @@
 # Architecture — BS-000 accepted by Codex 2026-09-07
+M2A amendment: docs/M2A_CONTRACT.md freezes a read-only RequestInterpreter with a real local Strands/Ollama adapter. Default disabled; explicit human draft review; no queue/persistence for suggestions. M2B persisted pickup/due processing and public provider/hosting remain separate gates.
 One Python REST service plus React SPA, SQLite for M1 local persistence. Backend later can serve built SPA, avoiding unnecessary service boundaries.
 Python 3.11+, FastAPI boundary, stdlib domain dataclasses/enums, application use cases/ports, sqlite3 adapter. React strict TypeScript/Vite/CSS/native controls, no component/state framework without need.
 Python Strands SDK in M2: supports local Ollama as well as hosted providers. Provider/hosting decision is gated on verified ₹0 access; no AWS account required for local domain/UI work.
