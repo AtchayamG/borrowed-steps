@@ -1,4 +1,4 @@
-# TASKSTATUS
+# M1 acceptance
 TASK_ID: BS-M1-INTEGRATION
 WORKER: Codex/Astra
 EFFORT: MEDIUM, user-confirmed

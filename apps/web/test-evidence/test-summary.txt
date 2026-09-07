@@ -1,0 +1,118 @@
+================================================================================
+BORROWED STEPS (M1) - FRONTEND VERIFICATION EVIDENCE (BS-002-R3)
+Worker: AGY
+Model: Gemini 3.8 Flash High — gemini-3.8-flash-high
+Effort: HIGH
+Workspace: D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-002-agy
+Branch: worker/agy/BS-002
+Reviewed Base Commit: 3b7b5fa
+Environment: Node v22.22.3, Vite v7.3.6, Vitest v3.2.7, Prettier v3.5.2, ESLint v9.20.0, Microsoft Edge 152.0.4191.66, Windows 11
+================================================================================
+
+1. CODE FORMATTING (Prettier 3.5.2)
+Command: cmd.exe /c npm run format:check
+Status: PASS
+Output: All matched files use Prettier code style!
+
+2. STATIC TYPE ANALYSIS (tsc --noEmit)
+Command: cmd.exe /c npm run typecheck
+Status: PASS (0 errors, strict mode enabled)
+
+3. CODE LINTING (eslint .)
+Command: cmd.exe /c npm run lint
+Status: PASS (0 warnings, 0 errors)
+
+4. TEST-BEFORE-FIX REPRODUCTION (Captured against 3b7b5fa)
+Command: cmd.exe /c npx vitest run src/test/CodexR2Regression.test.tsx
+Initial Status: FAIL 4/4
+- [FAIL] renders 422 refusal INSIDE allocation dialog: page-level error rendered behind backdrop
+- [FAIL] renders 422 refusal INSIDE inspection dialog: page-level error rendered behind backdrop
+- [FAIL] renders 422 refusal INSIDE loan pickup dialog: page-level error rendered behind backdrop
+- [FAIL] structured 500 snapshot error: classified as Connection Error instead of Server Error
+
+5. UNIT & REGRESSION TEST RESULTS (Vitest 3.2.7 + Testing Library)
+Command: cmd.exe /c npm test
+Status: PASS (24 of 24 tests passing across 5 test files, duration 4.59s)
+
+Suite 1: src/test/CodexR2Regression.test.tsx (4/4 PASS)
+- [PASS] review R2: renders 422 refusal INSIDE allocation dialog without closing
+- [PASS] review R2: renders 422 refusal INSIDE inspection dialog without closing
+- [PASS] review R2: renders 422 refusal INSIDE loan pickup dialog without closing
+- [PASS] review R2: distinguishes structured 500 server error from connection failure
+
+Suite 2: src/test/CodexR1Regression.test.tsx (3/3 PASS)
+- [PASS] review R1: unreadable 200 mutation body preserves safe retry
+- [PASS] review R1: dismissing uncertainty cannot turn the same request into a duplicate
+- [PASS] review R1: conflict refresh updates inspection version and clears prior approval
+
+Suite 3: src/test/CodexRegression.test.tsx (3/3 PASS)
+- [PASS] review: intake blocks duplicate submission while first request is pending
+- [PASS] review: allocation dialog and selected input survive 409
+- [PASS] review: changing inspection outcome requires new affirmation
+
+Suite 4: src/test/CorrectionScenarios.test.tsx (4/4 PASS)
+- [PASS] verifies exact request body, headers and idempotency key format on intake and allocation
+- [PASS] response loss after commit: retries snapshot refresh instead of re-posting mutation
+- [PASS] prevents second mutation from overwriting an unresolved uncertain retry
+- [PASS] session expiry (401) hides dialogs, and workspace creation clears unresolved retry and stale references
+
+Suite 5: src/test/App.test.tsx (10/10 PASS)
+- [PASS] Handles unauthenticated / expired session (401) with explicit workspace creation
+- [PASS] Validates structured request intake form with boundary conditions
+- [PASS] Creates structured request and verifies server confirmation and fresh idempotency key
+- [PASS] Enforces explicit human approval checkbox on allocation (no prechecked approvals)
+- [PASS] Full volunteer lifecycle: Allocate -> Pickup -> Return -> Inspect -> Available
+- [PASS] Handles competing update 409 conflict gracefully: refetches snapshot, explains conflict, preserves inputs
+- [PASS] Retains identical Idempotency-Key and body on uncertain network retry
+- [PASS] Displays actionable connection error banner when backend server is offline
+- [PASS] Accessible keyboard navigation and semantic structure
+- [PASS] Layout renders all interactive regions cleanly on 390px mobile viewport
+
+6. PRODUCTION BUILD (Vite 7.3.6)
+Command: cmd.exe /c npm run build (tsc -b && vite build)
+Status: PASS
+- dist/index.html: 0.63 kB (gzip: 0.42 kB)
+- dist/assets/index-CFaSrMYk.css: 6.87 kB (gzip: 2.05 kB)
+- dist/assets/index-dCAeDeC_.js: 178.77 kB (gzip: 55.06 kB)
+- Mock isolation: verified zero mock code present in dist bundle.
+
+7. REAL-BROWSER VERIFICATION (Microsoft Edge 152.0.4191.66 via Puppeteer-Core)
+Command: cmd.exe /c npm run test:browser (node scripts/browser-verify.js)
+Executable: C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe
+Provenance / Harness Disclosure:
+- Tests 1, 2, 3, 5 execute against a local static server (http://127.0.0.1:4173) serving the production dist build with mock health & snapshot endpoints.
+- Test 4 executes against a real unmocked Vite server (http://127.0.0.1:4183) instantiated via Vite's createServer API with proxy forwarding to refusing port 127.0.0.1:58999.
+- No live Python backend or multi-process live-agent network was used or claimed.
+Status: PASS (5 of 5 browser checks passed)
+
+- [PASS] Desktop Layout (1280x800):
+  * Measured scrollWidth: 1280px, innerWidth: 1280px
+  * Horizontal overflow: NONE (scrollWidth <= innerWidth)
+  * Screenshot: apps/web/test-evidence/desktop-1280x800.png
+
+- [PASS] Keyboard Navigation & Modal Trapping:
+  * Inspection Modal: Enter key opens, initial focus on #outcome-select, Tab cycles to checkbox and Cancel, wraps back to #outcome-select, Shift+Tab reverses wrap, Escape dismisses, trigger element focus restored to "Inspect Adult Axillary Crutches #1"
+  * Allocation Modal: Enter key opens, initial focus on #equipment-select, Escape dismisses
+  * Screenshot: apps/web/test-evidence/modal-keyboard-verified.png
+
+- [PASS] Mobile Layout (390x844):
+  * Measured scrollWidth: 390px, innerWidth: 390px
+  * Horizontal overflow: NONE (scrollWidth <= innerWidth)
+  * Screenshot: apps/web/test-evidence/mobile-390x844.png
+
+- [PASS] Real Installed Vite Proxy Failure (HTTP 500):
+  * Real Vite dev server instantiated via createServer API from installed vite package
+  * Proxy naturally receives ECONNREFUSED against 127.0.0.1:58999, returning HTTP 500
+  * UI renders actionable Connection Error banner with "Retry Connection" button
+  * Clicking "Retry Connection" verified to dispatch a new request to /api/snapshot
+  * Screenshot: apps/web/test-evidence/offline-banner.png
+
+- [PASS] Modal 422 Refusal In-Dialog Rendering:
+  * Non-conflict mutation refusal (422 UNPROCESSABLE_ENTITY) returned by mock server
+  * Failure message rendered directly inside active dialog .modal-content with role="alert"
+  * Page-level banner behind modal backdrop is cleanly suppressed
+  * Dialog remains open; user inputs (outcome select & approval checkbox) remain preserved
+  * Cancel button dismisses modal cleanly
+  * Screenshot: apps/web/test-evidence/modal-422-refusal-verified.png
+
+================================================================================

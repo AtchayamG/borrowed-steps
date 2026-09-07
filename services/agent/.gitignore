@@ -1,0 +1,3 @@
+# Editable-install build metadata. The repository root already ignores
+# .venv/, data/, *.db, __pycache__/ and the pytest/mypy/ruff caches.
+*.egg-info/
