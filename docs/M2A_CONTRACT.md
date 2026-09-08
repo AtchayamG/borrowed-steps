@@ -1,4 +1,5 @@
 # M2A frozen contract - real Strands intake (2026-09-07)
+2026-09-08 amendment: M2A_PROVIDER_RECOVERY.md authorizes a narrow owned Ollama transport extension, one optional zero-tool recovery within existing aggregate limits, and at most8 additional synthetic local endpoint probes for BS-003-R2. That decision supersedes the original probe ceiling for this task only. HTTP shapes and mandatory tool/evidence/human-review rules are unchanged.
 Authority: additive amendment to API_CONTRACT.md, approved at user-confirmed ASTRA_HIGH. Existing M1 business routes, persistence, approval and exact-byte idempotency stay unchanged. M2A is local proof, not complete M2 or public release.
 
 ## Scope and architecture
