@@ -1,4 +1,5 @@
 # M2A provider recovery decision - 2026-09-08
+Latest amendment: M2A_TWO_STAGE_RECOVERY.md governs BS-003-R3. The two-stage extraction path replaces the Agent structured_output_model requirement here; retry_strategy=None and aggregate limits remain. R2's eight probes are spent. Preserve this document as decision history.
 Approved by Codex at user-confirmed ASTRA_HIGH. Applies to BS-003-R2. This amends only implementation/recovery/probe constraints in M2A_CONTRACT.md. All HTTP shapes, model identifier, nullable evidence grounding, mandatory successful inventory tool, human review, isolation and zero-spend rules remain fixed.
 
 ## Evidence and decision
