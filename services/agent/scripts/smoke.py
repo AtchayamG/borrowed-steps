@@ -75,7 +75,14 @@ def main(base_url: str) -> int:
     status, health = client.call("GET", "/api/health")
     _check("health status", status, 200)
     _check(
-        "health body", health, {"status": "ok", "milestone": "M1", "agent_mode": "not_implemented"}
+        "health body",
+        (health["status"], health["milestone"]),
+        ("ok", "M2A"),
+    )
+    _check(
+        "health agent_mode is a configured mode",
+        health["agent_mode"] in {"disabled", "strands_ollama"},
+        True,
     )
 
     status, created = client.call("POST", "/api/workspaces", {})
@@ -167,7 +174,7 @@ def main(base_url: str) -> int:
     _check("stale version refused", (status, refused["error"]["code"]), (409, "STATE_CONFLICT"))
 
     status, snapshot = client.call("GET", "/api/snapshot")
-    _check("snapshot agent_mode", snapshot["agent_mode"], "not_implemented")
+    _check("snapshot agent_mode matches health", snapshot["agent_mode"], health["agent_mode"])
     _check(
         "event history",
         [event["action"] for event in snapshot["events"]],

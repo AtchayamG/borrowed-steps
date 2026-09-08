@@ -8,8 +8,10 @@ from enum import StrEnum
 
 __all__ = [
     "ACTIVE_LOAN_STATUSES",
+    "BORROWER_LABEL_MAX_LENGTH",
     "INSPECTABLE_STATES",
     "INSPECTION_OUTCOMES",
+    "PICKUP_LOCATION_MAX_LENGTH",
     "EntityType",
     "Equipment",
     "EquipmentKind",
@@ -81,6 +83,9 @@ class EventAction(StrEnum):
     INSPECTED_REPAIR = "INSPECTED_REPAIR"
     INSPECTED_QUARANTINED = "INSPECTED_QUARANTINED"
 
+
+BORROWER_LABEL_MAX_LENGTH = 60
+PICKUP_LOCATION_MAX_LENGTH = 120
 
 ACTIVE_LOAN_STATUSES: tuple[LoanStatus, ...] = (LoanStatus.RESERVED, LoanStatus.ON_LOAN)
 

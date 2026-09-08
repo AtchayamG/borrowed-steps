@@ -1,0 +1,74 @@
+{
+  "attempts_charged_before_this_run": 16,
+  "base_url": "http://127.0.0.1:8218",
+  "business_snapshot_unchanged": true,
+  "cases": [
+    {
+      "case": "1-explicit-fields",
+      "case_failures": [
+        "1-explicit-fields: equipment_kind=None, expected one of ['WHEELCHAIR']",
+        "1-explicit-fields: due_at=None, expected one of ['2026-09-15T12:38:37Z']",
+        "1-explicit-fields: missing_fields=['equipment_kind', 'due_at'], expected []"
+      ],
+      "diagnostic": {
+        "cleanup": "closed",
+        "correlation_id": "d416286231badba1",
+        "elapsed_ms": 5952,
+        "outcome": "success",
+        "reason": "ok",
+        "recovery_used": false,
+        "sends": 3,
+        "stage": "extraction",
+        "tool_attempts": 1,
+        "tool_successes": 1
+      },
+      "http_status": 200,
+      "intent": "every field stated outright, including a full ISO timestamp",
+      "response": {
+        "draft": {
+          "borrower_label": "Meena R",
+          "due_at": null,
+          "equipment_kind": null,
+          "pickup_location": "the Velachery equipment room"
+        },
+        "missing_fields": [
+          "equipment_kind",
+          "due_at"
+        ],
+        "provenance": {
+          "completed_at": "2026-09-08T12:38:10Z",
+          "framework": "strands",
+          "inventory_tool_calls": 1,
+          "model": "llama3.2:3b",
+          "provider": "ollama"
+        }
+      },
+      "seconds": 5.97,
+      "snapshot_statuses": [
+        200,
+        200
+      ],
+      "snapshot_unchanged": true,
+      "synthetic_text": "Meena R needs a wheelchair, pickup at the Velachery equipment room, return by 2026-09-15T12:38:37Z.",
+      "verdict": "FAIL"
+    }
+  ],
+  "cumulative_attempts_charged": 17,
+  "cumulative_ceiling": 22,
+  "failures": [
+    "1-explicit-fields: equipment_kind=None, expected one of ['WHEELCHAIR']",
+    "1-explicit-fields: due_at=None, expected one of ['2026-09-15T12:38:37Z']",
+    "1-explicit-fields: missing_fields=['equipment_kind', 'due_at'], expected []"
+  ],
+  "health": {
+    "agent_mode": "strands_ollama",
+    "milestone": "M2A",
+    "status": "ok"
+  },
+  "implementation_commit": "d52db5b29f596ade116cfa36a47036e281e557d0",
+  "real_inference_invocations": 1,
+  "recorded_at": "2026-09-08T12:38:10Z",
+  "stopped_at_case": "1-explicit-fields",
+  "task_id": "BS-003-R8-AGY",
+  "verdict": "BLOCKED"
+}

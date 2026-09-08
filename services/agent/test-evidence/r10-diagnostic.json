@@ -1,0 +1,72 @@
+{
+  "accounting": {
+    "attempts_charged_before_this_run": 17,
+    "cumulative_attempts_charged": 18,
+    "cumulative_ceiling": 18,
+    "invocations_this_run": 1,
+    "remaining_allowance": 0
+  },
+  "attempt": 13,
+  "diagnostic_verdict": "DIAGNOSTIC_COMPLETE",
+  "functional_verdict": "FIELDS_INCORRECT",
+  "http_status": 200,
+  "implementation_commit": "cea1c43560fc09433ba1624be8769dca31d7c253",
+  "log_byte_window": [
+    569,
+    1095
+  ],
+  "log_excerpts": [
+    "Assistant grounding: borrower_label=accepted, equipment_kind=absent_candidate, pickup_location=accepted, due_at=absent_candidate | model_requests=3 tool_calls=1",
+    "Assistant 84ad040d2ecb5b95 success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=6843 cleanup=closed"
+  ],
+  "model": "llama3.2:3b",
+  "provider": "ollama",
+  "reason_codes": {
+    "borrower_label": "accepted",
+    "due_at": "absent_candidate",
+    "equipment_kind": "absent_candidate",
+    "pickup_location": "accepted"
+  },
+  "recorded_at": "2026-09-08T16:24:38Z",
+  "response": {
+    "draft": {
+      "borrower_label": "Meena R",
+      "due_at": null,
+      "equipment_kind": null,
+      "pickup_location": "the Velachery equipment room"
+    },
+    "missing_fields": [
+      "equipment_kind",
+      "due_at"
+    ],
+    "provenance": {
+      "completed_at": "2026-09-08T16:24:38Z",
+      "framework": "strands",
+      "inventory_tool_calls": 1,
+      "model": "llama3.2:3b",
+      "provider": "ollama"
+    }
+  },
+  "snapshots": {
+    "statuses": [
+      200,
+      200
+    ],
+    "unchanged": true
+  },
+  "source_log_path": "D:\\Work\\Codex\\Hackathon Projects\\Agents For Humans\\00_PROGRAM_CONTROL\\worktrees\\BS-003-R10-agy\\services\\agent\\test-evidence\\r10-server.log",
+  "synthetic_request": "Meena R needs a wheelchair, pickup at the Velachery equipment room, return by 2026-09-15T12:38:37Z.",
+  "task_id": "BS-003-R10-AGY",
+  "terminal_diagnostic": {
+    "cleanup": "closed",
+    "correlation_id": "84ad040d2ecb5b95",
+    "elapsed_ms": 6843,
+    "outcome": "success",
+    "reason": "ok",
+    "recovery_used": false,
+    "sends": 3,
+    "stage": "extraction",
+    "tool_attempts": 1,
+    "tool_successes": 1
+  }
+}

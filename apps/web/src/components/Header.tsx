@@ -1,13 +1,14 @@
 import React from "react";
+import type { AgentMode } from "../types/api";
 
 interface HeaderProps {
-  agentMode?: string;
+  agentMode?: AgentMode | string;
   milestone?: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   agentMode = "not_implemented",
-  milestone = "M1",
+  milestone = "M2A",
 }) => {
   return (
     <header className="app-header">

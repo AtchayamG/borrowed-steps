@@ -8,10 +8,13 @@ model, provider or network call takes part in any request.
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import hashlib
 import json
 import logging
-from collections.abc import Callable
+import threading
+from collections.abc import AsyncIterator, Callable
 from typing import Any
 
 from fastapi import FastAPI, Response
@@ -21,7 +24,18 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from borrowed_steps.application.errors import IdempotencyConflictError
+from borrowed_steps.application.errors import (
+    AssistantBusyError,
+    AssistantDisabledError,
+    AssistantTimeoutError,
+    AssistantUnavailableError,
+    IdempotencyConflictError,
+)
+from borrowed_steps.application.interpreter import (
+    CleanupOwner,
+    Interpretation,
+    RequestInterpreter,
+)
 from borrowed_steps.application.ports import (
     Clock,
     IdempotencyRecord,
@@ -42,26 +56,43 @@ from borrowed_steps.application.use_cases import (
     return_loan,
     start_workspace,
 )
-from borrowed_steps.config import Settings, load_settings
+from borrowed_steps.config import (
+    ASSISTANT_CANCEL_GRACE_SECONDS,
+    ASSISTANT_DEADLINE_SECONDS,
+    ASSISTANT_SHUTDOWN_SECONDS,
+    Settings,
+    load_settings,
+)
 from borrowed_steps.domain.errors import CodedError, ValidationFailedError
 from borrowed_steps.domain.models import Equipment, EquipmentState, Event, Loan, Request
+from borrowed_steps.infrastructure.inventory import StoreInventoryReader
 from borrowed_steps.infrastructure.sqlite_store import SqliteStore
 from borrowed_steps.infrastructure.system import SecretsIdGenerator, SystemClock
+from borrowed_steps.interfaces.http.inference_slot import InferenceRegistry, InferenceSlot
 from borrowed_steps.interfaces.http.schemas import (
     CreateRequestBody,
     InspectionBody,
+    InterpretBody,
     ReservationBody,
     TransitionBody,
     WorkspaceBody,
 )
 from borrowed_steps.isotime import normalise, to_iso
 
-__all__ = ["AGENT_MODE", "MILESTONE", "SESSION_COOKIE", "OriginForbiddenError", "create_app"]
+__all__ = [
+    "AGENT_MODE_DISABLED",
+    "AGENT_MODE_STRANDS_OLLAMA",
+    "MILESTONE",
+    "SESSION_COOKIE",
+    "OriginForbiddenError",
+    "create_app",
+]
 
 SESSION_COOKIE = "bs_session"
 IDEMPOTENCY_HEADER = "Idempotency-Key"
-MILESTONE = "M1"
-AGENT_MODE = "not_implemented"
+MILESTONE = "M2A"
+AGENT_MODE_DISABLED = "disabled"
+AGENT_MODE_STRANDS_OLLAMA = "strands_ollama"
 
 _IDEMPOTENCY_KEY_MIN = 8
 _IDEMPOTENCY_KEY_MAX = 100
@@ -83,8 +114,13 @@ _STATUS_BY_CODE: dict[str, int] = {
     "NOT_FOUND": 404,
     "STATE_CONFLICT": 409,
     "IDEMPOTENCY_CONFLICT": 409,
+    "ASSISTANT_BUSY": 429,
     "VALIDATION_ERROR": 422,
     "APPROVAL_REQUIRED": 422,
+    "ASSISTANT_INVALID_OUTPUT": 502,
+    "ASSISTANT_DISABLED": 503,
+    "ASSISTANT_UNAVAILABLE": 503,
+    "ASSISTANT_TIMEOUT": 504,
 }
 
 _CODE_BY_STATUS: dict[int, str] = {
@@ -116,9 +152,16 @@ def _stored_response(status_code: int, body: str) -> Response:
     )
 
 
-def _error(status_code: int, code: str, message: str) -> JSONResponse:
+def _error(
+    status_code: int,
+    code: str,
+    message: str,
+    headers: dict[str, str] | None = None,
+) -> JSONResponse:
     return JSONResponse(
-        status_code=status_code, content={"error": {"code": code, "message": message}}
+        status_code=status_code,
+        content={"error": {"code": code, "message": message}},
+        headers=headers,
     )
 
 
@@ -165,14 +208,68 @@ def _event_json(event: Event) -> dict[str, Any]:
     }
 
 
-def _snapshot_json(snapshot: Snapshot) -> dict[str, Any]:
+def _snapshot_json(snapshot: Snapshot, agent_mode: str) -> dict[str, Any]:
     return {
         "equipment": [_equipment_json(item) for item in snapshot.equipment],
         "requests": [_request_json(item) for item in snapshot.requests],
         "loans": [_loan_json(item) for item in snapshot.loans],
         "events": [_event_json(item) for item in snapshot.events],
-        "agent_mode": AGENT_MODE,
+        "agent_mode": agent_mode,
     }
+
+
+def _interpretation_json(interpretation: Interpretation) -> dict[str, Any]:
+    """The exact M2A response shape. No prose, score, priority or approval field."""
+    draft = interpretation.draft
+    return {
+        "draft": {
+            "borrower_label": draft.borrower_label,
+            "equipment_kind": None if draft.equipment_kind is None else draft.equipment_kind.value,
+            "pickup_location": draft.pickup_location,
+            "due_at": None if draft.due_at is None else to_iso(draft.due_at),
+        },
+        "missing_fields": list(interpretation.missing_fields),
+        "provenance": {
+            "framework": interpretation.framework,
+            "provider": interpretation.provider,
+            "model": interpretation.model,
+            "inventory_tool_calls": interpretation.inventory_tool_calls,
+            "completed_at": to_iso(interpretation.completed_at),
+        },
+    }
+
+
+def _real_interpreter(settings: Settings, clock: Clock) -> RequestInterpreter:
+    """Build the local Strands adapter.
+
+    Imported here rather than at module scope so the structured workflow starts
+    and runs with no provider SDK installed at all when the assistant is off.
+    """
+    from borrowed_steps.infrastructure.strands_interpreter import StrandsOllamaInterpreter
+
+    return StrandsOllamaInterpreter(
+        host=settings.assistant_host,
+        model_id=settings.assistant_model,
+        clock=clock,
+    )
+
+
+async def _settle(task: asyncio.Task[Any], grace: float) -> None:
+    """Wait, bounded, for a cancelled run to finish winding down.
+
+    Returns as soon as the run ends, and gives up quietly when the grace expires
+    so a run that will not stop cannot hold the response open. Giving up is not
+    a failure here: the slot is released by the run's own done callback, so a
+    run still winding down simply keeps holding it.
+    """
+    try:
+        await asyncio.wait_for(asyncio.shield(task), timeout=grace)
+    except asyncio.CancelledError:
+        if not task.done():
+            # Not the run's cancellation but our own: the caller left too.
+            raise
+    except Exception:  # the run's own failure, already reported by its telemetry
+        return
 
 
 def _digest(body: BaseModel) -> str:
@@ -186,8 +283,17 @@ def create_app(
     *,
     clock: Clock | None = None,
     ids: IdGenerator | None = None,
+    interpreter: RequestInterpreter | None = None,
+    assistant_deadline_seconds: float = ASSISTANT_DEADLINE_SECONDS,
+    assistant_shutdown_seconds: float = ASSISTANT_SHUTDOWN_SECONDS,
+    assistant_cancel_grace_seconds: float = ASSISTANT_CANCEL_GRACE_SECONDS,
 ) -> FastAPI:
-    """Build the ASGI application. Opens (and migrates) the SQLite file."""
+    """Build the ASGI application. Opens (and migrates) the SQLite file.
+
+    ``interpreter`` is a test seam. Left unset with the assistant enabled, the
+    real local Strands adapter is built; with the assistant disabled no provider
+    module is imported at all.
+    """
     resolved = settings if settings is not None else load_settings()
     store = SqliteStore(resolved.db_path)
     services = Services(
@@ -195,6 +301,49 @@ def create_app(
         clock=clock if clock is not None else SystemClock(),
         ids=ids if ids is not None else SecretsIdGenerator(),
     )
+    agent_mode = AGENT_MODE_STRANDS_OLLAMA if resolved.assistant_enabled else AGENT_MODE_DISABLED
+    assistant: RequestInterpreter | None = interpreter
+    if assistant is None and resolved.assistant_enabled:
+        assistant = _real_interpreter(resolved, services.clock)
+    slot = InferenceSlot()
+    # The registry asks the interpreter whether it still owns anything, so a run
+    # that ended without closing its client is neither forgotten nor drained
+    # away. Interpreters with nothing to own (the test doubles) do not implement
+    # the protocol and are treated as always resolved.
+    registry = InferenceRegistry(assistant if isinstance(assistant, CleanupOwner) else None)
+
+    @contextlib.asynccontextmanager
+    async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        """Own the in-flight interpretations, and wind them down on the way out.
+
+        The drain signals and cancels each run and then waits a bounded time.
+        Its real outcome is logged either way: a run that does not end is
+        reported as left behind, and a client that will not close is reported as
+        still open. Neither is described as a clean shutdown, and nothing here
+        claims the model at the other end stopped computing.
+        """
+        try:
+            yield
+        finally:
+            report = await registry.drain(assistant_shutdown_seconds)
+            if report.abandoned:
+                _LOGGER.warning(
+                    "Shutdown: %d of %d interpretations ended; %d still running after %.1fs "
+                    "and were left behind.",
+                    report.ended,
+                    report.requested,
+                    report.abandoned,
+                    assistant_shutdown_seconds,
+                )
+            elif report.requested:
+                _LOGGER.info("Shutdown: all %d in-flight interpretations ended.", report.requested)
+            if report.cleanup_resolved is False:
+                _LOGGER.error(
+                    "Shutdown: a provider client could not be closed and is still open. "
+                    "This shutdown was not clean."
+                )
+            elif report.cleanup_resolved:
+                _LOGGER.info("Shutdown: outstanding provider cleanup completed.")
 
     app = FastAPI(
         title="Borrowed Steps agent service",
@@ -203,9 +352,11 @@ def create_app(
             "M1 local persisted equipment-loan workflow. "
             "Humans decide allocation and inspection; no agent inference runs here."
         ),
+        lifespan=lifespan,
     )
     app.state.settings = resolved
     app.state.services = services
+    app.state.inference = registry
 
     def check_origin(http_request: HttpRequest) -> None:
         origin = http_request.headers.get("origin")
@@ -258,7 +409,18 @@ def create_app(
     @app.exception_handler(CodedError)
     async def _coded_error(_: HttpRequest, exc: Exception) -> JSONResponse:
         error = exc if isinstance(exc, CodedError) else CodedError(_GENERIC_FAILURE)
-        return _error(_STATUS_BY_CODE.get(error.code, 500), error.code, error.message)
+        headers: dict[str, str] = {}
+        diagnostic = getattr(error, "diagnostic", None)
+        if isinstance(diagnostic, dict):
+            headers["X-Assistant-Diagnostic"] = json.dumps(
+                diagnostic, separators=(",", ":"), sort_keys=True
+            )
+        return _error(
+            _STATUS_BY_CODE.get(error.code, 500),
+            error.code,
+            error.message,
+            headers=headers if headers else None,
+        )
 
     @app.exception_handler(RequestValidationError)
     async def _schema_error(_: HttpRequest, __: Exception) -> JSONResponse:
@@ -291,8 +453,12 @@ def create_app(
 
     @app.get("/api/health")
     def health() -> JSONResponse:
-        """Public liveness probe. Declares the milestone and the agent mode."""
-        return JSONResponse({"status": "ok", "milestone": MILESTONE, "agent_mode": AGENT_MODE})
+        """Public liveness probe. Declares the milestone and the configured mode.
+
+        ``agent_mode`` reports configuration only. It never claims the provider
+        is reachable or that an interpretation would succeed.
+        """
+        return JSONResponse({"status": "ok", "milestone": MILESTONE, "agent_mode": agent_mode})
 
     @app.post("/api/workspaces", status_code=201)
     def post_workspace(http_request: HttpRequest, body: WorkspaceBody) -> JSONResponse:
@@ -310,7 +476,7 @@ def create_app(
             status_code=201,
             content={
                 "workspace": {"id": session.workspace_id},
-                "snapshot": _snapshot_json(snapshot),
+                "snapshot": _snapshot_json(snapshot, agent_mode),
             },
         )
         response.set_cookie(
@@ -330,7 +496,120 @@ def create_app(
         session = require_session(http_request)
         with store.transaction(session.workspace_id, write=False) as uow:
             snapshot = read_snapshot(uow)
-        return JSONResponse(_snapshot_json(snapshot))
+        return JSONResponse(_snapshot_json(snapshot, agent_mode))
+
+    @app.post("/api/intake/interpret")
+    async def post_interpret(http_request: HttpRequest, body: InterpretBody) -> JSONResponse:
+        """Suggest a draft request from free text. Read-only.
+
+        Nothing is created, updated or recorded: no request, loan, equipment
+        change, event, idempotency record or draft row. The caller reviews the
+        suggestion and then submits the existing structured route themselves.
+
+        Deliberately exempt from Idempotency-Key: a retry can only recompute a
+        suggestion, never repeat an effect.
+        """
+        check_origin(http_request)
+        session = require_session(http_request)
+        if assistant is None:
+            msg = "The intake assistant is not enabled on this server."
+            raise AssistantDisabledError(msg)
+        if registry.closing:
+            # Shutdown has begun. Starting inference now would either be
+            # abandoned mid-run or hold the process open past its bound.
+            msg = "The service is shutting down and is not starting new interpretations."
+            raise AssistantUnavailableError(msg)
+        if registry.cleanup_unresolved:
+            # An earlier run left its provider client open. Starting another
+            # would open a second one on top of it. This is not "busy": nothing
+            # is running, and saying so would be false.
+            msg = "The interpretation service is not available while a previous run is cleaned up."
+            raise AssistantUnavailableError(msg)
+        # A slot retained for a cleanup that has since resolved is released
+        # here, so an earlier failure cannot leave the service permanently
+        # answering "busy" with nothing running.
+        if registry.settle():
+            slot.release()
+        if not slot.try_acquire():
+            msg = "Another interpretation is already running. Try again in a moment."
+            raise AssistantBusyError(msg)
+
+        cancel = threading.Event()
+        task = asyncio.create_task(
+            assistant.interpret(
+                body.text,
+                StoreInventoryReader(store, session.workspace_id),
+                cancel,
+            )
+        )
+
+        def _finished(completed: asyncio.Task[Interpretation]) -> None:
+            # Retrieve any error so it is never an unretrieved task exception.
+            if not completed.cancelled():
+                completed.exception()
+            # The slot is freed when the inference truly ends, not when a caller
+            # stops waiting, so a timed-out request cannot be overtaken — and
+            # not while the run's provider client is still open, or the next
+            # caller would open a second one on top of it.
+            if registry.settle():
+                slot.release()
+            else:
+                _LOGGER.error(
+                    "An interpretation ended with cleanup unresolved; "
+                    "the inference slot is retained."
+                )
+
+        task.add_done_callback(_finished)
+        # From here the application owns the run, so shutdown can find it. The
+        # check above and this call happen in one event-loop step, so no drain
+        # can begin between them.
+        registry.register(task, cancel)
+
+        effective_deadline = min(
+            assistant_deadline_seconds,
+            max(0.0, 120.0 - assistant_cancel_grace_seconds),
+        )
+
+        try:
+            interpretation = await asyncio.wait_for(
+                asyncio.shield(task), timeout=effective_deadline
+            )
+        except TimeoutError:
+            # Stop the run for real: set the cooperative signal *and* cancel the
+            # task, which is the only half that can interrupt a provider call
+            # already awaiting a reply. Then wait, briefly, for its cleanup —
+            # the slot is released by the done callback when the run truly ends,
+            # so a run still winding down keeps holding it and the next caller
+            # is told the assistant is busy rather than overtaking it.
+            registry.stop(task)
+            _LOGGER.warning("Interpretation exceeded its deadline; the run was cancelled.")
+            await _settle(task, assistant_cancel_grace_seconds)
+            msg = "The interpretation took too long. Please try again or use the form."
+            exc = AssistantTimeoutError(msg)
+            if task.done() and not task.cancelled():
+                task_exc = task.exception()
+                if task_exc and hasattr(task_exc, "diagnostic"):
+                    exc.diagnostic = task_exc.diagnostic  # type: ignore[attr-defined]
+            raise exc from None
+        except asyncio.CancelledError:
+            # The caller went away. Without this the shielded task would keep
+            # running with nobody waiting for it, holding the slot until its own
+            # deadline. Waiting here is not possible — this coroutine is being
+            # cancelled — so the done callback releases the slot when the run
+            # finishes winding down.
+            registry.stop(task)
+            _LOGGER.warning("The caller stopped waiting; the interpretation was cancelled.")
+            raise
+
+        headers: dict[str, str] = {}
+        if interpretation.diagnostic is not None:
+            headers["X-Assistant-Diagnostic"] = json.dumps(
+                interpretation.diagnostic, separators=(",", ":"), sort_keys=True
+            )
+        return JSONResponse(
+            _interpretation_json(interpretation),
+            headers=headers if headers else None,
+        )
 
     @app.post("/api/requests")
     def post_request(http_request: HttpRequest, body: CreateRequestBody) -> Response:

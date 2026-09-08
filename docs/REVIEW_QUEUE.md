@@ -1,4 +1,9 @@
 # REVIEW_QUEUE
+## Current checkpoint - M2A integrated offline/disabled workflow accepted (2026-09-08)
+Codex ASTRA_MEDIUM integrated backend285df0f (production9db2d8c) and frontend e4ba9f4 on integration/m1. Canonical331 backend tests,87 frontend tests, six browser checks and static/build checks PASS. Real Edge/Vite/FastAPI/SQLite lifecycle and503 ASSISTANT_DISABLED/no-mutation path PASS; reload, fresh-context401,390px/no page errors PASS. No model calls this run. R13's six real backend cases remain accepted for unchanged source; ledger28, incomplete0, every allowance closed.
+See docs/M2A_INTEGRATION.md for evidence/limits. Four checkpoints reconciled; earlier entries below are historical. Frontend LF attributes address Windows checkout formatting without changing application behavior. Own services stopped; no public deployment or spend.
+NEXT_SAFE_ACTION: HIGH decision for a new bounded real enabled browser-to-backend proof allocation, then complete that last M2A combined gate. M2B/public hosting/provider/security/video/final audits remain outstanding. Do not reuse old allocations or request another worker correction for already accepted code.
+
 ## M2A pending review
 BS-003: real Strands/tool provenance, grounded output, read-only isolation, bounded execution/cancellation, provider failures and regression tests.
 BS-004: explicit human draft review, nullable fields/date conversion, stale responses, truthful modes/errors and M1 regression preservation.

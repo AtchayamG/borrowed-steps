@@ -1,0 +1,676 @@
+{
+  "task": "BS-003-R13-CODEX",
+  "implementation_commit": "9db2d8c5cfe97ce8461b59807bb154cb01e3a7ab",
+  "verdict": "PASS",
+  "cases": [
+    {
+      "task_id": "BS-003-R13-CODEX",
+      "implementation_commit": "9db2d8c5cfe97ce8461b59807bb154cb01e3a7ab",
+      "attempt": 18,
+      "case": "1-explicit-fields",
+      "failures": [],
+      "snapshot_before": {
+        "equipment": [
+          {
+            "id": "9e7f4338bef68d6c7e041460",
+            "label": "Wheelchair W-01",
+            "kind": "WHEELCHAIR",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "ab52db1e6008dc82309eeff2",
+            "label": "Walker K-04",
+            "kind": "WALKER",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "5ec075c813802309e0d791ef",
+            "label": "Crutches C-07",
+            "kind": "CRUTCHES",
+            "state": "QUARANTINED",
+            "version": 1
+          }
+        ],
+        "requests": [],
+        "loans": [],
+        "events": [],
+        "agent_mode": "strands_ollama"
+      },
+      "http_status": 200,
+      "response": {
+        "draft": {
+          "borrower_label": "Meena R",
+          "equipment_kind": "WHEELCHAIR",
+          "pickup_location": "the Velachery equipment room",
+          "due_at": "2026-09-15T17:24:37Z"
+        },
+        "missing_fields": [],
+        "provenance": {
+          "framework": "strands",
+          "provider": "ollama",
+          "model": "llama3.2:3b",
+          "inventory_tool_calls": 1,
+          "completed_at": "2026-09-08T17:24:49Z"
+        }
+      },
+      "diagnostic": {
+        "cleanup": "closed",
+        "correlation_id": "3582f258b060a7d6",
+        "elapsed_ms": 6140,
+        "outcome": "success",
+        "reason": "ok",
+        "recovery_used": false,
+        "sends": 3,
+        "stage": "extraction",
+        "tool_attempts": 1,
+        "tool_successes": 1
+      },
+      "snapshot_after": {
+        "equipment": [
+          {
+            "id": "9e7f4338bef68d6c7e041460",
+            "label": "Wheelchair W-01",
+            "kind": "WHEELCHAIR",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "ab52db1e6008dc82309eeff2",
+            "label": "Walker K-04",
+            "kind": "WALKER",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "5ec075c813802309e0d791ef",
+            "label": "Crutches C-07",
+            "kind": "CRUTCHES",
+            "state": "QUARANTINED",
+            "version": 1
+          }
+        ],
+        "requests": [],
+        "loans": [],
+        "events": [],
+        "agent_mode": "strands_ollama"
+      },
+      "snapshot_statuses": [
+        200,
+        200
+      ],
+      "snapshot_unchanged": true,
+      "log_excerpt": "INFO:     borrowed_steps.assistant Assistant grounding: borrower_label=accepted, equipment_kind=accepted, pickup_location=accepted, due_at=accepted | model_requests=3 tool_calls=1\r\nINFO:     borrowed_steps.assistant Assistant 3582f258b060a7d6 success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=6140 cleanup=closed\r\n",
+      "reason_codes": {
+        "borrower_label": "accepted",
+        "equipment_kind": "accepted",
+        "pickup_location": "accepted",
+        "due_at": "accepted"
+      },
+      "seconds": 6.187,
+      "verdict": "PASS"
+    },
+    {
+      "task_id": "BS-003-R13-CODEX",
+      "implementation_commit": "9db2d8c5cfe97ce8461b59807bb154cb01e3a7ab",
+      "attempt": 19,
+      "case": "2-relative-date",
+      "failures": [],
+      "snapshot_before": {
+        "equipment": [
+          {
+            "id": "9e7f4338bef68d6c7e041460",
+            "label": "Wheelchair W-01",
+            "kind": "WHEELCHAIR",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "ab52db1e6008dc82309eeff2",
+            "label": "Walker K-04",
+            "kind": "WALKER",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "5ec075c813802309e0d791ef",
+            "label": "Crutches C-07",
+            "kind": "CRUTCHES",
+            "state": "QUARANTINED",
+            "version": 1
+          }
+        ],
+        "requests": [],
+        "loans": [],
+        "events": [],
+        "agent_mode": "strands_ollama"
+      },
+      "http_status": 200,
+      "response": {
+        "draft": {
+          "borrower_label": "Arun",
+          "equipment_kind": "WALKER",
+          "pickup_location": null,
+          "due_at": null
+        },
+        "missing_fields": [
+          "pickup_location",
+          "due_at"
+        ],
+        "provenance": {
+          "framework": "strands",
+          "provider": "ollama",
+          "model": "llama3.2:3b",
+          "inventory_tool_calls": 1,
+          "completed_at": "2026-09-08T17:24:50Z"
+        }
+      },
+      "diagnostic": {
+        "cleanup": "closed",
+        "correlation_id": "697e15ed9ebc9739",
+        "elapsed_ms": 750,
+        "outcome": "success",
+        "reason": "ok",
+        "recovery_used": false,
+        "sends": 3,
+        "stage": "extraction",
+        "tool_attempts": 1,
+        "tool_successes": 1
+      },
+      "snapshot_after": {
+        "equipment": [
+          {
+            "id": "9e7f4338bef68d6c7e041460",
+            "label": "Wheelchair W-01",
+            "kind": "WHEELCHAIR",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "ab52db1e6008dc82309eeff2",
+            "label": "Walker K-04",
+            "kind": "WALKER",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "5ec075c813802309e0d791ef",
+            "label": "Crutches C-07",
+            "kind": "CRUTCHES",
+            "state": "QUARANTINED",
+            "version": 1
+          }
+        ],
+        "requests": [],
+        "loans": [],
+        "events": [],
+        "agent_mode": "strands_ollama"
+      },
+      "snapshot_statuses": [
+        200,
+        200
+      ],
+      "snapshot_unchanged": true,
+      "log_excerpt": "INFO:     borrowed_steps.assistant Assistant grounding: borrower_label=accepted, equipment_kind=accepted, pickup_location=absent_candidate, due_at=absent_candidate | model_requests=3 tool_calls=1\r\nINFO:     borrowed_steps.assistant Assistant 697e15ed9ebc9739 success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=750 cleanup=closed\r\n",
+      "reason_codes": {
+        "borrower_label": "accepted",
+        "equipment_kind": "accepted",
+        "pickup_location": "absent_candidate",
+        "due_at": "absent_candidate"
+      },
+      "seconds": 0.765,
+      "verdict": "PASS"
+    },
+    {
+      "task_id": "BS-003-R13-CODEX",
+      "implementation_commit": "9db2d8c5cfe97ce8461b59807bb154cb01e3a7ab",
+      "attempt": 20,
+      "case": "3-ambiguous-kind",
+      "failures": [],
+      "snapshot_before": {
+        "equipment": [
+          {
+            "id": "9e7f4338bef68d6c7e041460",
+            "label": "Wheelchair W-01",
+            "kind": "WHEELCHAIR",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "ab52db1e6008dc82309eeff2",
+            "label": "Walker K-04",
+            "kind": "WALKER",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "5ec075c813802309e0d791ef",
+            "label": "Crutches C-07",
+            "kind": "CRUTCHES",
+            "state": "QUARANTINED",
+            "version": 1
+          }
+        ],
+        "requests": [],
+        "loans": [],
+        "events": [],
+        "agent_mode": "strands_ollama"
+      },
+      "http_status": 200,
+      "response": {
+        "draft": {
+          "borrower_label": "Divya",
+          "equipment_kind": null,
+          "pickup_location": "the Velachery room",
+          "due_at": null
+        },
+        "missing_fields": [
+          "equipment_kind",
+          "due_at"
+        ],
+        "provenance": {
+          "framework": "strands",
+          "provider": "ollama",
+          "model": "llama3.2:3b",
+          "inventory_tool_calls": 1,
+          "completed_at": "2026-09-08T17:24:52Z"
+        }
+      },
+      "diagnostic": {
+        "cleanup": "closed",
+        "correlation_id": "9e5ddae358b8d936",
+        "elapsed_ms": 922,
+        "outcome": "success",
+        "reason": "ok",
+        "recovery_used": false,
+        "sends": 3,
+        "stage": "extraction",
+        "tool_attempts": 1,
+        "tool_successes": 1
+      },
+      "snapshot_after": {
+        "equipment": [
+          {
+            "id": "9e7f4338bef68d6c7e041460",
+            "label": "Wheelchair W-01",
+            "kind": "WHEELCHAIR",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "ab52db1e6008dc82309eeff2",
+            "label": "Walker K-04",
+            "kind": "WALKER",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "5ec075c813802309e0d791ef",
+            "label": "Crutches C-07",
+            "kind": "CRUTCHES",
+            "state": "QUARANTINED",
+            "version": 1
+          }
+        ],
+        "requests": [],
+        "loans": [],
+        "events": [],
+        "agent_mode": "strands_ollama"
+      },
+      "snapshot_statuses": [
+        200,
+        200
+      ],
+      "snapshot_unchanged": true,
+      "log_excerpt": "INFO:     borrowed_steps.assistant Assistant grounding: borrower_label=accepted, equipment_kind=ambiguous_kinds, pickup_location=accepted, due_at=evidence_not_in_source | model_requests=3 tool_calls=1\r\nINFO:     borrowed_steps.assistant Assistant 9e5ddae358b8d936 success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=922 cleanup=closed\r\n",
+      "reason_codes": {
+        "borrower_label": "accepted",
+        "equipment_kind": "ambiguous_kinds",
+        "pickup_location": "accepted",
+        "due_at": "evidence_not_in_source"
+      },
+      "seconds": 0.968,
+      "verdict": "PASS"
+    },
+    {
+      "task_id": "BS-003-R13-CODEX",
+      "implementation_commit": "9db2d8c5cfe97ce8461b59807bb154cb01e3a7ab",
+      "attempt": 21,
+      "case": "4-offset-date-crutches",
+      "failures": [],
+      "snapshot_before": {
+        "equipment": [
+          {
+            "id": "9e7f4338bef68d6c7e041460",
+            "label": "Wheelchair W-01",
+            "kind": "WHEELCHAIR",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "ab52db1e6008dc82309eeff2",
+            "label": "Walker K-04",
+            "kind": "WALKER",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "5ec075c813802309e0d791ef",
+            "label": "Crutches C-07",
+            "kind": "CRUTCHES",
+            "state": "QUARANTINED",
+            "version": 1
+          }
+        ],
+        "requests": [],
+        "loans": [],
+        "events": [],
+        "agent_mode": "strands_ollama"
+      },
+      "http_status": 200,
+      "response": {
+        "draft": {
+          "borrower_label": "Kavin",
+          "equipment_kind": "CRUTCHES",
+          "pickup_location": "the Tambaram equipment room",
+          "due_at": "2026-09-16T17:24:37Z"
+        },
+        "missing_fields": [],
+        "provenance": {
+          "framework": "strands",
+          "provider": "ollama",
+          "model": "llama3.2:3b",
+          "inventory_tool_calls": 1,
+          "completed_at": "2026-09-08T17:24:53Z"
+        }
+      },
+      "diagnostic": {
+        "cleanup": "closed",
+        "correlation_id": "ad4ae7d437b27883",
+        "elapsed_ms": 1000,
+        "outcome": "success",
+        "reason": "ok",
+        "recovery_used": false,
+        "sends": 3,
+        "stage": "extraction",
+        "tool_attempts": 1,
+        "tool_successes": 1
+      },
+      "snapshot_after": {
+        "equipment": [
+          {
+            "id": "9e7f4338bef68d6c7e041460",
+            "label": "Wheelchair W-01",
+            "kind": "WHEELCHAIR",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "ab52db1e6008dc82309eeff2",
+            "label": "Walker K-04",
+            "kind": "WALKER",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "5ec075c813802309e0d791ef",
+            "label": "Crutches C-07",
+            "kind": "CRUTCHES",
+            "state": "QUARANTINED",
+            "version": 1
+          }
+        ],
+        "requests": [],
+        "loans": [],
+        "events": [],
+        "agent_mode": "strands_ollama"
+      },
+      "snapshot_statuses": [
+        200,
+        200
+      ],
+      "snapshot_unchanged": true,
+      "log_excerpt": "INFO:     borrowed_steps.assistant Assistant grounding: borrower_label=accepted, equipment_kind=accepted, pickup_location=accepted, due_at=accepted | model_requests=3 tool_calls=1\r\nINFO:     borrowed_steps.assistant Assistant ad4ae7d437b27883 success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=1000 cleanup=closed\r\n",
+      "reason_codes": {
+        "borrower_label": "accepted",
+        "equipment_kind": "accepted",
+        "pickup_location": "accepted",
+        "due_at": "accepted"
+      },
+      "seconds": 1.031,
+      "verdict": "PASS"
+    },
+    {
+      "task_id": "BS-003-R13-CODEX",
+      "implementation_commit": "9db2d8c5cfe97ce8461b59807bb154cb01e3a7ab",
+      "attempt": 22,
+      "case": "5-synonym-walking-frame",
+      "failures": [],
+      "snapshot_before": {
+        "equipment": [
+          {
+            "id": "9e7f4338bef68d6c7e041460",
+            "label": "Wheelchair W-01",
+            "kind": "WHEELCHAIR",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "ab52db1e6008dc82309eeff2",
+            "label": "Walker K-04",
+            "kind": "WALKER",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "5ec075c813802309e0d791ef",
+            "label": "Crutches C-07",
+            "kind": "CRUTCHES",
+            "state": "QUARANTINED",
+            "version": 1
+          }
+        ],
+        "requests": [],
+        "loans": [],
+        "events": [],
+        "agent_mode": "strands_ollama"
+      },
+      "http_status": 200,
+      "response": {
+        "draft": {
+          "borrower_label": "Leela",
+          "equipment_kind": "WALKER",
+          "pickup_location": null,
+          "due_at": null
+        },
+        "missing_fields": [
+          "pickup_location",
+          "due_at"
+        ],
+        "provenance": {
+          "framework": "strands",
+          "provider": "ollama",
+          "model": "llama3.2:3b",
+          "inventory_tool_calls": 1,
+          "completed_at": "2026-09-08T17:24:54Z"
+        }
+      },
+      "diagnostic": {
+        "cleanup": "closed",
+        "correlation_id": "58217c85e0ef0aae",
+        "elapsed_ms": 750,
+        "outcome": "success",
+        "reason": "ok",
+        "recovery_used": false,
+        "sends": 3,
+        "stage": "extraction",
+        "tool_attempts": 1,
+        "tool_successes": 1
+      },
+      "snapshot_after": {
+        "equipment": [
+          {
+            "id": "9e7f4338bef68d6c7e041460",
+            "label": "Wheelchair W-01",
+            "kind": "WHEELCHAIR",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "ab52db1e6008dc82309eeff2",
+            "label": "Walker K-04",
+            "kind": "WALKER",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "5ec075c813802309e0d791ef",
+            "label": "Crutches C-07",
+            "kind": "CRUTCHES",
+            "state": "QUARANTINED",
+            "version": 1
+          }
+        ],
+        "requests": [],
+        "loans": [],
+        "events": [],
+        "agent_mode": "strands_ollama"
+      },
+      "snapshot_statuses": [
+        200,
+        200
+      ],
+      "snapshot_unchanged": true,
+      "log_excerpt": "INFO:     borrowed_steps.assistant Assistant grounding: borrower_label=accepted, equipment_kind=accepted, pickup_location=absent_candidate, due_at=absent_candidate | model_requests=3 tool_calls=1\r\nINFO:     borrowed_steps.assistant Assistant 58217c85e0ef0aae success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=750 cleanup=closed\r\n",
+      "reason_codes": {
+        "borrower_label": "accepted",
+        "equipment_kind": "accepted",
+        "pickup_location": "absent_candidate",
+        "due_at": "absent_candidate"
+      },
+      "seconds": 0.766,
+      "verdict": "PASS"
+    },
+    {
+      "task_id": "BS-003-R13-CODEX",
+      "implementation_commit": "9db2d8c5cfe97ce8461b59807bb154cb01e3a7ab",
+      "attempt": 23,
+      "case": "6-distinct-kind-ambiguity",
+      "failures": [],
+      "snapshot_before": {
+        "equipment": [
+          {
+            "id": "9e7f4338bef68d6c7e041460",
+            "label": "Wheelchair W-01",
+            "kind": "WHEELCHAIR",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "ab52db1e6008dc82309eeff2",
+            "label": "Walker K-04",
+            "kind": "WALKER",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "5ec075c813802309e0d791ef",
+            "label": "Crutches C-07",
+            "kind": "CRUTCHES",
+            "state": "QUARANTINED",
+            "version": 1
+          }
+        ],
+        "requests": [],
+        "loans": [],
+        "events": [],
+        "agent_mode": "strands_ollama"
+      },
+      "http_status": 200,
+      "response": {
+        "draft": {
+          "borrower_label": "Ravi",
+          "equipment_kind": null,
+          "pickup_location": "the Madurai equipment room",
+          "due_at": null
+        },
+        "missing_fields": [
+          "equipment_kind",
+          "due_at"
+        ],
+        "provenance": {
+          "framework": "strands",
+          "provider": "ollama",
+          "model": "llama3.2:3b",
+          "inventory_tool_calls": 1,
+          "completed_at": "2026-09-08T17:24:56Z"
+        }
+      },
+      "diagnostic": {
+        "cleanup": "closed",
+        "correlation_id": "bdf8b76043a97d46",
+        "elapsed_ms": 921,
+        "outcome": "success",
+        "reason": "ok",
+        "recovery_used": false,
+        "sends": 3,
+        "stage": "extraction",
+        "tool_attempts": 1,
+        "tool_successes": 1
+      },
+      "snapshot_after": {
+        "equipment": [
+          {
+            "id": "9e7f4338bef68d6c7e041460",
+            "label": "Wheelchair W-01",
+            "kind": "WHEELCHAIR",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "ab52db1e6008dc82309eeff2",
+            "label": "Walker K-04",
+            "kind": "WALKER",
+            "state": "AVAILABLE",
+            "version": 1
+          },
+          {
+            "id": "5ec075c813802309e0d791ef",
+            "label": "Crutches C-07",
+            "kind": "CRUTCHES",
+            "state": "QUARANTINED",
+            "version": 1
+          }
+        ],
+        "requests": [],
+        "loans": [],
+        "events": [],
+        "agent_mode": "strands_ollama"
+      },
+      "snapshot_statuses": [
+        200,
+        200
+      ],
+      "snapshot_unchanged": true,
+      "log_excerpt": "INFO:     borrowed_steps.assistant Assistant grounding: borrower_label=accepted, equipment_kind=ambiguous_kinds, pickup_location=accepted, due_at=absent_candidate | model_requests=3 tool_calls=1\r\nINFO:     borrowed_steps.assistant Assistant bdf8b76043a97d46 success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=921 cleanup=closed\r\n",
+      "reason_codes": {
+        "borrower_label": "accepted",
+        "equipment_kind": "ambiguous_kinds",
+        "pickup_location": "accepted",
+        "due_at": "absent_candidate"
+      },
+      "seconds": 0.953,
+      "verdict": "PASS"
+    }
+  ],
+  "failures": [],
+  "server_stopped": true,
+  "ledger_state": [
+    28,
+    0,
+    24,
+    []
+  ],
+  "allocation_closed": true
+}

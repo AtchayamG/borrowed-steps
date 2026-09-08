@@ -15,19 +15,21 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import AwareDatetime, BaseModel, BeforeValidator, ConfigDict, Field
+from pydantic import AfterValidator, AwareDatetime, BaseModel, BeforeValidator, ConfigDict, Field
 
 from borrowed_steps.domain.models import EquipmentKind
 
 __all__ = [
     "CreateRequestBody",
     "InspectionBody",
+    "InterpretBody",
     "ReservationBody",
     "TransitionBody",
     "WorkspaceBody",
 ]
 
 _ID_MAX = 100
+INTAKE_TEXT_MAX_LENGTH = 2000
 
 
 def _must_be_a_string(value: object) -> object:
@@ -45,6 +47,18 @@ Approval = Annotated[bool | None, Field(default=None, strict=True)]
 
 ExpectedVersion = Annotated[int, Field(ge=1, strict=True)]
 """The equipment version the caller believes it is acting on."""
+
+
+def _trimmed_intake(value: str) -> str:
+    text = value.strip()
+    if not 1 <= len(text) <= INTAKE_TEXT_MAX_LENGTH:
+        msg = f"intake text must be 1 to {INTAKE_TEXT_MAX_LENGTH} characters once trimmed"
+        raise ValueError(msg)
+    return text
+
+
+IntakeText = Annotated[str, Field(strict=True), AfterValidator(_trimmed_intake)]
+"""Free intake text, measured after trimming and returned already trimmed."""
 
 
 class _Strict(BaseModel):
@@ -88,3 +102,9 @@ class InspectionBody(_Strict):
     expected_equipment_version: ExpectedVersion
     outcome: Literal["AVAILABLE", "REPAIR", "QUARANTINED"]
     human_approved: Approval
+
+
+class InterpretBody(_Strict):
+    """``POST /api/intake/interpret``. Read-only: this route writes nothing."""
+
+    text: IntakeText

@@ -1,0 +1,13 @@
+INFO:     borrowed_steps.assistant R13 logging ready
+INFO:     borrowed_steps.assistant Assistant grounding: borrower_label=accepted, equipment_kind=accepted, pickup_location=accepted, due_at=accepted | model_requests=3 tool_calls=1
+INFO:     borrowed_steps.assistant Assistant 3582f258b060a7d6 success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=6140 cleanup=closed
+INFO:     borrowed_steps.assistant Assistant grounding: borrower_label=accepted, equipment_kind=accepted, pickup_location=absent_candidate, due_at=absent_candidate | model_requests=3 tool_calls=1
+INFO:     borrowed_steps.assistant Assistant 697e15ed9ebc9739 success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=750 cleanup=closed
+INFO:     borrowed_steps.assistant Assistant grounding: borrower_label=accepted, equipment_kind=ambiguous_kinds, pickup_location=accepted, due_at=evidence_not_in_source | model_requests=3 tool_calls=1
+INFO:     borrowed_steps.assistant Assistant 9e5ddae358b8d936 success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=922 cleanup=closed
+INFO:     borrowed_steps.assistant Assistant grounding: borrower_label=accepted, equipment_kind=accepted, pickup_location=accepted, due_at=accepted | model_requests=3 tool_calls=1
+INFO:     borrowed_steps.assistant Assistant ad4ae7d437b27883 success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=1000 cleanup=closed
+INFO:     borrowed_steps.assistant Assistant grounding: borrower_label=accepted, equipment_kind=accepted, pickup_location=absent_candidate, due_at=absent_candidate | model_requests=3 tool_calls=1
+INFO:     borrowed_steps.assistant Assistant 58217c85e0ef0aae success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=750 cleanup=closed
+INFO:     borrowed_steps.assistant Assistant grounding: borrower_label=accepted, equipment_kind=ambiguous_kinds, pickup_location=accepted, due_at=absent_candidate | model_requests=3 tool_calls=1
+INFO:     borrowed_steps.assistant Assistant bdf8b76043a97d46 success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=921 cleanup=closed

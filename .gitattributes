@@ -1,0 +1,2 @@
+# Keep frontend checkouts compatible with Prettier on Windows; binary assets stay binary.
+apps/web/** text=auto eol=lf

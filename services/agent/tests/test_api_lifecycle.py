@@ -25,8 +25,8 @@ def test_health_declares_milestone_and_agent_mode(client: TestClient) -> None:
     assert response.status_code == 200
     assert body(response) == {
         "status": "ok",
-        "milestone": "M1",
-        "agent_mode": "not_implemented",
+        "milestone": "M2A",
+        "agent_mode": "disabled",
     }
 
 
@@ -37,7 +37,7 @@ def test_workspace_creation_seeds_the_equipment_room(client: TestClient) -> None
 
     snap = payload["snapshot"]
     assert set(snap) == {"equipment", "requests", "loans", "events", "agent_mode"}
-    assert snap["agent_mode"] == "not_implemented"
+    assert snap["agent_mode"] == "disabled"
     assert snap["requests"] == []
     assert snap["loans"] == []
     assert snap["events"] == []

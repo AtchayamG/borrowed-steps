@@ -50,12 +50,14 @@ export interface DomainEvent {
   at: string;
 }
 
+export type AgentMode = "disabled" | "strands_ollama" | "not_implemented";
+
 export interface Snapshot {
   equipment: Equipment[];
   requests: BorrowRequest[];
   loans: Loan[];
   events: DomainEvent[];
-  agent_mode: "not_implemented";
+  agent_mode: AgentMode;
 }
 
 export interface WorkspaceCreationResponse {
@@ -68,7 +70,35 @@ export interface WorkspaceCreationResponse {
 export interface HealthResponse {
   status: string;
   milestone: string;
-  agent_mode: string;
+  agent_mode: AgentMode | string;
+}
+
+export interface IntakeInterpretRequest {
+  text: string;
+}
+
+export type MissingField =
+  "borrower_label" | "equipment_kind" | "pickup_location" | "due_at";
+
+export interface IntakeDraft {
+  borrower_label: string | null;
+  equipment_kind: EquipmentKind | null;
+  pickup_location: string | null;
+  due_at: string | null;
+}
+
+export interface IntakeProvenance {
+  framework: "strands";
+  provider: "ollama";
+  model: "llama3.2:3b";
+  inventory_tool_calls: number;
+  completed_at: string;
+}
+
+export interface IntakeInterpretResponse {
+  draft: IntakeDraft;
+  missing_fields: MissingField[];
+  provenance: IntakeProvenance;
 }
 
 export interface ApiErrorDetail {

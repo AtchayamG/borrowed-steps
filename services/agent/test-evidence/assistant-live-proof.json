@@ -1,0 +1,95 @@
+{
+  "attempts_charged_before_this_run": 8,
+  "base_url": "http://127.0.0.1:8401",
+  "business_snapshot_unchanged": true,
+  "cases": [
+    {
+      "case": "1-explicit-fields",
+      "http_status": 200,
+      "intent": "every field stated outright, including a full ISO timestamp",
+      "response": {
+        "draft": {
+          "borrower_label": "Meena R",
+          "due_at": "2026-09-15T06:25:37Z",
+          "equipment_kind": null,
+          "pickup_location": "Velachery equipment room"
+        },
+        "missing_fields": [
+          "equipment_kind"
+        ],
+        "provenance": {
+          "completed_at": "2026-09-08T06:25:18Z",
+          "framework": "strands",
+          "inventory_tool_calls": 1,
+          "model": "llama3.2:3b",
+          "provider": "ollama"
+        }
+      },
+      "seconds": 6.41,
+      "synthetic_text": "Meena R needs a wheelchair, pickup at the Velachery equipment room, return by 2026-09-15T06:25:37Z."
+    },
+    {
+      "case": "2-relative-date",
+      "http_status": 200,
+      "intent": "relative date and no location: both must come back null",
+      "response": {
+        "draft": {
+          "borrower_label": "Arun",
+          "due_at": null,
+          "equipment_kind": null,
+          "pickup_location": null
+        },
+        "missing_fields": [
+          "equipment_kind",
+          "pickup_location",
+          "due_at"
+        ],
+        "provenance": {
+          "completed_at": "2026-09-08T06:25:19Z",
+          "framework": "strands",
+          "inventory_tool_calls": 1,
+          "model": "llama3.2:3b",
+          "provider": "ollama"
+        }
+      },
+      "seconds": 1.27,
+      "synthetic_text": "Arun needs a walker, he will return it next Tuesday."
+    },
+    {
+      "case": "3-ambiguous-kind",
+      "http_status": 200,
+      "intent": "two kinds named: equipment_kind must be null",
+      "response": {
+        "draft": {
+          "borrower_label": "Divya",
+          "due_at": null,
+          "equipment_kind": null,
+          "pickup_location": "the Velachery room"
+        },
+        "missing_fields": [
+          "equipment_kind",
+          "due_at"
+        ],
+        "provenance": {
+          "completed_at": "2026-09-08T06:25:21Z",
+          "framework": "strands",
+          "inventory_tool_calls": 1,
+          "model": "llama3.2:3b",
+          "provider": "ollama"
+        }
+      },
+      "seconds": 1.47,
+      "synthetic_text": "Could be a wheelchair or crutches for Divya, at the Velachery room."
+    }
+  ],
+  "cumulative_attempts_charged": 11,
+  "cumulative_ceiling": 19,
+  "failures": [],
+  "health": {
+    "agent_mode": "strands_ollama",
+    "milestone": "M2A",
+    "status": "ok"
+  },
+  "real_inference_invocations": 3,
+  "recorded_at": "2026-09-08T06:25:21Z"
+}

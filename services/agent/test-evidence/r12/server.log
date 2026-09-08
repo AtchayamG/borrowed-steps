@@ -1,0 +1,9 @@
+INFO:     borrowed_steps.assistant R12 logging ready
+INFO:     borrowed_steps.assistant Assistant grounding: borrower_label=accepted, equipment_kind=accepted, pickup_location=accepted, due_at=accepted | model_requests=3 tool_calls=1
+INFO:     borrowed_steps.assistant Assistant 601742118efaf4d4 success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=7407 cleanup=closed
+INFO:     borrowed_steps.assistant Assistant grounding: borrower_label=accepted, equipment_kind=accepted, pickup_location=evidence_not_in_source, due_at=evidence_not_in_source | model_requests=3 tool_calls=1
+INFO:     borrowed_steps.assistant Assistant b52278796405c4fd success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=1452 cleanup=closed
+INFO:     borrowed_steps.assistant Assistant grounding: borrower_label=accepted, equipment_kind=ambiguous_kinds, pickup_location=accepted, due_at=absent_candidate | model_requests=3 tool_calls=1
+INFO:     borrowed_steps.assistant Assistant b0bd0ca906ed2ba2 success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=1561 cleanup=closed
+INFO:     borrowed_steps.assistant Assistant grounding: borrower_label=accepted, equipment_kind=absent_candidate, pickup_location=accepted, due_at=absent_candidate | model_requests=3 tool_calls=1
+INFO:     borrowed_steps.assistant Assistant b772f61a989afe0c success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=1640 cleanup=closed

@@ -1,37 +1,54 @@
-import React, { useState } from "react";
-import type { EquipmentKind, CreateRequestBody } from "../types/api";
+import React, { useState, useEffect } from "react";
+import type {
+  EquipmentKind,
+  CreateRequestBody,
+  IntakeDraft,
+} from "../types/api";
+import {
+  isoToLocalInput,
+  localInputToIso,
+  getDefaultDueDate,
+} from "../utils/dateTime";
 
 interface RequestFormProps {
   onSubmit: (body: CreateRequestBody) => Promise<void>;
   isSubmitting?: boolean;
+  draft?: IntakeDraft | null;
+  onClearDraft?: () => void;
 }
 
 const DEFAULT_PICKUP =
   "Velachery Community Room, 12 Cross Road, Velachery, Chennai";
 
-// Default due date: 7 days in future
-function getDefaultDueDate(): string {
-  const d = new Date();
-  d.setDate(d.getDate() + 7);
-  // Format as YYYY-MM-DDTHH:mm
-  const pad = (n: number) => n.toString().padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T10:00`;
-}
-
 export const RequestForm: React.FC<RequestFormProps> = ({
   onSubmit,
   isSubmitting = false,
+  draft = null,
+  onClearDraft,
 }) => {
   const [borrowerLabel, setBorrowerLabel] = useState(
     "Ananya R. (Velachery Resident)",
   );
-  const [equipmentKind, setEquipmentKind] =
-    useState<EquipmentKind>("WHEELCHAIR");
+  const [equipmentKind, setEquipmentKind] = useState<EquipmentKind | "">(
+    "WHEELCHAIR",
+  );
   const [pickupLocation, setPickupLocation] = useState(DEFAULT_PICKUP);
   const [dueDateTime, setDueDateTime] = useState(getDefaultDueDate());
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isLocalSubmitting, setIsLocalSubmitting] = useState(false);
   const submittingRef = React.useRef(false);
+
+  // When a draft is provided via deliberate 'Use draft', populate the form fields.
+  // Missing/null fields remain empty strings so volunteer must complete them.
+  useEffect(() => {
+    if (draft) {
+      setBorrowerLabel(draft.borrower_label ?? "");
+      setEquipmentKind(draft.equipment_kind ?? "");
+      setPickupLocation(draft.pickup_location ?? "");
+      setDueDateTime(draft.due_at ? isoToLocalInput(draft.due_at) : "");
+      setValidationError(null);
+    }
+  }, [draft]);
 
   const isPending = isSubmitting || isLocalSubmitting;
 
@@ -48,6 +65,11 @@ export const RequestForm: React.FC<RequestFormProps> = ({
       return;
     }
 
+    if (!equipmentKind) {
+      setValidationError("Please select an equipment kind.");
+      return;
+    }
+
     const trimmedLocation = pickupLocation.trim();
     if (!trimmedLocation || trimmedLocation.length > 120) {
       setValidationError(
@@ -56,12 +78,14 @@ export const RequestForm: React.FC<RequestFormProps> = ({
       return;
     }
 
-    const dueDate = new Date(dueDateTime);
-    const now = new Date();
-    if (isNaN(dueDate.getTime())) {
+    const dueAtIso = localInputToIso(dueDateTime);
+    if (!dueAtIso) {
       setValidationError("Please specify a valid due date and time.");
       return;
     }
+
+    const dueDate = new Date(dueDateTime);
+    const now = new Date();
 
     if (dueDate <= now) {
       setValidationError("Due date must be in the future.");
@@ -75,9 +99,6 @@ export const RequestForm: React.FC<RequestFormProps> = ({
       return;
     }
 
-    // Convert to ISO string in UTC
-    const dueAtIso = dueDate.toISOString();
-
     submittingRef.current = true;
     setIsLocalSubmitting(true);
     try {
@@ -87,6 +108,7 @@ export const RequestForm: React.FC<RequestFormProps> = ({
         pickup_location: trimmedLocation,
         due_at: dueAtIso,
       });
+      onClearDraft?.();
     } finally {
       submittingRef.current = false;
       setIsLocalSubmitting(false);
@@ -141,6 +163,7 @@ export const RequestForm: React.FC<RequestFormProps> = ({
             onChange={(e) => setEquipmentKind(e.target.value as EquipmentKind)}
             disabled={isPending}
           >
+            <option value="">Select equipment kind...</option>
             <option value="WHEELCHAIR">WHEELCHAIR</option>
             <option value="WALKER">WALKER</option>
             <option value="CRUTCHES">CRUTCHES</option>
@@ -170,6 +193,7 @@ export const RequestForm: React.FC<RequestFormProps> = ({
           <input
             id="due-datetime"
             type="datetime-local"
+            step="1"
             className="form-input"
             value={dueDateTime}
             onChange={(e) => setDueDateTime(e.target.value)}

@@ -1,0 +1,146 @@
+{
+  "task": "BS-003-R12-CODEX",
+  "implementation_commit": "b66ee2e69fcbb343a2a6d5f2195e25ad978cc230",
+  "at": "2026-09-08T17:14:54Z",
+  "cases": [
+    {
+      "id": "1-explicit-fields",
+      "intent": "every field stated outright, including a full ISO timestamp",
+      "text": "Meena R needs a wheelchair, pickup at the Velachery equipment room, return by 2026-09-15T17:14:37Z.",
+      "expect": {
+        "borrower_label": [
+          "Meena R"
+        ],
+        "equipment_kind": [
+          "WHEELCHAIR"
+        ],
+        "pickup_location": [
+          "the Velachery equipment room",
+          "Velachery equipment room"
+        ],
+        "due_at": [
+          "2026-09-15T17:14:37Z"
+        ],
+        "missing_fields": []
+      }
+    },
+    {
+      "id": "2-relative-date",
+      "intent": "relative date and no location: both null, the stated kind kept",
+      "text": "Arun needs a walker, he will return it next Tuesday.",
+      "expect": {
+        "borrower_label": [
+          "Arun"
+        ],
+        "equipment_kind": [
+          "WALKER"
+        ],
+        "pickup_location": [
+          null
+        ],
+        "due_at": [
+          null
+        ],
+        "missing_fields": [
+          "pickup_location",
+          "due_at"
+        ]
+      }
+    },
+    {
+      "id": "3-ambiguous-kind",
+      "intent": "two kinds named: equipment_kind null, everything else kept",
+      "text": "Could be a wheelchair or crutches for Divya, at the Velachery room.",
+      "expect": {
+        "borrower_label": [
+          "Divya"
+        ],
+        "equipment_kind": [
+          null
+        ],
+        "pickup_location": [
+          "the Velachery room",
+          "Velachery room"
+        ],
+        "due_at": [
+          null
+        ],
+        "missing_fields": [
+          "equipment_kind",
+          "due_at"
+        ]
+      }
+    },
+    {
+      "id": "4-offset-date-crutches",
+      "intent": "crutches and aware timestamp with +05:30 offset: CRUTCHES kept, date normalized to whole-second UTC",
+      "text": "Kavin needs crutches, pickup at the Tambaram equipment room, return by 2026-09-16T22:44:37+05:30.",
+      "expect": {
+        "borrower_label": [
+          "Kavin"
+        ],
+        "equipment_kind": [
+          "CRUTCHES"
+        ],
+        "pickup_location": [
+          "the Tambaram equipment room",
+          "Tambaram equipment room"
+        ],
+        "due_at": [
+          "2026-09-16T17:14:37Z"
+        ],
+        "missing_fields": []
+      }
+    },
+    {
+      "id": "5-synonym-walking-frame",
+      "intent": "walking frame synonym for WALKER, relative date and no location null",
+      "text": "Leela needs a walking frame and will return it tomorrow.",
+      "expect": {
+        "borrower_label": [
+          "Leela"
+        ],
+        "equipment_kind": [
+          "WALKER"
+        ],
+        "pickup_location": [
+          null
+        ],
+        "due_at": [
+          null
+        ],
+        "missing_fields": [
+          "pickup_location",
+          "due_at"
+        ]
+      }
+    },
+    {
+      "id": "6-distinct-kind-ambiguity",
+      "intent": "distinct kinds walker or crutches named: equipment_kind null, location kept",
+      "text": "A walker or crutches for Ravi, pickup at the Madurai equipment room.",
+      "expect": {
+        "borrower_label": [
+          "Ravi"
+        ],
+        "equipment_kind": [
+          null
+        ],
+        "pickup_location": [
+          "the Madurai equipment room",
+          "Madurai equipment room"
+        ],
+        "due_at": [
+          null
+        ],
+        "missing_fields": [
+          "equipment_kind",
+          "due_at"
+        ]
+      }
+    }
+  ],
+  "historical_spent": 18,
+  "cumulative_cap": 24,
+  "verifier_sha256": "abbed8cc80b30c4885a7065294ef640f117748148c7e643f754cb88ba8527279"
+}

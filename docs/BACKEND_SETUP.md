@@ -64,6 +64,16 @@ All optional, all environment variables, none of them a secret.
 | Variable | Default | Meaning |
 |---|---|---|
 | `BS_DB_PATH` | `data/borrowed_steps.db` | SQLite file, relative to the working directory. Parent directories are created. |
+| `BS_ASSISTANT_ENABLED` | `false` | Turns on the local M2A intake assistant. Off by default. |
+| `BS_ASSISTANT_HOST` | `http://127.0.0.1:11434` | **Pinned.** Present only so a mismatch can be refused; see below. |
+| `BS_ASSISTANT_MODEL` | `llama3.2:3b` | **Pinned.** Same. |
+
+The endpoint and the model are fixed by the contract and cannot be changed. If
+either variable is set to anything other than its pinned value, `load_settings`
+raises `ValueError` and the service refuses to start, rather than quietly using
+the substitute. Setting them to exactly the pinned value, or leaving them unset,
+is fine. Tests inject an interpreter through `create_app` instead of moving the
+provider.
 | `BS_ALLOWED_ORIGINS` | `http://127.0.0.1:5173,http://localhost:5173` | Comma-separated origins accepted on mutations. Both loopback spellings of the Vite dev server are allowed by default. |
 | `BS_COOKIE_SECURE` | `false` | Sets `Secure` on the session cookie. Turn on only when serving over HTTPS. |
 
@@ -180,3 +190,197 @@ Codex can rely on them. Both are flagged in `docs/workers/BS-001.md` for review.
 `entity_type` on an event is `REQUEST` for `REQUEST_CREATED`, `LOAN` for
 `RESERVED`, `PICKED_UP` and `RETURNED`, and `EQUIPMENT` for the three
 `INSPECTED_*` actions.
+
+## The M2A intake assistant
+
+`docs/M2A_CONTRACT.md` adds one read-only route, `POST /api/intake/interpret`.
+It turns free text into a suggested draft that a human edits and then submits
+through the existing `POST /api/requests`. It creates no request, loan,
+equipment change, event, idempotency record or draft row, and it is explicitly
+exempt from `Idempotency-Key`.
+
+### Disabled startup, which is the default
+
+With `BS_ASSISTANT_ENABLED` unset or false:
+
+- `health.agent_mode` and `snapshot.agent_mode` are `"disabled"`;
+- `POST /api/intake/interpret` returns `503 ASSISTANT_DISABLED`;
+- the whole structured workflow works exactly as in M1;
+- **no provider SDK is imported at all**, so the service runs with none of the
+  assistant dependencies installed.
+
+`health.milestone` is `"M2A"` in both modes. `agent_mode` reports configuration
+only: it never claims the provider is reachable or that a call would succeed.
+
+### Enabled startup
+
+Requires the assistant extra and a local Ollama with the model already pulled.
+Nothing here downloads a model or contacts a remote provider.
+
+```powershell
+# one-off, in addition to the base install
+.\.venv\Scripts\python.exe -m pip install -e ".[assistant]"
+
+# confirm the local provider and model are present
+ollama list                       # expect llama3.2:3b
+curl http://127.0.0.1:11434/api/tags
+
+$env:BS_ASSISTANT_ENABLED = "true"
+.\.venv\Scripts\python.exe -m uvicorn borrowed_steps.main:app --host 127.0.0.1 --port 8000
+```
+
+`agent_mode` then reports `"strands_ollama"`.
+
+### Provider dependency
+
+| Piece | Pin |
+|---|---|
+| Strands SDK | `strands-agents[ollama]==1.54.0` (extras `assistant` and `dev`) |
+| Ollama client | `ollama==0.6.2`, resolved by that extra |
+| Ollama server | installed separately, verified at 0.33.3 |
+| Model | `llama3.2:3b`, already installed |
+
+The adapter builds an explicit `OllamaModel(host=..., model_id=...)`. There is no
+implicit Bedrock or default provider, no credential lookup and no remote host.
+
+### Limits, fixed by the contract
+
+| Bound | Value | On breach |
+|---|---|---|
+| Concurrent interpretations per process | 1, no queue | `429 ASSISTANT_BUSY` |
+| Wall clock, route guard | 120 s | `504 ASSISTANT_TIMEOUT` |
+| Wall clock, adapter's own hard deadline | 110 s | `504 ASSISTANT_TIMEOUT` |
+| HTTP transport timeout to Ollama | 60 s | provider error, `503 ASSISTANT_UNAVAILABLE` |
+| Model requests per invocation | 6 (SDK `Limits(turns=6)`) | `502 ASSISTANT_INVALID_OUTPUT` |
+| `read_inventory` **attempts** per invocation | 2 | `502 ASSISTANT_INVALID_OUTPUT` |
+| Successful `read_inventory` executions | 1 to 2 | `502 ASSISTANT_INVALID_OUTPUT` |
+| Intake text, after trimming | 1 to 2000 characters | `422 VALIDATION_ERROR` |
+
+A caller that times out does **not** free the concurrency slot. The slot stays
+held until the owned run really ends, so a slow interpretation cannot be
+overtaken by a second one.
+
+Three separate things stop a stalled provider from holding that slot forever:
+
+1. the ollama client is given a finite `timeout` through `ollama_client_args`.
+   Left alone it defaults to `None`, meaning no timeout at all;
+2. the adapter wraps its own run in `asyncio.timeout(110 s)`, which genuinely
+   cancels the run at its next await point rather than only asking it to stop.
+   The cooperative `cancel_signal` is still passed so the SDK can wind down
+   cleanly first;
+3. the route keeps its 120 s guard as an outer backstop.
+
+Because the adapter's deadline is inside the route's, the run ends itself and
+the slot is released. There is no orphaned background inference.
+
+The tool budget is enforced on **attempts**, not only on successes. The SDK turns
+an ordinary tool exception into a tool-error result and lets the model continue,
+so a refused third `read_inventory` could otherwise be followed by valid
+structured output and be reported as a success. A run that attempted more than
+two reads fails as a whole.
+
+### Owned provider lifecycle
+
+`infrastructure/owned_ollama.py` subclasses the native `OllamaModel` and reuses
+its public `format_request` / `format_chunk` helpers unchanged, so request and
+response translation stays the SDK's. It adds exactly two things:
+
+- **One owned client per interpretation.** The installed provider builds a fresh
+  `ollama.AsyncClient` inside every `stream` and `structured_output` call and
+  never closes it. Here one client is opened for the logical interpretation and
+  closed through the client's public API on every exit: success, provider error,
+  timeout, cancellation and budget refusal. The streaming response is closed the
+  same way, including when a consumer abandons it part-way.
+- **A counted request budget.** Every outbound chat request is charged *before*
+  it is sent, across streaming, structured output and the recovery pass. The
+  seventh request is refused without reaching the transport, and the refusal is
+  sticky, so a layer that swallows it cannot turn the run into a success.
+  `retry_strategy=None` disables implicit SDK retries; the explicit counter is
+  the authority.
+
+The installed SDK is not modified, monkeypatched or vendored wholesale, and no
+private attribute of the client is touched. Adapted control-flow carries its
+Apache-2.0 attribution in the module docstring.
+
+Client arguments pin the destination: a finite timeout, `follow_redirects=False`
+and `trust_env=False`, so no redirect, environment proxy or inherited credential
+can move traffic off the loopback endpoint.
+
+### The stage-two extraction prompt
+
+Stage two sends the extraction rules **and the generated JSON schema itself** as
+the system prompt, then the intake text alone as the user message. The schema is
+serialised from `_Extraction.model_json_schema()` — the same call that builds the
+request's native `format` parameter — so one schema is generated in one place and
+there is no second copy to drift. Ollama's structured-output guidance asks for
+the schema in the prompt as well as in `format`
+(https://docs.ollama.com/capabilities/structured-outputs, checked 2026-09-08).
+
+This is prompt construction only. `format`, `stream=False`, temperature 0, the
+budgets, the grounding and every validation are unchanged, and nothing here
+claims the model extracts more accurately as a result — that is a question for a
+separately authorised live proof.
+
+### Optional single recovery
+
+If the first completed pass executed **zero** inventory tools, the same agent is
+asked once more to call the tool and return the structured result. Both passes
+share one client, one 110 s deadline, one six-request budget and one
+two-attempt tool budget. There is no recovery after a timeout, a provider error,
+malformed output, a budget breach or any successful tool execution, and no
+broader retry loop. Nothing is ever synthesised: only real tool executions count,
+and a run that still has none fails with 502.
+
+### Diagnostics
+
+Set `BS_LOG_LEVEL=INFO` to see one line per interpretation naming each field and
+the reason code for its outcome — `accepted`, `absent_candidate`,
+`evidence_not_in_source`, `value_evidence_mismatch`, `parse_failure`,
+`window_failure`, `ambiguous_kinds` and so on — plus the real model-request and
+tool-call counts. These lines never contain intake text, candidate values or
+model reasoning. `uvicorn --log-level` alone is not enough: it configures only
+the `uvicorn.*` loggers.
+
+Error codes: `401 SESSION_REQUIRED`, `403 ORIGIN_FORBIDDEN`,
+`422 VALIDATION_ERROR`, `429 ASSISTANT_BUSY`, `502 ASSISTANT_INVALID_OUTPUT`,
+`503 ASSISTANT_DISABLED` / `ASSISTANT_UNAVAILABLE`, `504 ASSISTANT_TIMEOUT`,
+`500 INTERNAL_ERROR`. Error bodies carry no draft, no provenance, no prompt and
+no trace.
+
+#### Live smoke, separately labelled
+
+Ordinary `pytest` never runs inference. The one script that does:
+
+```powershell
+$env:BS_DB_PATH = "$env:TEMP/bs-assistant-bs.db"
+$env:BS_ASSISTANT_ENABLED = "true"
+.\.venv\Scripts\python.exe -m uvicorn borrowed_steps.main:app --host 127.0.0.1 --port 8218
+
+# in another shell (requires exact task authorization)
+$env:BS_LIVE_PROOF_AUTHORIZATION = "BS-003-R8-AGY"
+.\.venv\Scripts\python.exe scripts/assistant_smoke.py http://127.0.0.1:8218 --label "r8-pass-1"
+```
+
+It drives real HTTP, charges every attempt to `services/agent/test-evidence/probe-ledger.jsonl`
+before sending, enforces the cumulative ceiling of 22 attempts, checks provenance and real tool
+execution, verifies read-only snapshot consistency, and writes `services/agent/test-evidence/assistant-live-proof-r8.json`.
+Top-level `PASS` (exit code 0) strictly requires all six controlled cases passing on the same run.
+Proper subsets finish `PARTIAL` (exit code 2) and never emit full acceptance proof; invalid selections
+are rejected before client creation (exit code 1).
+
+To see which fields grounding rejected (field names and reason codes only, never values or model
+reasoning), set `BS_LOG_LEVEL=INFO`.
+
+### Remaining gates
+
+This slice is local proof, not a finished M2 and not a public release.
+
+- Live proof on Case 1 returned post-grounding `null` for `equipment_kind` and `due_at`.
+  Because grounding logs were not captured during R8, the exact cause (model omission vs.
+  grounding rejection) is `UNKNOWN`. Result is recorded as `BLOCKED` in `assistant-live-proof-r8.json`.
+- The clarification path (`null` plus `missing_fields`) safely prompts a human operator rather than hallucinating.
+- M2B persisted pickup and due processing, and idempotent background work.
+- Public deployment, TLS, abuse and session protections, bounded inference cost
+  and availability through judging.
+- A public release would need a provider decision and a security review; this
+  configuration is single-process localhost development only.

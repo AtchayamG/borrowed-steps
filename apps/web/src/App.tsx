@@ -6,6 +6,7 @@ import type {
   LoanPickupBody,
   LoanReturnBody,
   EquipmentInspectionBody,
+  IntakeDraft,
 } from "./types/api";
 import { api, ApiClientError, generateIdempotencyKey } from "./api/client";
 import { Header } from "./components/Header";
@@ -13,6 +14,7 @@ import { OfflineBanner } from "./components/OfflineBanner";
 import { ExpiredSessionBanner } from "./components/ExpiredSessionBanner";
 import { ConflictBanner } from "./components/ConflictBanner";
 import { EquipmentList } from "./components/EquipmentList";
+import { IntakeAssistant } from "./components/IntakeAssistant";
 import { RequestForm } from "./components/RequestForm";
 import { RequestList } from "./components/RequestList";
 import { LoanList } from "./components/LoanList";
@@ -50,6 +52,8 @@ export const App: React.FC = () => {
   const [isExpiredSession, setIsExpiredSession] = useState(false);
   const [isStartingWorkspace, setIsStartingWorkspace] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [draftForForm, setDraftForForm] = useState<IntakeDraft | null>(null);
+  const [sessionGeneration, setSessionGeneration] = useState(1);
 
   // Store selected entity IDs; derive current entity instances from latest snapshot
   const [allocatingRequestId, setAllocatingRequestId] = useState<string | null>(
@@ -150,11 +154,13 @@ export const App: React.FC = () => {
     setUncertainRetry(null);
     setAllocatingRequestId(null);
     setInspectingEquipmentId(null);
+    setDraftForForm(null);
     try {
       const res = await api.createWorkspace();
       setSnapshot(res.snapshot);
       setIsExpiredSession(false);
       setSnapshotError(null);
+      setSessionGeneration((prev) => prev + 1);
       setSuccessMessage(
         "Synthetic workspace initialized with seed community inventory.",
       );
@@ -428,7 +434,7 @@ export const App: React.FC = () => {
   return (
     <div className="app-root">
       <Header
-        milestone={health?.milestone || "M1"}
+        milestone={health?.milestone || "M2A"}
         agentMode={
           health?.agent_mode || snapshot?.agent_mode || "not_implemented"
         }
@@ -591,10 +597,34 @@ export const App: React.FC = () => {
                   }}
                   isLoading={isLoading || isMutating}
                 />
-                <RequestForm
-                  onSubmit={handleCreateRequest}
-                  isSubmitting={isMutating}
-                />
+                <div
+                  className="intake-column"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1.5rem",
+                  }}
+                >
+                  <IntakeAssistant
+                    onApplyDraft={(draft) => setDraftForForm(draft)}
+                    agentMode={
+                      health?.agent_mode ||
+                      snapshot.agent_mode ||
+                      "not_implemented"
+                    }
+                    workspaceId={`session-${sessionGeneration}`}
+                    onStartWorkspace={handleStartWorkspace}
+                    onSessionExpired={() => {
+                      setDraftForForm(null);
+                    }}
+                  />
+                  <RequestForm
+                    onSubmit={handleCreateRequest}
+                    isSubmitting={isMutating}
+                    draft={draftForForm}
+                    onClearDraft={() => setDraftForForm(null)}
+                  />
+                </div>
               </div>
 
               {/* Middle Grid: Pending Requests & Active Loans */}

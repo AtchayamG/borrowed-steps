@@ -1,0 +1,108 @@
+{
+  "task_id": "BS-003-R13-CODEX",
+  "implementation_commit": "9db2d8c5cfe97ce8461b59807bb154cb01e3a7ab",
+  "attempt": 18,
+  "case": "1-explicit-fields",
+  "failures": [],
+  "snapshot_before": {
+    "equipment": [
+      {
+        "id": "9e7f4338bef68d6c7e041460",
+        "label": "Wheelchair W-01",
+        "kind": "WHEELCHAIR",
+        "state": "AVAILABLE",
+        "version": 1
+      },
+      {
+        "id": "ab52db1e6008dc82309eeff2",
+        "label": "Walker K-04",
+        "kind": "WALKER",
+        "state": "AVAILABLE",
+        "version": 1
+      },
+      {
+        "id": "5ec075c813802309e0d791ef",
+        "label": "Crutches C-07",
+        "kind": "CRUTCHES",
+        "state": "QUARANTINED",
+        "version": 1
+      }
+    ],
+    "requests": [],
+    "loans": [],
+    "events": [],
+    "agent_mode": "strands_ollama"
+  },
+  "http_status": 200,
+  "response": {
+    "draft": {
+      "borrower_label": "Meena R",
+      "equipment_kind": "WHEELCHAIR",
+      "pickup_location": "the Velachery equipment room",
+      "due_at": "2026-09-15T17:24:37Z"
+    },
+    "missing_fields": [],
+    "provenance": {
+      "framework": "strands",
+      "provider": "ollama",
+      "model": "llama3.2:3b",
+      "inventory_tool_calls": 1,
+      "completed_at": "2026-09-08T17:24:49Z"
+    }
+  },
+  "diagnostic": {
+    "cleanup": "closed",
+    "correlation_id": "3582f258b060a7d6",
+    "elapsed_ms": 6140,
+    "outcome": "success",
+    "reason": "ok",
+    "recovery_used": false,
+    "sends": 3,
+    "stage": "extraction",
+    "tool_attempts": 1,
+    "tool_successes": 1
+  },
+  "snapshot_after": {
+    "equipment": [
+      {
+        "id": "9e7f4338bef68d6c7e041460",
+        "label": "Wheelchair W-01",
+        "kind": "WHEELCHAIR",
+        "state": "AVAILABLE",
+        "version": 1
+      },
+      {
+        "id": "ab52db1e6008dc82309eeff2",
+        "label": "Walker K-04",
+        "kind": "WALKER",
+        "state": "AVAILABLE",
+        "version": 1
+      },
+      {
+        "id": "5ec075c813802309e0d791ef",
+        "label": "Crutches C-07",
+        "kind": "CRUTCHES",
+        "state": "QUARANTINED",
+        "version": 1
+      }
+    ],
+    "requests": [],
+    "loans": [],
+    "events": [],
+    "agent_mode": "strands_ollama"
+  },
+  "snapshot_statuses": [
+    200,
+    200
+  ],
+  "snapshot_unchanged": true,
+  "log_excerpt": "INFO:     borrowed_steps.assistant Assistant grounding: borrower_label=accepted, equipment_kind=accepted, pickup_location=accepted, due_at=accepted | model_requests=3 tool_calls=1\r\nINFO:     borrowed_steps.assistant Assistant 3582f258b060a7d6 success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=6140 cleanup=closed\r\n",
+  "reason_codes": {
+    "borrower_label": "accepted",
+    "equipment_kind": "accepted",
+    "pickup_location": "accepted",
+    "due_at": "accepted"
+  },
+  "seconds": 6.187,
+  "verdict": "PASS"
+}

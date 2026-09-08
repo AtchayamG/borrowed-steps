@@ -14,11 +14,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Only needed when BS_ASSISTANT_ENABLED is true. The structured M1 workflow runs
+# with none of this installed.
+assistant = [
+    "strands-agents[ollama]==1.54.0",
+]
 dev = [
     "httpx==0.28.1",
     "mypy==2.3.1",
     "pytest==9.1.1",
     "ruff==0.16.6",
+    "strands-agents[ollama]==1.54.0",
 ]
 
 [tool.setuptools.packages.find]

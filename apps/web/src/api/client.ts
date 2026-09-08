@@ -10,6 +10,8 @@ import type {
   LoanReturnBody,
   EquipmentInspectionBody,
   ApiErrorResponse,
+  IntakeInterpretRequest,
+  IntakeInterpretResponse,
 } from "../types/api";
 
 export class ApiClientError extends Error {
@@ -47,13 +49,14 @@ interface RequestOptions {
   method?: string;
   body?: unknown;
   idempotencyKey?: string;
+  signal?: AbortSignal;
 }
 
 async function request<T>(
   path: string,
   options: RequestOptions = {},
 ): Promise<T> {
-  const { method = "GET", body, idempotencyKey } = options;
+  const { method = "GET", body, idempotencyKey, signal } = options;
   const headers: Record<string, string> = {
     Accept: "application/json",
   };
@@ -73,8 +76,17 @@ async function request<T>(
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
       credentials: "same-origin",
+      signal,
     });
   } catch (networkErr: unknown) {
+    if (networkErr instanceof Error && networkErr.name === "AbortError") {
+      throw new ApiClientError(
+        0,
+        "ABORT_ERROR",
+        "Request was cancelled.",
+        false,
+      );
+    }
     const message =
       networkErr instanceof Error
         ? `Backend unreachable at ${path}: ${networkErr.message}. Ensure backend is running on 127.0.0.1:8000.`
@@ -186,5 +198,12 @@ export const api = {
       method: "POST",
       body,
       idempotencyKey,
+    }),
+
+  interpretIntake: (body: IntakeInterpretRequest, signal?: AbortSignal) =>
+    request<IntakeInterpretResponse>("/api/intake/interpret", {
+      method: "POST",
+      body,
+      signal,
     }),
 };

@@ -9,6 +9,8 @@ import type {
   LoanPickupBody,
   LoanReturnBody,
   EquipmentInspectionBody,
+  IntakeInterpretResponse,
+  AgentMode,
 } from "../../types/api";
 
 export function createInitialSnapshot(): Snapshot {
@@ -41,19 +43,27 @@ export function createInitialSnapshot(): Snapshot {
     requests: [],
     loans: [],
     events: [],
-    agent_mode: "not_implemented",
+    agent_mode: "strands_ollama",
   };
 }
 
 export class MockBackendServer {
   private hasSession = false;
   private snapshot: Snapshot = createInitialSnapshot();
+  public agentMode: AgentMode = "strands_ollama";
   public receivedIdempotencyKeys: string[] = [];
   public lastRequestBody: unknown = null;
   public lastRequestHeaders: Headers | null = null;
   public force409OnAllocation = false;
   public simulateNetworkDropForRoute: string | null = null;
   public simulateResponseDropAfterCommit = false;
+  public forceAssistantError: {
+    status: number;
+    code: string;
+    message: string;
+  } | null = null;
+  public mockInterpretationResponse: IntakeInterpretResponse | null = null;
+  public interpretationCallCount = 0;
   public idempotentResponses = new Map<
     string,
     { status: number; body: unknown }
@@ -62,12 +72,16 @@ export class MockBackendServer {
   public reset(authenticated = true) {
     this.hasSession = authenticated;
     this.snapshot = createInitialSnapshot();
+    this.agentMode = "strands_ollama";
     this.receivedIdempotencyKeys = [];
     this.lastRequestBody = null;
     this.lastRequestHeaders = null;
     this.force409OnAllocation = false;
     this.simulateNetworkDropForRoute = null;
     this.simulateResponseDropAfterCommit = false;
+    this.forceAssistantError = null;
+    this.mockInterpretationResponse = null;
+    this.interpretationCallCount = 0;
     this.idempotentResponses.clear();
   }
 
@@ -122,8 +136,8 @@ export class MockBackendServer {
       return new Response(
         JSON.stringify({
           status: "ok",
-          milestone: "M1",
-          agent_mode: "not_implemented",
+          milestone: "M2A",
+          agent_mode: this.agentMode,
         }),
         { status: 200, headers: { "Content-Type": "application/json" } },
       );
@@ -161,6 +175,117 @@ export class MockBackendServer {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
+    }
+
+    // POST /api/intake/interpret (M2A Strands Assistant)
+    if (path === "/api/intake/interpret" && method === "POST") {
+      this.interpretationCallCount++;
+
+      if (this.forceAssistantError) {
+        return new Response(
+          JSON.stringify({
+            error: {
+              code: this.forceAssistantError.code,
+              message: this.forceAssistantError.message,
+            },
+          }),
+          {
+            status: this.forceAssistantError.status,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      if (this.mockInterpretationResponse) {
+        return new Response(JSON.stringify(this.mockInterpretationResponse), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      const body = JSON.parse((init?.body as string) || "{}") as {
+        text?: string;
+      };
+      const text = body.text || "";
+      const trimmed = text.trim();
+
+      if (!trimmed || trimmed.length > 2000) {
+        return new Response(
+          JSON.stringify({
+            error: {
+              code: "VALIDATION_ERROR",
+              message: "Intake text must be between 1 and 2000 characters.",
+            },
+          }),
+          {
+            status: 422,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      let equipment_kind: "WHEELCHAIR" | "WALKER" | "CRUTCHES" | null = null;
+      if (/wheelchair/i.test(trimmed)) equipment_kind = "WHEELCHAIR";
+      else if (/walker/i.test(trimmed)) equipment_kind = "WALKER";
+      else if (/crutch/i.test(trimmed)) equipment_kind = "CRUTCHES";
+
+      let borrower_label: string | null = null;
+      const borrowerMatch = trimmed.match(
+        /(?:resident\s+)?([A-Z][a-z]+(?:\s+[A-Z]\.?)+)/,
+      );
+      if (borrowerMatch) {
+        borrower_label = borrowerMatch[1] || null;
+      } else if (trimmed.includes("Ananya R.")) {
+        borrower_label = "Ananya R.";
+      }
+
+      let pickup_location: string | null = null;
+      if (trimmed.toLowerCase().includes("velachery community room")) {
+        pickup_location = "Velachery Community Room";
+      }
+
+      let due_at: string | null = null;
+      const isoMatch = trimmed.match(
+        /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})/,
+      );
+      if (isoMatch) {
+        due_at = isoMatch[0];
+      }
+
+      const draft = {
+        borrower_label,
+        equipment_kind,
+        pickup_location,
+        due_at,
+      };
+
+      const missing_fields: (
+        "borrower_label" | "equipment_kind" | "pickup_location" | "due_at"
+      )[] = [];
+      if (!draft.borrower_label) missing_fields.push("borrower_label");
+      if (!draft.equipment_kind) missing_fields.push("equipment_kind");
+      if (!draft.pickup_location) missing_fields.push("pickup_location");
+      if (!draft.due_at) missing_fields.push("due_at");
+
+      const provenance = {
+        framework: "strands" as const,
+        provider: "ollama" as const,
+        model: "llama3.2:3b" as const,
+        inventory_tool_calls: 1,
+        completed_at: new Date().toISOString(),
+      };
+
+      return new Response(
+        JSON.stringify({
+          draft,
+          missing_fields,
+          provenance,
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
     }
 
     // Create Request

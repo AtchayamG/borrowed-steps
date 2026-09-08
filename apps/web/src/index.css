@@ -507,3 +507,129 @@ textarea {
     width: 100%;
   }
 }
+
+/* M2A Intake Assistant & Ephemeral Suggestions */
+.intake-suggestion-box {
+  background-color: var(--bg-surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.suggestion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.25rem;
+}
+
+.suggestion-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--indigo-950);
+}
+
+.suggestion-disclaimer {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.suggestion-section {
+  margin-bottom: 0.75rem;
+}
+
+.suggestion-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.suggestion-source-text {
+  background-color: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.suggestion-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.suggestion-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+@media (min-width: 500px) {
+  .suggestion-field {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.suggestion-field-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.suggestion-field-value {
+  font-size: 0.85rem;
+  word-break: break-word;
+}
+
+.clarification-box {
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  border-radius: 5px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.provenance-block {
+  background-color: var(--indigo-50);
+  border: 1px solid #c7d2fe;
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.provenance-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--indigo-900);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.provenance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.provenance-grid code {
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  border: 1px solid #e0e7ff;
+  font-family: monospace;
+}

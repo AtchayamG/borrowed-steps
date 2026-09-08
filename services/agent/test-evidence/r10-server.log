@@ -1,0 +1,13 @@
+INFO:     borrowed_steps.assistant LOGGING_READINESS_MARKER: R10 diagnostic logging pipeline verified
+INFO:     Started server process [40864]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8220 (Press CTRL+C to quit)
+INFO:     127.0.0.1:49847 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63596 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63597 - "POST /api/workspaces HTTP/1.1" 201 Created
+INFO:     127.0.0.1:63599 - "GET /api/snapshot HTTP/1.1" 200 OK
+INFO:     borrowed_steps.assistant Assistant grounding: borrower_label=accepted, equipment_kind=absent_candidate, pickup_location=accepted, due_at=absent_candidate | model_requests=3 tool_calls=1
+INFO:     borrowed_steps.assistant Assistant 84ad040d2ecb5b95 success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=6843 cleanup=closed
+INFO:     127.0.0.1:63600 - "POST /api/intake/interpret HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64501 - "GET /api/snapshot HTTP/1.1" 200 OK
