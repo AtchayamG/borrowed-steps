@@ -1,4 +1,5 @@
 # M2A two-stage recovery decision
+Latest task amendment: M2A_EXTRACTION_ALIGNMENT.md governs R8 instruction alignment and a new six-call local allocation. R3 stopped at failure and cannot be resumed. Architecture and aggregate per-invocation limits below remain unchanged.
 
 Approved 2026-09-08 at user-confirmed ASTRA_HIGH for BS-003-R3. Supersedes only the extraction-path and task-specific probe provisions in M2A_CONTRACT.md and M2A_PROVIDER_RECOVERY.md. Public HTTP shapes, grounding, actual inventory-tool provenance, human review, read-only behavior, pinned provider/model and aggregate limits remain unchanged. This is a local integration decision, not release acceptance.
 
