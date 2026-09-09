@@ -1,3 +1,41 @@
+## Latest checkpoint - operations contracts frozen; BS-014/BS-015 ready
+Canonical architecture commit f18c303, based on accepted BS-013 source300a19f.
+User-confirmed ASTRA_HIGH defined docs/M3_OPERATIONS_CONTRACT.md. Official
+GitHub schedule, Groq organization rate limits and Vercel limits rechecked.
+No application code changed, no new tests/inference/cloud/account mutations,
+no spend or deploy. Previous493-test local acceptance retained.
+
+CURRENT_TASKS (manual launch only):
+BS-014 AGY Gemini3.8 Flash High: implement bounded callable scheduler service,
+V2 aggregate execution evidence and real PostgreSQL deadline/concurrency tests.
+Worktree worktrees/BS-014-agy, branch worker/agy/BS-014, base f18c303.
+Full prompt tasks/BS-014_AGY_PROMPT.md. Start this with available AGY.
+BS-015 Claude Opus5 HIGH: offline request-size/SDK probe and measured shared
+admission proposal; no production provider/admission wiring.
+Worktree worktrees/BS-015-claude, branch worker/claude/BS-015, base f18c303.
+Full prompt tasks/BS-015_CLAUDE_PROMPT.md. Ready for when Claude is available;
+current availability remains last reported unavailable. Do not auto-launch.
+Tasks have disjoint files and can run independently. If Claude remains blocked,
+reassign BS-015 to AGY after BS-014, with a revised worker/model header.
+
+DECISIONS: Scheduler candidates<=100,20s processing budget plus finite DB bounds,
+target<=45s tested execution,60s fenced scheduler lease, truthful partial/failed/
+expired state and separate30min freshness. Operational HTTP/workflow/UI remains
+a later integration gate. No security claim that BS-013 cold-start readiness
+occurs after operational authentication; resolve at packaging before release.
+Inference unknown/crashed owner remains blocked; lease expiry alone is not safe
+release. Preserve conservative debits; actual quotas/token bounds pending.
+No shared DB transaction over inference or entire scheduler tick.
+All29 historical inference allowances remain closed; assistant remains disabled.
+
+NEXT_SAFE_ACTION: User manually runs prompts. Read report/four checkpoints/diff
+on completion, no pasted logs. LIGHT initial inspection; select MEDIUM/HIGH
+only for the actual returned complexity/architecture findings. Preserve usage.
+SAFE_RESUME: Do not restart Phase0 or rerun accepted BS-013; resume these tasks.
+No platform quota bypass or reset/purchase authorized.
+NEXT_CODEX_MODE: ASTRA_LIGHT
+REASON: Architecture and bounded decomposition complete; manual worker work next.
+
 ## Latest checkpoint - BS-013 accepted after direct Codex review
 STATUS: COMPLETED (local hosted-mode API foundation only).
 AGY return6e50b39 corrected and verified at ASTRA_MEDIUM in73d33fe.
