@@ -1,4 +1,5 @@
 # Public hosting feasibility - Codex disposition (2026-09-09)
+Superseding user instruction: public deployment must use hosted free platforms, never the user's computer. The personal-origin/tunnel candidate and host/domain question below are retired. See M3_HOSTED_DIRECTION.md for the current direction. M2B runner is now locally implemented; the stack description below is historical at f1e9428.
 
 Status: CONDITIONAL CANDIDATE; no hosting approved or provisioned. Supersedes BS-006's recommendation at worker commit ef5bbfb. The original report remains in that worktree for provenance; its claims are not accepted merely because the worker marked it complete.
 
