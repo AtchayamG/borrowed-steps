@@ -1,0 +1,20 @@
+{
+  "task": "BS-013",
+  "worker_return": "6e50b39",
+  "review_mode": "ASTRA_MEDIUM",
+  "status": "ACCEPTED_LOCAL_FOUNDATION_AFTER_DIRECT_CORRECTION",
+  "full_pytest": {"passed": 493, "failed": 0, "skipped": 0, "warnings": 2, "seconds": 62.0},
+  "focused_hosted_pytest": {"passed": 62, "failed": 0, "skipped": 0},
+  "ruff_lint": "PASS",
+  "ruff_format": "PASS, 71 files",
+  "strict_mypy": "PASS, 71 files",
+  "dependency_check": "PASS, 72 packages",
+  "database": "PostgreSQL16.10, Codex-owned loopback cluster, disposable per-test databases",
+  "remaining_test_databases": 0,
+  "owned_server": "STOPPED",
+  "inference_calls": 0,
+  "cloud_calls": 0,
+  "spend_inr": 0,
+  "public_deployment": false,
+  "details": "docs/BS-013_ACCEPTANCE.md"
+}

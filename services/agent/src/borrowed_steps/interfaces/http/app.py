@@ -42,6 +42,7 @@ from borrowed_steps.application.ports import (
     IdGenerator,
     Session,
     Snapshot,
+    Store,
     WorkspaceUnitOfWork,
 )
 from borrowed_steps.application.use_cases import (
@@ -65,6 +66,7 @@ from borrowed_steps.config import (
     TASK_TICK_SECONDS,
     Settings,
     load_settings,
+    validate_settings,
 )
 from borrowed_steps.domain.errors import CodedError, ValidationFailedError
 from borrowed_steps.domain.models import (
@@ -94,6 +96,8 @@ __all__ = [
     "AGENT_MODE_DISABLED",
     "AGENT_MODE_STRANDS_OLLAMA",
     "MILESTONE",
+    "MILESTONE_HOSTED",
+    "MILESTONE_LOCAL",
     "SESSION_COOKIE",
     "OriginForbiddenError",
     "create_app",
@@ -101,7 +105,9 @@ __all__ = [
 
 SESSION_COOKIE = "bs_session"
 IDEMPOTENCY_HEADER = "Idempotency-Key"
-MILESTONE = "M2B"
+MILESTONE_LOCAL = "M2B"
+MILESTONE_HOSTED = "M3"
+MILESTONE = MILESTONE_LOCAL
 AGENT_MODE_DISABLED = "disabled"
 AGENT_MODE_STRANDS_OLLAMA = "strands_ollama"
 
@@ -324,33 +330,53 @@ def create_app(
     module is imported at all.
     """
     resolved = settings if settings is not None else load_settings()
-    store = SqliteStore(resolved.db_path)
+    validate_settings(resolved)
+
+    store: Store
+    runner: TaskRunner | None = None
+    assistant: RequestInterpreter | None = None
+    if resolved.runtime == "hosted":
+        if resolved.database_url is None:
+            raise ValueError("Hosted runtime requires an explicit database_url.")
+        from borrowed_steps.infrastructure.postgres_store import PostgresStore
+
+        pg_store = PostgresStore(resolved.database_url)
+        pg_store.check_schema()
+        store = pg_store
+        agent_mode = AGENT_MODE_DISABLED
+        milestone = MILESTONE_HOSTED
+    else:
+        store = SqliteStore(resolved.db_path)
+        agent_mode = (
+            AGENT_MODE_STRANDS_OLLAMA if resolved.assistant_enabled else AGENT_MODE_DISABLED
+        )
+        milestone = MILESTONE_LOCAL
+
     services = Services(
         store=store,
         clock=clock if clock is not None else SystemClock(),
         ids=ids if ids is not None else SecretsIdGenerator(),
     )
-    agent_mode = AGENT_MODE_STRANDS_OLLAMA if resolved.assistant_enabled else AGENT_MODE_DISABLED
-    assistant: RequestInterpreter | None = interpreter
-    if assistant is None and resolved.assistant_enabled:
-        assistant = _real_interpreter(resolved, services.clock)
+
+    if resolved.runtime == "local":
+        if resolved.tasks_enabled:
+            runner = TaskRunner(
+                store,
+                services.clock,
+                services.ids,
+                interval=TASK_TICK_SECONDS,
+                limit=TASK_TICK_CANDIDATE_LIMIT,
+            )
+        assistant = interpreter
+        if assistant is None and resolved.assistant_enabled:
+            assistant = _real_interpreter(resolved, services.clock)
+
     slot = InferenceSlot()
     # The registry asks the interpreter whether it still owns anything, so a run
     # that ended without closing its client is neither forgotten nor drained
     # away. Interpreters with nothing to own (the test doubles) do not implement
     # the protocol and are treated as always resolved.
     registry = InferenceRegistry(assistant if isinstance(assistant, CleanupOwner) else None)
-    runner = (
-        TaskRunner(
-            store,
-            services.clock,
-            services.ids,
-            interval=TASK_TICK_SECONDS,
-            limit=TASK_TICK_CANDIDATE_LIMIT,
-        )
-        if resolved.tasks_enabled
-        else None
-    )
 
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -410,11 +436,15 @@ def create_app(
 
     app = FastAPI(
         title="Borrowed Steps agent service",
-        version=MILESTONE,
+        version=milestone,
         description=(
-            "Local persisted equipment-loan workflow with in-app coordination notices. "
-            "Humans decide allocation and inspection; the coordination runner only "
-            "records that a deadline passed and never changes inventory or a loan."
+            "Hosted persisted equipment-loan workflow with in-app coordination notices."
+            if resolved.runtime == "hosted"
+            else (
+                "Local persisted equipment-loan workflow with in-app coordination notices. "
+                "Humans decide allocation and inspection; the coordination runner only "
+                "records that a deadline passed and never changes inventory or a loan."
+            )
         ),
         lifespan=lifespan,
     )
@@ -525,7 +555,7 @@ def create_app(
         ``agent_mode`` reports configuration only. It never claims the provider
         is reachable or that an interpretation would succeed.
         """
-        return JSONResponse({"status": "ok", "milestone": MILESTONE, "agent_mode": agent_mode})
+        return JSONResponse({"status": "ok", "milestone": milestone, "agent_mode": agent_mode})
 
     @app.post("/api/workspaces", status_code=201)
     def post_workspace(http_request: HttpRequest, body: WorkspaceBody) -> JSONResponse:

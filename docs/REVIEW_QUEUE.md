@@ -1,3 +1,25 @@
+## Latest checkpoint - BS-013 accepted after direct Codex review
+STATUS: COMPLETED (local hosted-mode API foundation only).
+AGY return6e50b39 corrected and verified at ASTRA_MEDIUM in73d33fe.
+Canonical integrates exactly that source; see docs/BS-013_ACCEPTANCE.md.
+493 backend tests passed, zero skips, including actual PostgreSQL HTTP/concurrency.
+Ruff lint/format71 files, strict mypy71 files and72-package dependency check PASS.
+Fixed reflected configuration values/parser exceptions, malformed origin hosts,
+unknown hosted boolean flags, direct boolean guards and time-dependent tests.
+Strengthened no-provider/runner/database-health/import and mutation/event assertions.
+No AGY correction loop. All test databases removed; Codex-owned server stopped.
+No inference/cloud calls, spend, push or deployment. All29 historic probes closed.
+Assistant and scheduler remain disabled in hosted runtime. M3 public release unaccepted.
+
+NEXT_SAFE_ACTION: User switch ASTRA_MEDIUM -> ASTRA_HIGH, then define bounded
+scheduler/shared inference-admission contracts and manual worker prompts. No
+new implementation of these architecture-sensitive components at MEDIUM.
+Preserve canonical checkpoints/history; do not restart Phase0 or BS-013.
+Public entitlement/quota, provider, scheduler, UI/live deployment, videos,
+final MAX reviews and submission gates remain pending.
+NEXT_CODEX_MODE: ASTRA_HIGH
+REASON: Next operation defines cross-instance budget and scheduled-work contracts.
+
 ## Latest checkpoint - BS-011 integrated; BS-013 ready for manual AGY
 2026-09-09. CURRENT_PROJECT: Borrowed Steps. STATUS: BS-011 COMPLETED (foundation only).
 Canonical integration/m1 ae2c517 contains Codex takeover, tested on identical

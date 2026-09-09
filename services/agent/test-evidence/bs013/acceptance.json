@@ -1,0 +1,55 @@
+{
+  "task": "BS-013",
+  "worker": "AGY, senior backend developer (Claude unavailable)",
+  "model": "Gemini 3.8 Flash High (serving identity hidden/unverified per contract)",
+  "effort": "HIGH",
+  "date": "2026-09-09",
+  "base_commit": "ae2c517",
+  "environment": {
+    "python": "3.11.15",
+    "postgresql": "16.10",
+    "psycopg": "3.2.10",
+    "psycopg_binary": "3.2.10",
+    "database": "Owned disposable loopback cluster (port 54339); random per-test databases",
+    "inference_calls": 0,
+    "cloud_calls": 0,
+    "spend_inr": 0
+  },
+  "final_checks": {
+    "python -m pytest -q": {
+      "passed": 477,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 2,
+      "seconds": 57.00
+    },
+    "retained_tests": 431,
+    "new_hosted_config_tests": 40,
+    "new_hosted_runtime_tests": 6,
+    "python -m ruff check src tests scripts": "PASS",
+    "python -m ruff format --check src tests scripts": "PASS, 71 files",
+    "python -m mypy src tests scripts": "PASS, strict + warn_unreachable, 71 files",
+    "uv pip check --python .venv/Scripts/python.exe": "PASS, 72 packages"
+  },
+  "assertions": [
+    "Configuration matrix for local and hosted modes enforces strict validation; invalid combinations fail closed",
+    "Direct Settings construction cannot bypass hosted security invariants (database_url, cookie_secure, tasks_enabled, assistant_enabled, allowed_origins)",
+    "Hosted HTTPS origin allowlist strictly validates HTTPS, domain, optional valid port; rejects wildcards, credentials, paths, query, fragment, localhost, loopback IPs",
+    "Database URL and sensitive configuration excluded from Settings repr and error messages",
+    "Hosted startup checks schema version via read-only check_schema(); rejects unmigrated (v0) or future (v2) schema without creating application tables",
+    "Hosted initialization never calls SqliteStore, apply_migrations, TaskRunner, or provider constructors",
+    "Injected interpreter cannot bypass hosted disabled gate; /api/intake/interpret always returns 503 ASSISTANT_DISABLED",
+    "Full HTTP lifecycle against PostgreSQL: workspace creation, Secure/HttpOnly/SameSite cookies, request, human approval refusal, reservation, pickup, return, inspection",
+    "Session isolation and foreign entity ID protection enforced across independent workspaces",
+    "Fresh application instances against existing database correctly restore state and replay byte-identical idempotent responses",
+    "Idempotency conflict (same key, different payload) returns 409 IDEMPOTENCY_CONFLICT",
+    "Concurrent HTTP clients attempting to allocate the same item: exactly one wins (200), other gets 409 STATE_CONFLICT, exactly one loan created in database",
+    "Concurrent HTTP clients sending identical idempotency envelope: both receive 200 with byte-identical payload, exactly one request row created in database"
+  ],
+  "limits": [
+    "Locally verified hosted-mode API foundation against disposable local PostgreSQL cluster",
+    "Public deployment, Neon cloud provisioning, Vercel deployment, and GitHub Actions cron scheduler remain future gates",
+    "Assistant and autonomous scheduling remain disabled in this increment; zero model inference calls executed",
+    "Zero cloud spend incurred"
+  ]
+}

@@ -1,11 +1,14 @@
-"""Runtime configuration, read from the environment. No secrets are involved."""
+"""Runtime configuration; private database credentials never appear in errors."""
 
 from __future__ import annotations
 
 import os
-from collections.abc import Mapping
-from dataclasses import dataclass
+import re
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, field
+from ipaddress import ip_address
 from pathlib import Path
+from urllib.parse import urlsplit
 
 __all__ = [
     "ASSISTANT_DEADLINE_SECONDS",
@@ -18,16 +21,31 @@ __all__ = [
     "DEFAULT_ALLOWED_ORIGINS",
     "DEFAULT_ASSISTANT_HOST",
     "DEFAULT_ASSISTANT_MODEL",
+    "DEFAULT_ASSISTANT_PROVIDER",
     "DEFAULT_DB_PATH",
+    "DEFAULT_RUNTIME",
+    "DEFAULT_STORE",
     "TASK_STOP_TIMEOUT_SECONDS",
     "TASK_TICK_CANDIDATE_LIMIT",
     "TASK_TICK_SECONDS",
+    "VALID_ASSISTANT_PROVIDERS",
+    "VALID_RUNTIMES",
+    "VALID_STORES",
     "Settings",
     "load_settings",
+    "validate_settings",
 ]
 
 DEFAULT_DB_PATH = "data/borrowed_steps.db"
 DEFAULT_ALLOWED_ORIGINS = "http://127.0.0.1:5173,http://localhost:5173"
+DEFAULT_RUNTIME = "local"
+DEFAULT_STORE = "sqlite"
+DEFAULT_ASSISTANT_PROVIDER = "ollama"
+
+VALID_RUNTIMES = ("local", "hosted")
+VALID_STORES = ("sqlite", "postgres")
+VALID_ASSISTANT_PROVIDERS = ("ollama", "groq")
+
 # Fixed by docs/M2A_CONTRACT.md: an explicit local endpoint and the one installed
 # model. These are not configurable, so no environment can point production at a
 # remote host or a different model.
@@ -67,6 +85,96 @@ TASK_STOP_TIMEOUT_SECONDS = 10.0
 TASK_TICK_CANDIDATE_LIMIT = 100
 
 
+def _validate_hosted_origins(origins: tuple[str, ...] | Sequence[str]) -> None:
+    """Ensure origins strictly satisfy hosted HTTPS allowlist requirements.
+
+    Rejects wildcards, credentials, paths, queries, fragments, invalid ports,
+    and localhost/loopback origins. Error messages are sanitized and contain no
+    reflected input or secrets.
+    """
+    if not origins:
+        raise ValueError("Hosted runtime requires a non-empty allowed_origins allowlist.")
+    for origin in origins:
+        if not origin or not isinstance(origin, str) or not origin.strip():
+            raise ValueError("Hosted allowed origin must be a non-empty string.")
+        if origin.strip() != origin:
+            raise ValueError("Hosted allowed origin contains surrounding whitespace.")
+        if "*" in origin:
+            raise ValueError("Hosted allowed origin cannot contain wildcards.")
+        if "@" in origin:
+            raise ValueError("Hosted allowed origin cannot contain credentials.")
+        try:
+            parts = urlsplit(origin)
+        except ValueError:
+            raise ValueError("Hosted allowed origin is invalid.") from None
+        if parts.scheme != "https":
+            raise ValueError("Hosted allowed origin must use HTTPS scheme.")
+        if parts.path:
+            raise ValueError("Hosted allowed origin cannot include a path.")
+        if parts.query:
+            raise ValueError("Hosted allowed origin cannot include a query.")
+        if parts.fragment:
+            raise ValueError("Hosted allowed origin cannot include a fragment.")
+        if not parts.hostname:
+            raise ValueError("Hosted allowed origin must include a valid host.")
+        hostname = parts.hostname.lower()
+        if hostname == "localhost" or hostname.endswith(".localhost"):
+            raise ValueError("Hosted allowed origin cannot be localhost or loopback.")
+        try:
+            address = ip_address(hostname)
+        except ValueError:
+            if not re.fullmatch(
+                r"(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{1,62}",
+                hostname,
+            ) or hostname.endswith("-"):
+                raise ValueError(
+                    "Hosted allowed origin must include a valid public host."
+                ) from None
+        else:
+            if not address.is_global:
+                raise ValueError("Hosted allowed origin must include a public IP address.")
+        try:
+            port = parts.port
+        except ValueError:
+            raise ValueError("Hosted allowed origin port is invalid.") from None
+        if port is not None and not (1 <= port <= 65535):
+            raise ValueError("Hosted allowed origin port out of range (1-65535).")
+        host = f"[{hostname}]" if ":" in hostname else hostname
+        expected = f"https://{host}" if port is None else f"https://{host}:{port}"
+        if origin != expected:
+            raise ValueError("Hosted allowed origin is not in exact canonical format.")
+
+
+def validate_settings(settings: Settings) -> None:
+    """Validate Settings consistency across local and hosted runtimes."""
+    if settings.runtime not in VALID_RUNTIMES:
+        raise ValueError("Invalid runtime; expected local or hosted.")
+    if settings.store not in VALID_STORES:
+        raise ValueError("Invalid store; expected sqlite or postgres.")
+    if settings.assistant_provider not in VALID_ASSISTANT_PROVIDERS:
+        raise ValueError("Invalid assistant provider; expected ollama or groq.")
+
+    if settings.runtime == "local":
+        if settings.store != "sqlite":
+            raise ValueError("Local runtime requires store='sqlite'.")
+        if settings.assistant_provider != "ollama":
+            raise ValueError("Local runtime requires assistant_provider='ollama'.")
+    elif settings.runtime == "hosted":
+        if settings.store != "postgres":
+            raise ValueError("Hosted runtime requires store='postgres'.")
+        if settings.assistant_provider != "groq":
+            raise ValueError("Hosted runtime requires assistant_provider='groq'.")
+        if not settings.database_url or not settings.database_url.strip():
+            raise ValueError("Hosted runtime requires an explicit database_url.")
+        if settings.cookie_secure is not True:
+            raise ValueError("Hosted runtime requires cookie_secure=True.")
+        if settings.tasks_enabled is not False:
+            raise ValueError("Hosted runtime requires tasks_enabled=False.")
+        if settings.assistant_enabled is not False:
+            raise ValueError("Hosted assistant is disabled in this increment.")
+        _validate_hosted_origins(settings.allowed_origins)
+
+
 @dataclass(frozen=True, slots=True)
 class Settings:
     """Everything the service needs to start."""
@@ -81,6 +189,13 @@ class Settings:
     # network call and costs nothing. Tests that assert exact event counts turn
     # it off so their counts stay about the action under test.
     tasks_enabled: bool = True
+    runtime: str = DEFAULT_RUNTIME
+    store: str = DEFAULT_STORE
+    database_url: str | None = field(default=None, repr=False)
+    assistant_provider: str = DEFAULT_ASSISTANT_PROVIDER
+
+    def __post_init__(self) -> None:
+        validate_settings(self)
 
 
 def _flag(value: str | None, *, default: bool = False) -> bool:
@@ -123,13 +238,104 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     ignored. Tests inject an interpreter through ``create_app`` instead.
     """
     source = os.environ if env is None else env
-    origins = source.get("BS_ALLOWED_ORIGINS", DEFAULT_ALLOWED_ORIGINS)
+
+    raw_runtime = source.get("BS_RUNTIME", DEFAULT_RUNTIME).strip().lower()
+    if raw_runtime not in VALID_RUNTIMES:
+        raise ValueError("Invalid BS_RUNTIME; expected local or hosted.")
+
+    raw_store = source.get("BS_STORE")
+    if raw_runtime == "hosted":
+        if raw_store is None or not raw_store.strip():
+            raise ValueError("Hosted runtime requires explicitly selected BS_STORE=postgres.")
+        store = raw_store.strip().lower()
+        if store != "postgres":
+            raise ValueError("Hosted runtime requires BS_STORE=postgres.")
+    else:
+        store = raw_store.strip().lower() if raw_store and raw_store.strip() else DEFAULT_STORE
+        if store != "sqlite":
+            raise ValueError("Local runtime requires BS_STORE=sqlite.")
+
+    raw_provider = source.get("BS_ASSISTANT_PROVIDER")
+    if raw_runtime == "hosted":
+        provider = raw_provider.strip().lower() if raw_provider and raw_provider.strip() else "groq"
+        if provider != "groq":
+            raise ValueError("Hosted runtime requires BS_ASSISTANT_PROVIDER=groq.")
+    else:
+        provider = (
+            raw_provider.strip().lower()
+            if raw_provider and raw_provider.strip()
+            else DEFAULT_ASSISTANT_PROVIDER
+        )
+        if provider != "ollama":
+            raise ValueError("Local runtime requires BS_ASSISTANT_PROVIDER=ollama.")
+
+    if raw_runtime == "hosted":
+        for key in ("BS_TASKS_ENABLED", "BS_COOKIE_SECURE", "BS_ASSISTANT_ENABLED"):
+            value = source.get(key)
+            if value is not None and value.strip().lower() not in {
+                "0",
+                "false",
+                "no",
+                "off",
+                "1",
+                "true",
+                "yes",
+                "on",
+            }:
+                raise ValueError(f"Hosted {key} must be an explicit boolean.")
+        raw_tasks = source.get("BS_TASKS_ENABLED")
+        if raw_tasks is None or not raw_tasks.strip():
+            raise ValueError("Hosted runtime requires BS_TASKS_ENABLED=0 explicitly configured.")
+        tasks_enabled = _flag(raw_tasks, default=True)
+        if tasks_enabled:
+            raise ValueError("Hosted runtime requires BS_TASKS_ENABLED=0.")
+    else:
+        tasks_enabled = _flag(source.get("BS_TASKS_ENABLED"), default=True)
+
+    if raw_runtime == "hosted":
+        raw_cookie = source.get("BS_COOKIE_SECURE")
+        if raw_cookie is None or not raw_cookie.strip():
+            raise ValueError("Hosted runtime requires BS_COOKIE_SECURE=1.")
+        cookie_secure = _flag(raw_cookie, default=False)
+        if not cookie_secure:
+            raise ValueError("Hosted runtime requires BS_COOKIE_SECURE=1.")
+    else:
+        cookie_secure = _flag(source.get("BS_COOKIE_SECURE"))
+
+    raw_assistant = source.get("BS_ASSISTANT_ENABLED")
+    assistant_enabled = _flag(raw_assistant, default=False)
+    if raw_runtime == "hosted" and assistant_enabled:
+        raise ValueError("Hosted assistant is disabled in this increment.")
+
+    if raw_runtime == "hosted":
+        raw_origins = source.get("BS_ALLOWED_ORIGINS")
+        if raw_origins is None or not raw_origins.strip():
+            raise ValueError("Hosted runtime requires explicit non-empty BS_ALLOWED_ORIGINS.")
+        allowed_origins = tuple(o.strip() for o in raw_origins.split(",") if o.strip())
+        _validate_hosted_origins(allowed_origins)
+    else:
+        origins = source.get("BS_ALLOWED_ORIGINS", DEFAULT_ALLOWED_ORIGINS)
+        allowed_origins = tuple(o.strip() for o in origins.split(",") if o.strip())
+
+    database_url: str | None
+    if raw_runtime == "hosted":
+        db_url = source.get("BS_DATABASE_URL")
+        if db_url is None or not db_url.strip():
+            raise ValueError("Hosted runtime requires an explicit BS_DATABASE_URL.")
+        database_url = db_url.strip()
+    else:
+        database_url = source.get("BS_DATABASE_URL")
+
     return Settings(
         db_path=Path(source.get("BS_DB_PATH", DEFAULT_DB_PATH)),
-        allowed_origins=tuple(o.strip() for o in origins.split(",") if o.strip()),
-        cookie_secure=_flag(source.get("BS_COOKIE_SECURE")),
-        assistant_enabled=_flag(source.get("BS_ASSISTANT_ENABLED")),
-        tasks_enabled=_flag(source.get("BS_TASKS_ENABLED"), default=True),
+        allowed_origins=allowed_origins,
+        cookie_secure=cookie_secure,
+        assistant_enabled=assistant_enabled,
+        tasks_enabled=tasks_enabled,
         assistant_host=_pinned(source, "BS_ASSISTANT_HOST", DEFAULT_ASSISTANT_HOST, "endpoint"),
         assistant_model=_pinned(source, "BS_ASSISTANT_MODEL", DEFAULT_ASSISTANT_MODEL, "model"),
+        runtime=raw_runtime,
+        store=store,
+        database_url=database_url,
+        assistant_provider=provider,
     )
