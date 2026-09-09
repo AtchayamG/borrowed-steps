@@ -1,3 +1,32 @@
+## Latest checkpoint - BS-011 integrated; BS-013 ready for manual AGY
+2026-09-09. CURRENT_PROJECT: Borrowed Steps. STATUS: BS-011 COMPLETED (foundation only).
+Canonical integration/m1 ae2c517 contains Codex takeover, tested on identical
+worker/codex/BS-011-takeover source. Clean worktrees; git diff --check passed.
+431 tests passed, zero skips: 413 retained +18 new cases, including13 real
+PostgreSQL cases. Ruff lint/format, strict mypy68 files and dependency checks pass.
+See docs/workers/BS-011.md and services/agent/test-evidence/bs011/acceptance.json.
+Codex-owned test server stopped, zero test databases remain. Claude originals
+and his server untouched. No cloud/model calls, spend, push or deployment.
+All29 prior model allocations remain closed. No reset/purchase authorized.
+
+NEXT_TASK: BS-013, manual AGY senior backend developer, Gemini3.8 Flash High.
+Worktree 00_PROGRAM_CONTROL/worktrees/BS-013-agy; branch worker/agy/BS-013;
+base ae2c517. Full copy-ready prompt: 00_PROGRAM_CONTROL/tasks/BS-013_AGY_PROMPT.md.
+Task is explicit hosted PostgreSQL HTTP factory/configuration and real local
+HTTP proof for human workflows. Assistant and scheduler must stay disabled.
+No generic refactor, admission design, provider wiring, cloud activation or deployment.
+Claude remains unavailable per user; do not schedule overlapping work for him.
+BS-013 is ready for user launch, not started automatically.
+
+NEXT_SAFE_ACTION: User pastes complete BS-013 prompt into AGY. On completion,
+read its task report/four checkpoints/diff. Recommend ASTRA_MEDIUM before
+substantive review; use LIGHT for routine status. Do not rerun BS-011/Phase0.
+Hosted account/terms/quotas, inference admission/provider proof, scheduler,
+public UI/deployment, LumaLoad videos and final MAX audits remain pending.
+CURRENT_CONFIRMED_MODE: ASTRA_HIGH; user controls selector.
+NEXT_CODEX_MODE: ASTRA_LIGHT
+REASON: Completed takeover and bounded decomposition; manual worker work next.
+
 ## Latest checkpoint — BS-011 completed by Codex takeover
 2026-09-09. PostgreSQL foundation accepted at user-confirmed ASTRA_HIGH.
 Claude stopped mid-task due usage/tool limits; Codex preserved his originals and
