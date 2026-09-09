@@ -1,0 +1,241 @@
+{
+  "task_id": "BS-M2A-BROWSER-R1-CODEX",
+  "implementation_commit": "00be3588ca598bb473984d708039192fbeff1638",
+  "attempt": 24,
+  "case": "browser-explicit-fields",
+  "result": "PASS",
+  "input": "Meena R needs a wheelchair, pickup at the Velachery equipment room, return by 2026-09-16T01:56:37Z.",
+  "dueAt": "2026-09-16T01:56:37Z",
+  "before": {
+    "status": 200,
+    "body": {
+      "equipment": [
+        {
+          "id": "6864f82ce67cf411fb2dce64",
+          "label": "Wheelchair W-01",
+          "kind": "WHEELCHAIR",
+          "state": "AVAILABLE",
+          "version": 1
+        },
+        {
+          "id": "9009c416780754a970c1916b",
+          "label": "Walker K-04",
+          "kind": "WALKER",
+          "state": "AVAILABLE",
+          "version": 1
+        },
+        {
+          "id": "18a3f645567afc6c4d24cc1b",
+          "label": "Crutches C-07",
+          "kind": "CRUTCHES",
+          "state": "QUARANTINED",
+          "version": 1
+        }
+      ],
+      "requests": [],
+      "loans": [],
+      "events": [],
+      "agent_mode": "strands_ollama"
+    }
+  },
+  "http_status": 200,
+  "response": {
+    "draft": {
+      "borrower_label": "Meena R",
+      "equipment_kind": "WHEELCHAIR",
+      "pickup_location": "the Velachery equipment room",
+      "due_at": "2026-09-16T01:56:37Z"
+    },
+    "missing_fields": [],
+    "provenance": {
+      "framework": "strands",
+      "provider": "ollama",
+      "model": "llama3.2:3b",
+      "inventory_tool_calls": 1,
+      "completed_at": "2026-09-09T01:57:53Z"
+    }
+  },
+  "diagnostic": {
+    "cleanup": "closed",
+    "correlation_id": "511ad27058c6fbb5",
+    "elapsed_ms": 13219,
+    "outcome": "success",
+    "reason": "ok",
+    "recovery_used": false,
+    "sends": 3,
+    "stage": "extraction",
+    "tool_attempts": 1,
+    "tool_successes": 1
+  },
+  "afterInterpret": {
+    "status": 200,
+    "body": {
+      "equipment": [
+        {
+          "id": "6864f82ce67cf411fb2dce64",
+          "label": "Wheelchair W-01",
+          "kind": "WHEELCHAIR",
+          "state": "AVAILABLE",
+          "version": 1
+        },
+        {
+          "id": "9009c416780754a970c1916b",
+          "label": "Walker K-04",
+          "kind": "WALKER",
+          "state": "AVAILABLE",
+          "version": 1
+        },
+        {
+          "id": "18a3f645567afc6c4d24cc1b",
+          "label": "Crutches C-07",
+          "kind": "CRUTCHES",
+          "state": "QUARANTINED",
+          "version": 1
+        }
+      ],
+      "requests": [],
+      "loans": [],
+      "events": [],
+      "agent_mode": "strands_ollama"
+    }
+  },
+  "appliedForm": {
+    "borrower-label": "Meena R",
+    "equipment-kind": "WHEELCHAIR",
+    "pickup-location": "the Velachery equipment room",
+    "due-datetime": "2026-09-16T07:26:37"
+  },
+  "submitted": {
+    "equipment": [
+      {
+        "id": "6864f82ce67cf411fb2dce64",
+        "label": "Wheelchair W-01",
+        "kind": "WHEELCHAIR",
+        "state": "AVAILABLE",
+        "version": 1
+      },
+      {
+        "id": "9009c416780754a970c1916b",
+        "label": "Walker K-04",
+        "kind": "WALKER",
+        "state": "AVAILABLE",
+        "version": 1
+      },
+      {
+        "id": "18a3f645567afc6c4d24cc1b",
+        "label": "Crutches C-07",
+        "kind": "CRUTCHES",
+        "state": "QUARANTINED",
+        "version": 1
+      }
+    ],
+    "requests": [
+      {
+        "id": "4fd3b3e00d04c24ce410996b",
+        "borrower_label": "Meena R",
+        "equipment_kind": "WHEELCHAIR",
+        "pickup_location": "the Velachery equipment room",
+        "due_at": "2026-09-16T01:56:37Z",
+        "status": "REQUESTED",
+        "created_at": "2026-09-09T01:57:54Z"
+      }
+    ],
+    "loans": [],
+    "events": [
+      {
+        "id": "93333cb88921a13fe95040b3",
+        "entity_type": "REQUEST",
+        "entity_id": "4fd3b3e00d04c24ce410996b",
+        "action": "REQUEST_CREATED",
+        "at": "2026-09-09T01:57:54Z"
+      }
+    ],
+    "agent_mode": "strands_ollama"
+  },
+  "finalSnapshot": {
+    "equipment": [
+      {
+        "id": "6864f82ce67cf411fb2dce64",
+        "label": "Wheelchair W-01",
+        "kind": "WHEELCHAIR",
+        "state": "AVAILABLE",
+        "version": 5
+      },
+      {
+        "id": "9009c416780754a970c1916b",
+        "label": "Walker K-04",
+        "kind": "WALKER",
+        "state": "AVAILABLE",
+        "version": 1
+      },
+      {
+        "id": "18a3f645567afc6c4d24cc1b",
+        "label": "Crutches C-07",
+        "kind": "CRUTCHES",
+        "state": "QUARANTINED",
+        "version": 1
+      }
+    ],
+    "requests": [
+      {
+        "id": "4fd3b3e00d04c24ce410996b",
+        "borrower_label": "Meena R",
+        "equipment_kind": "WHEELCHAIR",
+        "pickup_location": "the Velachery equipment room",
+        "due_at": "2026-09-16T01:56:37Z",
+        "status": "CLOSED",
+        "created_at": "2026-09-09T01:57:54Z"
+      }
+    ],
+    "loans": [
+      {
+        "id": "6c3c26425da38531f75589a9",
+        "request_id": "4fd3b3e00d04c24ce410996b",
+        "equipment_id": "6864f82ce67cf411fb2dce64",
+        "status": "CLOSED",
+        "due_at": "2026-09-16T01:56:37Z",
+        "created_at": "2026-09-09T01:57:55Z"
+      }
+    ],
+    "events": [
+      {
+        "id": "c7870404901b4d951924f63b",
+        "entity_type": "EQUIPMENT",
+        "entity_id": "6864f82ce67cf411fb2dce64",
+        "action": "INSPECTED_AVAILABLE",
+        "at": "2026-09-09T01:57:55Z"
+      },
+      {
+        "id": "0c4297a32540f7f9cec38e75",
+        "entity_type": "LOAN",
+        "entity_id": "6c3c26425da38531f75589a9",
+        "action": "RETURNED",
+        "at": "2026-09-09T01:57:55Z"
+      },
+      {
+        "id": "2a2bd2c970824a0791b6c2b8",
+        "entity_type": "LOAN",
+        "entity_id": "6c3c26425da38531f75589a9",
+        "action": "PICKED_UP",
+        "at": "2026-09-09T01:57:55Z"
+      },
+      {
+        "id": "c0400b1eff1ecb69c2dba844",
+        "entity_type": "LOAN",
+        "entity_id": "6c3c26425da38531f75589a9",
+        "action": "RESERVED",
+        "at": "2026-09-09T01:57:55Z"
+      },
+      {
+        "id": "93333cb88921a13fe95040b3",
+        "entity_type": "REQUEST",
+        "entity_id": "4fd3b3e00d04c24ce410996b",
+        "action": "REQUEST_CREATED",
+        "at": "2026-09-09T01:57:54Z"
+      }
+    ],
+    "agent_mode": "strands_ollama"
+  },
+  "inferenceRequests": 1,
+  "browser": "Edg/152.0.4191.66"
+}

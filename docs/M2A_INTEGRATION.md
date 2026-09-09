@@ -1,5 +1,10 @@
 # M2A integrated checkout verification — 2026-09-08
 
+## Enabled browser gate accepted — 2026-09-09
+Real Edge -> Vite -> integrated FastAPI/Strands/Ollama -> SQLite passed at00be358 (unchanged application source from6e0ddb3). One real interpretation of the frozen explicit wheelchair case; exact expected fields, real tool provenance and matching diagnostics. Form and business snapshot unchanged until deliberate Use Draft; applying the draft changed only form fields, preserving the UTC instant. Separate submission created exactly one request, with no automatic reservation. Human allocation approval initially unchecked. Full reservation/pickup/return/inspection reached CLOSED request/loan and five events; reload persisted, fresh context401, mobile390px no overflow and no page errors. Backend stopped gracefully.
+
+Evidence: services/agent/test-evidence/m2a-browser-r1/{manifest.json,result.json,server.log,shutdown.json,unsaved-desktop.png,unsaved-mobile.png}; program-control reviews/M2A-enabled-r1-integration.mjs and output. Original m2a-browser attempt failed in verifier keyboard setup before inference; preserved separately, no model call or ledger charge. R1 was a separate one-call allocation. Canonical ledger cumulative29, no incomplete attempts; all allocations closed. Production code unchanged; no spend or public deployment. Local M2A is accepted. M2B durable coordination and public/release/video/final gates remain open; historical pending-gate text below is superseded by this section.
+
 Codex integrated accepted backend285df0f (implementation9db2d8c, R13 proof) and frontend e4ba9f4 into integration/m1 from659dd12. Production source is unchanged from those accepted versions. Worker reports are retained; these current integration checkpoints supersede their historical status. Frontend LF checkout attributes prevent Windows line endings from failing Prettier.
 
 ## Checks passed

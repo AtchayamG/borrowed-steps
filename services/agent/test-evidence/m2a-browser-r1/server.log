@@ -1,0 +1,46 @@
+INFO:     borrowed_steps.assistant M2A browser logger ready
+INFO:     Started server process [18332]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:63667 (Press CTRL+C to quit)
+INFO:     127.0.0.1:56707 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51058 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51059 - "GET /api/snapshot HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51060 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51061 - "GET /api/snapshot HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:51062 - "POST /api/workspaces HTTP/1.1" 201 Created
+INFO:     127.0.0.1:51063 - "GET /api/snapshot HTTP/1.1" 200 OK
+INFO:     borrowed_steps.assistant Assistant grounding: borrower_label=accepted, equipment_kind=accepted, pickup_location=accepted, due_at=accepted | model_requests=3 tool_calls=1
+INFO:     borrowed_steps.assistant Assistant 511ad27058c6fbb5 success at stage=extraction reason=ok | sends=3 tool_attempts=1 tool_successes=1 recovery=False elapsed_ms=13219 cleanup=closed
+INFO:     127.0.0.1:52702 - "POST /api/intake/interpret HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60801 - "GET /api/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59268 - "GET /api/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49370 - "POST /api/requests HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54984 - "GET /api/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51283 - "GET /api/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64117 - "POST /api/reservations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49171 - "GET /api/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54971 - "GET /api/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57053 - "POST /api/loans/6c3c26425da38531f75589a9/pickup HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52246 - "GET /api/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52970 - "GET /api/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54011 - "POST /api/loans/6c3c26425da38531f75589a9/return HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60700 - "GET /api/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62670 - "GET /api/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51409 - "POST /api/equipment/6864f82ce67cf411fb2dce64/inspection HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60194 - "GET /api/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58597 - "GET /api/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51221 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51222 - "GET /api/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51223 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51224 - "GET /api/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52972 - "GET /api/snapshot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65134 - "GET /api/snapshot HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:65133 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65137 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65135 - "GET /api/snapshot HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:54731 - "GET /api/snapshot HTTP/1.1" 401 Unauthorized
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [18332]

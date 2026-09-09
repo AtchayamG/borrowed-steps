@@ -1,0 +1,10 @@
+{
+  "task_id": "BS-M2A-BROWSER-R1-CODEX",
+  "implementation_commit": "00be3588ca598bb473984d708039192fbeff1638",
+  "attempt": 24,
+  "case": "browser-explicit-fields",
+  "input": "Meena R needs a wheelchair, pickup at the Velachery equipment room, return by 2026-09-16T01:56:37Z.",
+  "dueAt": "2026-09-16T01:56:37Z",
+  "historical_spent": 28,
+  "cumulative_cap": 29
+}
