@@ -13,6 +13,7 @@ import type {
   IntakeInterpretRequest,
   IntakeInterpretResponse,
 } from "../types/api";
+import { validateSnapshot } from "../utils/validation";
 
 export class ApiClientError extends Error {
   status: number;
@@ -140,13 +141,21 @@ export const api = {
       "/api/health",
     ),
 
-  createWorkspace: () =>
-    request<WorkspaceCreationResponse>("/api/workspaces", {
+  createWorkspace: async () => {
+    const raw = await request<WorkspaceCreationResponse>("/api/workspaces", {
       method: "POST",
       body: {},
-    }),
+    });
+    return {
+      workspace: raw.workspace,
+      snapshot: validateSnapshot(raw.snapshot),
+    };
+  },
 
-  getSnapshot: () => request<Snapshot>("/api/snapshot"),
+  getSnapshot: async () => {
+    const raw = await request<Snapshot>("/api/snapshot");
+    return validateSnapshot(raw);
+  },
 
   createRequest: (body: CreateRequestBody, idempotencyKey: string) =>
     request<{ request: BorrowRequest }>("/api/requests", {

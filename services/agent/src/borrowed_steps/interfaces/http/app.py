@@ -60,14 +60,25 @@ from borrowed_steps.config import (
     ASSISTANT_CANCEL_GRACE_SECONDS,
     ASSISTANT_DEADLINE_SECONDS,
     ASSISTANT_SHUTDOWN_SECONDS,
+    TASK_STOP_TIMEOUT_SECONDS,
+    TASK_TICK_CANDIDATE_LIMIT,
+    TASK_TICK_SECONDS,
     Settings,
     load_settings,
 )
 from borrowed_steps.domain.errors import CodedError, ValidationFailedError
-from borrowed_steps.domain.models import Equipment, EquipmentState, Event, Loan, Request
+from borrowed_steps.domain.models import (
+    CoordinationTask,
+    Equipment,
+    EquipmentState,
+    Event,
+    Loan,
+    Request,
+)
 from borrowed_steps.infrastructure.inventory import StoreInventoryReader
 from borrowed_steps.infrastructure.sqlite_store import SqliteStore
 from borrowed_steps.infrastructure.system import SecretsIdGenerator, SystemClock
+from borrowed_steps.infrastructure.task_runner import TaskRunner
 from borrowed_steps.interfaces.http.inference_slot import InferenceRegistry, InferenceSlot
 from borrowed_steps.interfaces.http.schemas import (
     CreateRequestBody,
@@ -90,7 +101,7 @@ __all__ = [
 
 SESSION_COOKIE = "bs_session"
 IDEMPOTENCY_HEADER = "Idempotency-Key"
-MILESTONE = "M2A"
+MILESTONE = "M2B"
 AGENT_MODE_DISABLED = "disabled"
 AGENT_MODE_STRANDS_OLLAMA = "strands_ollama"
 
@@ -208,12 +219,30 @@ def _event_json(event: Event) -> dict[str, Any]:
     }
 
 
+def _task_json(task: CoordinationTask) -> dict[str, Any]:
+    """The six public fields of a coordination task.
+
+    ``workspace_id`` is deliberately absent: it is a storage concern, and a
+    response that carried it would tell one caller something about the shape of
+    everyone else's data.
+    """
+    return {
+        "id": task.id,
+        "loan_id": task.loan_id,
+        "kind": task.kind.value,
+        "status": task.status.value,
+        "due_at": to_iso(task.due_at),
+        "created_at": to_iso(task.created_at),
+    }
+
+
 def _snapshot_json(snapshot: Snapshot, agent_mode: str) -> dict[str, Any]:
     return {
         "equipment": [_equipment_json(item) for item in snapshot.equipment],
         "requests": [_request_json(item) for item in snapshot.requests],
         "loans": [_loan_json(item) for item in snapshot.loans],
         "events": [_event_json(item) for item in snapshot.events],
+        "tasks": [_task_json(item) for item in snapshot.tasks],
         "agent_mode": agent_mode,
     }
 
@@ -311,10 +340,30 @@ def create_app(
     # away. Interpreters with nothing to own (the test doubles) do not implement
     # the protocol and are treated as always resolved.
     registry = InferenceRegistry(assistant if isinstance(assistant, CleanupOwner) else None)
+    runner = (
+        TaskRunner(
+            store,
+            services.clock,
+            services.ids,
+            interval=TASK_TICK_SECONDS,
+            limit=TASK_TICK_CANDIDATE_LIMIT,
+        )
+        if resolved.tasks_enabled
+        else None
+    )
 
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-        """Own the in-flight interpretations, and wind them down on the way out.
+        """Own the coordination runner and the in-flight interpretations.
+
+        The runner is stopped first, so no tick is still writing while the rest
+        of shutdown runs, and its stop is awaited off the event loop because
+        joining a thread blocks. Whether it really stopped is reported: a thread
+        that outlives its bounded join is named as still running, never counted
+        as clean cleanup.
+
+        The inference drain is unchanged and runs in a ``finally``, so a runner
+        that refuses to stop cannot cause the provider cleanup to be skipped.
 
         The drain signals and cancels each run and then waits a bounded time.
         Its real outcome is logged either way: a run that does not end is
@@ -322,41 +371,59 @@ def create_app(
         still open. Neither is described as a clean shutdown, and nothing here
         claims the model at the other end stopped computing.
         """
+        if runner is not None:
+            runner.start()
         try:
             yield
         finally:
-            report = await registry.drain(assistant_shutdown_seconds)
-            if report.abandoned:
-                _LOGGER.warning(
-                    "Shutdown: %d of %d interpretations ended; %d still running after %.1fs "
-                    "and were left behind.",
-                    report.ended,
-                    report.requested,
-                    report.abandoned,
-                    assistant_shutdown_seconds,
-                )
-            elif report.requested:
-                _LOGGER.info("Shutdown: all %d in-flight interpretations ended.", report.requested)
-            if report.cleanup_resolved is False:
-                _LOGGER.error(
-                    "Shutdown: a provider client could not be closed and is still open. "
-                    "This shutdown was not clean."
-                )
-            elif report.cleanup_resolved:
-                _LOGGER.info("Shutdown: outstanding provider cleanup completed.")
+            try:
+                if runner is not None and not await asyncio.to_thread(
+                    runner.stop, TASK_STOP_TIMEOUT_SECONDS
+                ):
+                    _LOGGER.error(
+                        "Shutdown: the coordination runner did not stop within %.1fs and is "
+                        "still running. This shutdown was not clean.",
+                        TASK_STOP_TIMEOUT_SECONDS,
+                    )
+            finally:
+                report = await registry.drain(assistant_shutdown_seconds)
+                if report.abandoned:
+                    _LOGGER.warning(
+                        "Shutdown: %d of %d interpretations ended; %d still running after "
+                        "%.1fs and were left behind.",
+                        report.ended,
+                        report.requested,
+                        report.abandoned,
+                        assistant_shutdown_seconds,
+                    )
+                elif report.requested:
+                    _LOGGER.info(
+                        "Shutdown: all %d in-flight interpretations ended.", report.requested
+                    )
+                if report.cleanup_resolved is False:
+                    _LOGGER.error(
+                        "Shutdown: a provider client could not be closed and is still open. "
+                        "This shutdown was not clean."
+                    )
+                elif report.cleanup_resolved:
+                    _LOGGER.info("Shutdown: outstanding provider cleanup completed.")
 
     app = FastAPI(
         title="Borrowed Steps agent service",
         version=MILESTONE,
         description=(
-            "M1 local persisted equipment-loan workflow. "
-            "Humans decide allocation and inspection; no agent inference runs here."
+            "Local persisted equipment-loan workflow with in-app coordination notices. "
+            "Humans decide allocation and inspection; the coordination runner only "
+            "records that a deadline passed and never changes inventory or a loan."
         ),
         lifespan=lifespan,
     )
     app.state.settings = resolved
     app.state.services = services
     app.state.inference = registry
+    # Exposed so a test can assert the real owned thread started and stopped,
+    # rather than inferring it from a log line.
+    app.state.tasks = runner
 
     def check_origin(http_request: HttpRequest) -> None:
         origin = http_request.headers.get("origin")

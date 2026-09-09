@@ -1,4 +1,5 @@
 # Milestones and judging evidence
+2026-09-09: M2A/M2B accepted locally. M3 public hosting/release architecture is next; see M2B_INTEGRATION.md. No public release or submission acceptance yet.
 M1 BS-001 Claude API/domain/persistence + BS-002 AGY UI; parallel frozen contract. Codex integrates and real local full-stack smoke. Not final Strands/live proof.
 M2 real Strands interpretation/clarification/tools, human boundary, persisted pickup/due tasks and idempotent background processing, truthful provider failure.
 M2A: BS-003 Claude real local Strands intake/API; BS-004 AGY review-and-edit UI, parallel under docs/M2A_CONTRACT.md. M2B: persisted pickup/due processing follows acceptance; M2A alone does not complete M2.

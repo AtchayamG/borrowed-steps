@@ -20,8 +20,10 @@ from contextlib import contextmanager, suppress
 from datetime import UTC, datetime
 from pathlib import Path
 
-from borrowed_steps.application.ports import IdempotencyRecord, Session
+from borrowed_steps.application.errors import StorageBusyError
+from borrowed_steps.application.ports import DueTaskRef, IdempotencyRecord, Session
 from borrowed_steps.domain.models import (
+    CoordinationTask,
     EntityType,
     Equipment,
     EquipmentKind,
@@ -32,6 +34,8 @@ from borrowed_steps.domain.models import (
     LoanStatus,
     Request,
     RequestStatus,
+    TaskKind,
+    TaskStatus,
 )
 from borrowed_steps.isotime import parse_iso, to_iso
 
@@ -119,7 +123,56 @@ _SCHEMA_V1: tuple[str, ...] = (
     """,
 )
 
-_MIGRATIONS: tuple[tuple[str, ...], ...] = (_SCHEMA_V1,)
+# Version 2 adds persisted coordination tasks. It only ever adds: no statement
+# in _SCHEMA_V1 is edited, and an existing database keeps every row it had.
+#
+# The composite foreign key is the point of ux_loans_workspace_id: it makes the
+# storage layer itself refuse a task whose loan belongs to another workspace,
+# rather than leaving that to a caller remembering to check.
+#
+# Backfill runs exactly once, gated by schema_migrations, and only for loans
+# that are still open. A RETURNED or CLOSED loan gets nothing: there is no
+# coordination left to do, and inventing a due event for a past deadline would
+# be fabricating history. created_at is the migration instant - honest about
+# when the record appeared - while due_at is the real deadline the loan already
+# had. `strftime` here produces exactly the canonical whole-second UTC format
+# in isotime.to_iso, and randomblob(12) matches the 24-hex-character shape of
+# SecretsIdGenerator.new_id(); task ids are opaque handles inside a
+# workspace-scoped read, not a security boundary.
+_SCHEMA_V2: tuple[str, ...] = (
+    "CREATE UNIQUE INDEX ux_loans_workspace_id ON loans(workspace_id, id)",
+    """
+    CREATE TABLE tasks (
+        id TEXT PRIMARY KEY,
+        workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+        loan_id TEXT NOT NULL REFERENCES loans(id),
+        kind TEXT NOT NULL CHECK (kind IN ('PICKUP_DUE', 'RETURN_DUE')),
+        status TEXT NOT NULL CHECK (status IN ('PENDING', 'DUE', 'RESOLVED')),
+        due_at TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (workspace_id, loan_id) REFERENCES loans(workspace_id, id)
+    )
+    """,
+    "CREATE UNIQUE INDEX ux_tasks_loan_kind ON tasks(loan_id, kind)",
+    "CREATE INDEX ix_tasks_pending_due ON tasks(status, due_at, id)",
+    "CREATE INDEX ix_tasks_workspace ON tasks(workspace_id, created_at, id)",
+    """
+    INSERT INTO tasks (id, workspace_id, loan_id, kind, status, due_at, created_at)
+    SELECT lower(hex(randomblob(12))), loans.workspace_id, loans.id,
+           'PICKUP_DUE', 'PENDING', loans.created_at,
+           strftime('%Y-%m-%dT%H:%M:%SZ', 'now')
+    FROM loans WHERE loans.status = 'RESERVED'
+    """,
+    """
+    INSERT INTO tasks (id, workspace_id, loan_id, kind, status, due_at, created_at)
+    SELECT lower(hex(randomblob(12))), loans.workspace_id, loans.id,
+           'RETURN_DUE', 'PENDING', loans.due_at,
+           strftime('%Y-%m-%dT%H:%M:%SZ', 'now')
+    FROM loans WHERE loans.status = 'ON_LOAN'
+    """,
+)
+
+_MIGRATIONS: tuple[tuple[str, ...], ...] = (_SCHEMA_V1, _SCHEMA_V2)
 
 
 def _to_equipment(row: sqlite3.Row) -> Equipment:
@@ -150,6 +203,17 @@ def _to_loan(row: sqlite3.Row) -> Loan:
         request_id=str(row["request_id"]),
         equipment_id=str(row["equipment_id"]),
         status=LoanStatus(row["status"]),
+        due_at=parse_iso(str(row["due_at"])),
+        created_at=parse_iso(str(row["created_at"])),
+    )
+
+
+def _to_task(row: sqlite3.Row) -> CoordinationTask:
+    return CoordinationTask(
+        id=str(row["id"]),
+        loan_id=str(row["loan_id"]),
+        kind=TaskKind(row["kind"]),
+        status=TaskStatus(row["status"]),
         due_at=parse_iso(str(row["due_at"])),
         created_at=parse_iso(str(row["created_at"])),
     )
@@ -329,6 +393,94 @@ class SqliteUnitOfWork:
             ),
         )
 
+    # --- coordination tasks ---------------------------------------------
+    #
+    # Every statement below is scoped by workspace_id like the rest of this
+    # class, so a task id from another workspace simply does not resolve.
+
+    def list_tasks(self) -> list[CoordinationTask]:
+        rows = self._conn.execute(
+            "SELECT * FROM tasks WHERE workspace_id = ? ORDER BY created_at, id",
+            (self._workspace_id,),
+        ).fetchall()
+        return [_to_task(row) for row in rows]
+
+    def get_task(self, task_id: str) -> CoordinationTask | None:
+        row = self._conn.execute(
+            "SELECT * FROM tasks WHERE workspace_id = ? AND id = ?",
+            (self._workspace_id, task_id),
+        ).fetchone()
+        return None if row is None else _to_task(row)
+
+    def find_task(self, loan_id: str, kind: TaskKind) -> CoordinationTask | None:
+        row = self._conn.execute(
+            "SELECT * FROM tasks WHERE workspace_id = ? AND loan_id = ? AND kind = ?",
+            (self._workspace_id, loan_id, kind.value),
+        ).fetchone()
+        return None if row is None else _to_task(row)
+
+    def open_tasks_for_loan(self, loan_id: str) -> list[CoordinationTask]:
+        rows = self._conn.execute(
+            "SELECT * FROM tasks"
+            " WHERE workspace_id = ? AND loan_id = ? AND status <> ?"
+            " ORDER BY created_at, id",
+            (self._workspace_id, loan_id, TaskStatus.RESOLVED.value),
+        ).fetchall()
+        return [_to_task(row) for row in rows]
+
+    def add_task(self, task: CoordinationTask) -> None:
+        """Insert one task.
+
+        The composite foreign key on (workspace_id, loan_id) means SQLite
+        itself rejects a loan belonging to another workspace; there is no
+        application-side check to forget.
+        """
+        self._conn.execute(
+            "INSERT INTO tasks"
+            " (id, workspace_id, loan_id, kind, status, due_at, created_at)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                task.id,
+                self._workspace_id,
+                task.loan_id,
+                task.kind.value,
+                task.status.value,
+                to_iso(task.due_at),
+                to_iso(task.created_at),
+            ),
+        )
+
+    def resolve_task(self, task_id: str) -> bool:
+        cursor = self._conn.execute(
+            "UPDATE tasks SET status = ? WHERE workspace_id = ? AND id = ? AND status <> ?",
+            (
+                TaskStatus.RESOLVED.value,
+                self._workspace_id,
+                task_id,
+                TaskStatus.RESOLVED.value,
+            ),
+        )
+        return cursor.rowcount == 1
+
+    def mark_task_due(self, task_id: str) -> bool:
+        """Claim one PENDING task, reporting whether this call really claimed it.
+
+        The PENDING condition lives in the statement rather than in a prior
+        read, so the answer cannot be stale: two runners inside two write
+        transactions cannot both see rowcount 1, and a later tick over an
+        already-DUE task claims nothing and writes no second event.
+        """
+        cursor = self._conn.execute(
+            "UPDATE tasks SET status = ? WHERE workspace_id = ? AND id = ? AND status = ?",
+            (
+                TaskStatus.DUE.value,
+                self._workspace_id,
+                task_id,
+                TaskStatus.PENDING.value,
+            ),
+        )
+        return cursor.rowcount == 1
+
 
 class SqliteStore:
     """Durable storage on one SQLite file."""
@@ -389,7 +541,16 @@ class SqliteStore:
         """Open a transaction scoped to ``workspace_id``."""
         conn = self._connect()
         try:
-            conn.execute("BEGIN IMMEDIATE" if write else "BEGIN DEFERRED")
+            try:
+                conn.execute("BEGIN IMMEDIATE" if write else "BEGIN DEFERRED")
+            except sqlite3.OperationalError as error:
+                # Another writer still held the lock when the busy timeout ran
+                # out. Nothing was begun, so nothing needs undoing. Translated
+                # here so callers that can retry do not have to know what
+                # database this is.
+                if _is_contention(error):
+                    raise StorageBusyError(str(error)) from error
+                raise
             try:
                 yield SqliteUnitOfWork(conn, workspace_id)
             except BaseException:
@@ -466,6 +627,35 @@ class SqliteStore:
             created_at=parse_iso(str(row["created_at"])),
             expires_at=parse_iso(str(row["expires_at"])),
         )
+
+    def due_task_candidates(self, now: datetime, limit: int) -> list[DueTaskRef]:
+        """Identifiers only, across workspaces, for the scheduler alone.
+
+        A read on its own connection, outside any write transaction: discovery
+        must not hold the single writer while the runner works through
+        candidates one workspace at a time.
+
+        ``due_at <= ?`` makes equality count as due, and comparing the stored
+        text is exact because ``to_iso`` writes one fixed-width whole-second UTC
+        form for every row.
+        """
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT workspace_id, id FROM tasks"
+                " WHERE status = ? AND due_at <= ?"
+                " ORDER BY due_at, id LIMIT ?",
+                (TaskStatus.PENDING.value, to_iso(now), limit),
+            ).fetchall()
+        finally:
+            conn.close()
+        return [DueTaskRef(workspace_id=str(r["workspace_id"]), task_id=str(r["id"])) for r in rows]
+
+
+def _is_contention(error: sqlite3.OperationalError) -> bool:
+    """True for the two lock messages SQLite reports when a writer is busy."""
+    message = str(error).lower()
+    return "locked" in message or "busy" in message
 
 
 def _rollback(conn: sqlite3.Connection) -> None:

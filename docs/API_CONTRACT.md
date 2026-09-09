@@ -1,4 +1,5 @@
 # Frozen API contract v1 — M1 business routes, with M2 amendments
+Current implementation: M2B additive tasks and health.milestone="M2B" are accepted locally; see M2B_INTEGRATION.md. The target/pending wording below is historical dispatch context.
 M2A_CONTRACT.md and its dated amendments govern the accepted intake implementation. M2B_CONTRACT.md freezes the additive task snapshot and M2B health label for the next implementation; these are not implemented at this documentation checkpoint. Business transitions below retain their original shapes.
 Relative same-origin JSON routes. UTC ISO-8601 timestamps. due_at must be future and <=30 days ahead. IDs opaque strings. Reject unknown fields.
 Reads and mutations return 200 except workspace creation 201.

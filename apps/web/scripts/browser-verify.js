@@ -56,6 +56,13 @@ function createStaticAppServer(port = 4173) {
         state: "QUARANTINED",
         version: 1,
       },
+      {
+        id: "eq-walker-02",
+        label: "Standard Aluminum Walker #2",
+        kind: "WALKER",
+        state: "RESERVED",
+        version: 1,
+      },
     ],
     requests: [
       {
@@ -68,8 +75,53 @@ function createStaticAppServer(port = 4173) {
         status: "REQUESTED",
         created_at: new Date().toISOString(),
       },
+      {
+        id: "req-velachery-02",
+        borrower_label: "K. Raman (Velachery Main)",
+        equipment_kind: "WALKER",
+        pickup_location:
+          "Velachery Community Room, 12 Cross Road, Velachery, Chennai",
+        due_at: "2026-09-25T12:00:00Z",
+        status: "RESERVED",
+        created_at: new Date().toISOString(),
+      },
     ],
-    loans: [],
+    loans: [
+      {
+        id: "loan-velachery-02",
+        request_id: "req-velachery-02",
+        equipment_id: "eq-walker-02",
+        status: "RESERVED",
+        due_at: "2026-09-25T12:00:00Z",
+        created_at: new Date().toISOString(),
+      },
+    ],
+    tasks: [
+      {
+        id: "task-pickup-01",
+        loan_id: "loan-velachery-02",
+        kind: "PICKUP_DUE",
+        status: "PENDING",
+        due_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: "task-return-02",
+        loan_id: "loan-velachery-02",
+        kind: "RETURN_DUE",
+        status: "DUE",
+        due_at: "2026-09-25T12:00:00Z",
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: "task-pickup-resolved-03",
+        loan_id: "loan-velachery-02",
+        kind: "PICKUP_DUE",
+        status: "RESOLVED",
+        due_at: new Date(Date.now() - 86400000).toISOString(),
+        created_at: new Date(Date.now() - 86400000).toISOString(),
+      },
+    ],
     events: [
       {
         id: "evt-01",
@@ -91,7 +143,7 @@ function createStaticAppServer(port = 4173) {
       res.end(
         JSON.stringify({
           status: "ok",
-          milestone: "M2A",
+          milestone: "M2B",
           agent_mode: "strands_ollama",
         }),
       );
@@ -785,6 +837,176 @@ async function runBrowserVerification() {
         "Synthetic intake interpretation, validated provenance display, deliberate Use Draft form population, and 390px mobile usability verified",
     });
     await intakePage.close();
+
+    // ----------------------------------------------------
+    // TEST 7: M2B Coordination Section (Desktop & 390px Mobile Viewports)
+    // ----------------------------------------------------
+    console.log(
+      "\n[TEST 7] Testing M2B Coordination Section (active/resolved tasks, badges, in-app scope, desktop & 390px mobile)...",
+    );
+    const coordPage = await browser.newPage();
+    await coordPage.setViewport({ width: 1280, height: 800 });
+
+    await coordPage.goto("http://127.0.0.1:4173", {
+      waitUntil: "networkidle0",
+    });
+
+    // 1. Verify heading and in-app scope banner
+    await coordPage.waitForSelector("#coordination-heading");
+    const headingText = await coordPage.evaluate(() =>
+      document.querySelector("#coordination-heading")?.textContent?.trim(),
+    );
+    console.log("Coordination heading text:", headingText);
+    if (!headingText || !headingText.includes("Coordination")) {
+      throw new Error(`Expected Coordination heading, got: ${headingText}`);
+    }
+
+    const scopeNotice = await coordPage.evaluate(() =>
+      document.querySelector(".coordination-scope-notice")?.textContent?.trim(),
+    );
+    console.log("Scope notice text:", scopeNotice);
+    if (!scopeNotice || !scopeNotice.includes("no external email/SMS")) {
+      throw new Error(
+        `Expected in-app scope notice explicitly stating no external email/SMS, got: ${scopeNotice}`,
+      );
+    }
+
+    // 2. Verify active tasks (PICKUP_DUE and RETURN_DUE)
+    const activeTaskItems = await coordPage.evaluate(() => {
+      const items = Array.from(
+        document.querySelectorAll(".coordination-task-active"),
+      );
+      return items.map((el) => ({
+        id: el.getAttribute("data-testid"),
+        text: el.textContent?.trim() || "",
+        badge: el.querySelector(".tag")?.textContent?.trim() || "",
+      }));
+    });
+    console.log("Active tasks rendered:", activeTaskItems);
+    if (activeTaskItems.length < 2) {
+      throw new Error(
+        `Expected at least 2 active tasks, got: ${activeTaskItems.length}`,
+      );
+    }
+
+    const pickupActive = activeTaskItems.find(
+      (t) => t.text.includes("Arrange pickup") && t.badge === "PENDING",
+    );
+    if (!pickupActive) {
+      throw new Error("Active PICKUP_DUE task with PENDING badge not found!");
+    }
+    if (
+      !pickupActive.text.includes("Velachery Community Room") ||
+      !pickupActive.text.includes("K. Raman")
+    ) {
+      throw new Error(
+        `Active pickup task missing location or borrower: ${pickupActive.text}`,
+      );
+    }
+
+    const returnActive = activeTaskItems.find(
+      (t) =>
+        (t.text.includes("Return due") || t.text.includes("Return reminder")) &&
+        t.badge === "DUE",
+    );
+    if (!returnActive) {
+      throw new Error("Active RETURN_DUE task with DUE badge not found!");
+    }
+    if (!returnActive.text.includes("K. Raman")) {
+      throw new Error(
+        `Active return task missing borrower: ${returnActive.text}`,
+      );
+    }
+
+    // 3. Verify resolved tasks inside <details>
+    const resolvedSummary = await coordPage.evaluate(() =>
+      document
+        .querySelector(".coordination-resolved-details summary")
+        ?.textContent?.trim(),
+    );
+    console.log("Resolved summary text:", resolvedSummary);
+    if (!resolvedSummary || !resolvedSummary.includes("Resolved")) {
+      throw new Error(
+        `Expected resolved tasks details element, got: ${resolvedSummary}`,
+      );
+    }
+
+    // Expand details element to verify resolved task content
+    await coordPage.evaluate(() => {
+      const details = document.querySelector(".coordination-resolved-details");
+      if (details) details.open = true;
+    });
+
+    const resolvedBadge = await coordPage.evaluate(() =>
+      document
+        .querySelector(".coordination-task-resolved .tag")
+        ?.textContent?.trim(),
+    );
+    console.log("Resolved task badge:", resolvedBadge);
+    if (resolvedBadge !== "RESOLVED") {
+      throw new Error(`Expected RESOLVED badge, got: ${resolvedBadge}`);
+    }
+
+    // 4. Verify zero dummy buttons inside coordination section
+    const dummyButtons = await coordPage.evaluate(() => {
+      const section = document.querySelector(".coordination-section");
+      if (!section) return [];
+      const buttons = Array.from(section.querySelectorAll("button"));
+      return buttons.map((b) => b.textContent?.trim());
+    });
+    console.log("Buttons inside CoordinationSection:", dummyButtons);
+    if (dummyButtons.length > 0) {
+      throw new Error(
+        `Coordination section must have zero dummy buttons! Found: ${JSON.stringify(dummyButtons)}`,
+      );
+    }
+
+    // 5. Check desktop screenshot
+    const coordDesktopScreenshotPath = path.join(
+      EVIDENCE_DIR,
+      "m2b-coordination-desktop.png",
+    );
+    await coordPage.screenshot({
+      path: coordDesktopScreenshotPath,
+      fullPage: true,
+    });
+    console.log(`Saved screenshot: ${coordDesktopScreenshotPath}`);
+
+    // 6. Check 390px mobile responsiveness
+    await coordPage.setViewport({ width: 390, height: 844, isMobile: true });
+    const coordMobileMetrics = await coordPage.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      innerWidth: window.innerWidth,
+      hasHorizontalOverflow:
+        document.documentElement.scrollWidth > window.innerWidth,
+    }));
+    console.log(
+      "M2B Coordination Mobile 390px layout check:",
+      coordMobileMetrics,
+    );
+    if (coordMobileMetrics.hasHorizontalOverflow) {
+      throw new Error(
+        `Coordination section caused horizontal overflow on 390px mobile! scrollWidth=${coordMobileMetrics.scrollWidth}`,
+      );
+    }
+
+    const coordMobileScreenshotPath = path.join(
+      EVIDENCE_DIR,
+      "m2b-coordination-mobile-390px.png",
+    );
+    const coordinationSection = await coordPage.$(".coordination-section");
+    if (!coordinationSection)
+      throw new Error("Missing mobile coordination section");
+    await coordinationSection.screenshot({ path: coordMobileScreenshotPath });
+    console.log(`Saved screenshot: ${coordMobileScreenshotPath}`);
+
+    results.push({
+      name: "M2B Coordination Desktop & Mobile 390px",
+      status: "PASS",
+      details:
+        "Active PICKUP_DUE (PENDING) and RETURN_DUE (DUE) tasks, resolved details, in-app scope notice, zero dummy buttons, and 390px mobile verified",
+    });
+    await coordPage.close();
 
     console.log("\n--- ALL REAL BROWSER CHECKS PASSED ---");
     console.table(results);

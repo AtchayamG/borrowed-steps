@@ -23,6 +23,7 @@ from borrowed_steps.application.ports import (
 )
 from borrowed_steps.domain import rules
 from borrowed_steps.domain.models import (
+    CoordinationTask,
     EntityType,
     Equipment,
     EquipmentKind,
@@ -33,6 +34,8 @@ from borrowed_steps.domain.models import (
     LoanStatus,
     Request,
     RequestStatus,
+    TaskKind,
+    TaskStatus,
     inspection_action,
 )
 
@@ -114,7 +117,49 @@ def read_snapshot(uow: WorkspaceUnitOfWork) -> Snapshot:
         requests=uow.list_requests(),
         loans=uow.list_loans(),
         events=uow.list_events(),
+        tasks=uow.list_tasks(),
     )
+
+
+def _open_task(
+    svc: Services,
+    uow: WorkspaceUnitOfWork,
+    *,
+    loan_id: str,
+    kind: TaskKind,
+    due_at: datetime,
+    now: datetime,
+) -> CoordinationTask:
+    """Record one PENDING coordination notice.
+
+    Called from inside the caller's lifecycle transaction, so the task and the
+    state change it belongs to commit or roll back together. There is no
+    separate write and therefore no window in which a loan exists without its
+    notice.
+    """
+    task = CoordinationTask(
+        id=svc.ids.new_id(),
+        loan_id=loan_id,
+        kind=kind,
+        status=TaskStatus.PENDING,
+        due_at=due_at,
+        created_at=now,
+    )
+    uow.add_task(task)
+    return task
+
+
+def _resolve_task(uow: WorkspaceUnitOfWork, loan_id: str, kind: TaskKind) -> None:
+    """Close the notice a human action has just answered.
+
+    Silent when there is nothing to close. A task may already be RESOLVED
+    because the action raced the processor, or absent because the loan predates
+    this schema - neither is a failure of the action, and neither should stop a
+    human from recording what really happened.
+    """
+    task = uow.find_task(loan_id, kind)
+    if task is not None:
+        uow.resolve_task(task.id)
 
 
 def create_request(
@@ -188,6 +233,10 @@ def reserve_equipment(
             at=now,
         )
     )
+    # Due immediately: arranging the pickup is what happens next, so the notice
+    # applies from this instant. It is not a promised pickup time and it is not
+    # a deadline the borrower can miss.
+    _open_task(svc, uow, loan_id=loan.id, kind=TaskKind.PICKUP_DUE, due_at=now, now=now)
     return updated_request, updated_equipment, loan
 
 
@@ -210,7 +259,20 @@ def pick_up_loan(
     rules.require_human_approval(human_approved)
     request, equipment, loan = _loan_context(uow, loan_id)
     updated = rules.pick_up(request, equipment, loan, expected_equipment_version)
-    return _commit_transition(svc, uow, updated, EventAction.PICKED_UP)
+    committed = _commit_transition(svc, uow, updated, EventAction.PICKED_UP)
+    now = svc.clock.now()
+    _resolve_task(uow, loan.id, TaskKind.PICKUP_DUE)
+    # The return notice carries the loan's real due instant, the one the human
+    # entered on the request. Nothing here invents or shifts a deadline.
+    _open_task(
+        svc,
+        uow,
+        loan_id=loan.id,
+        kind=TaskKind.RETURN_DUE,
+        due_at=loan.due_at,
+        now=now,
+    )
+    return committed
 
 
 def return_loan(
@@ -225,7 +287,9 @@ def return_loan(
     rules.require_human_approval(human_approved)
     request, equipment, loan = _loan_context(uow, loan_id)
     updated = rules.return_item(request, equipment, loan, expected_equipment_version)
-    return _commit_transition(svc, uow, updated, EventAction.RETURNED)
+    committed = _commit_transition(svc, uow, updated, EventAction.RETURNED)
+    _resolve_task(uow, loan.id, TaskKind.RETURN_DUE)
+    return committed
 
 
 def _commit_transition(
@@ -273,6 +337,12 @@ def inspect_item(
         closed_request, closed_loan = rules.close_after_inspection(request, returned_loan)
         uow.save_request(closed_request)
         uow.save_loan(closed_loan)
+        # Defensive: a closed loan has nothing left to coordinate. In the normal
+        # path pickup and return already resolved both notices, so this closes
+        # nothing; it exists so a loan closed by any route cannot leave a notice
+        # behind that a later tick would announce.
+        for open_task in uow.open_tasks_for_loan(closed_loan.id):
+            uow.resolve_task(open_task.id)
 
     uow.save_equipment(updated_equipment)
     uow.add_event(

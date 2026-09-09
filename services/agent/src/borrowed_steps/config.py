@@ -19,6 +19,9 @@ __all__ = [
     "DEFAULT_ASSISTANT_HOST",
     "DEFAULT_ASSISTANT_MODEL",
     "DEFAULT_DB_PATH",
+    "TASK_STOP_TIMEOUT_SECONDS",
+    "TASK_TICK_CANDIDATE_LIMIT",
+    "TASK_TICK_SECONDS",
     "Settings",
     "load_settings",
 ]
@@ -52,6 +55,17 @@ ASSISTANT_SHUTDOWN_SECONDS = 10.0
 # 115.0s wait + 5.0s cancel grace = 120.0s total maximum response time.
 ASSISTANT_CANCEL_GRACE_SECONDS = 5.0
 
+# Fixed by docs/M2B_CONTRACT.md. The runner ticks immediately at startup and
+# then waits this long between ticks, interruptibly.
+TASK_TICK_SECONDS = 30.0
+# How long shutdown waits for the runner thread to leave its tick. Bounded on
+# purpose, and the outcome is reported: a thread that will not stop is said to
+# be still running, never counted as clean cleanup.
+TASK_STOP_TIMEOUT_SECONDS = 10.0
+# Most tasks one tick will consider. It bounds the work a single tick holds the
+# writer for; a longer backlog is simply worked oldest-first over more ticks.
+TASK_TICK_CANDIDATE_LIMIT = 100
+
 
 @dataclass(frozen=True, slots=True)
 class Settings:
@@ -63,10 +77,22 @@ class Settings:
     assistant_enabled: bool = False
     assistant_host: str = DEFAULT_ASSISTANT_HOST
     assistant_model: str = DEFAULT_ASSISTANT_MODEL
+    # Coordination processing is on by default: it needs no provider, makes no
+    # network call and costs nothing. Tests that assert exact event counts turn
+    # it off so their counts stay about the action under test.
+    tasks_enabled: bool = True
 
 
-def _flag(value: str | None) -> bool:
-    return (value or "").strip().lower() in {"1", "true", "yes", "on"}
+def _flag(value: str | None, *, default: bool = False) -> bool:
+    """Read a boolean environment flag.
+
+    An unset or blank value keeps the caller's default. A value that is present
+    but not recognised as true is false, so an explicit ``BS_TASKS_ENABLED=0``
+    turns a default-on flag off.
+    """
+    if value is None or not value.strip():
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _pinned(source: Mapping[str, str], key: str, fixed: str, label: str) -> str:
@@ -103,6 +129,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         allowed_origins=tuple(o.strip() for o in origins.split(",") if o.strip()),
         cookie_secure=_flag(source.get("BS_COOKIE_SECURE")),
         assistant_enabled=_flag(source.get("BS_ASSISTANT_ENABLED")),
+        tasks_enabled=_flag(source.get("BS_TASKS_ENABLED"), default=True),
         assistant_host=_pinned(source, "BS_ASSISTANT_HOST", DEFAULT_ASSISTANT_HOST, "endpoint"),
         assistant_model=_pinned(source, "BS_ASSISTANT_MODEL", DEFAULT_ASSISTANT_MODEL, "model"),
     )

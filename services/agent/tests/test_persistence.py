@@ -71,7 +71,8 @@ def test_migrations_are_applied_once(settings: Settings, clock: FakeClock, db_pa
     finally:
         connection.close()
 
-    assert versions == [(1,)]
+    # Both migrations, each recorded exactly once however often the app starts.
+    assert versions == [(1,), (2,)]
     assert journal.lower() == "wal"
 
 

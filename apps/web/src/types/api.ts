@@ -50,6 +50,19 @@ export interface DomainEvent {
   at: string;
 }
 
+export type CoordinationTaskKind = "PICKUP_DUE" | "RETURN_DUE";
+
+export type CoordinationTaskStatus = "PENDING" | "DUE" | "RESOLVED";
+
+export interface CoordinationTask {
+  id: string;
+  loan_id: string;
+  kind: CoordinationTaskKind;
+  status: CoordinationTaskStatus;
+  due_at: string;
+  created_at: string;
+}
+
 export type AgentMode = "disabled" | "strands_ollama" | "not_implemented";
 
 export interface Snapshot {
@@ -58,6 +71,7 @@ export interface Snapshot {
   loans: Loan[];
   events: DomainEvent[];
   agent_mode: AgentMode;
+  tasks: CoordinationTask[];
 }
 
 export interface WorkspaceCreationResponse {

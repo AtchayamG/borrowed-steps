@@ -3,6 +3,7 @@ import type {
   Equipment,
   BorrowRequest,
   Loan,
+  CoordinationTask,
   DomainEvent,
   CreateRequestBody,
   CreateReservationBody,
@@ -43,6 +44,7 @@ export function createInitialSnapshot(): Snapshot {
     requests: [],
     loans: [],
     events: [],
+    tasks: [],
     agent_mode: "strands_ollama",
   };
 }
@@ -93,6 +95,10 @@ export class MockBackendServer {
     return JSON.parse(JSON.stringify(this.snapshot));
   }
 
+  public setTasks(tasks: CoordinationTask[]) {
+    this.snapshot.tasks = JSON.parse(JSON.stringify(tasks));
+  }
+
   public async handleFetch(
     input: RequestInfo | URL,
     init?: RequestInit,
@@ -136,7 +142,7 @@ export class MockBackendServer {
       return new Response(
         JSON.stringify({
           status: "ok",
-          milestone: "M2A",
+          milestone: "M2B",
           agent_mode: this.agentMode,
         }),
         { status: 200, headers: { "Content-Type": "application/json" } },
@@ -430,6 +436,15 @@ export class MockBackendServer {
         created_at: new Date().toISOString(),
       };
 
+      const pickupTask: CoordinationTask = {
+        id: `task-pickup-${loan.id}`,
+        loan_id: loan.id,
+        kind: "PICKUP_DUE",
+        status: "PENDING",
+        due_at: loan.created_at,
+        created_at: loan.created_at,
+      };
+
       const event: DomainEvent = {
         id: `evt-${Date.now()}-2`,
         entity_type: "LOAN",
@@ -439,6 +454,7 @@ export class MockBackendServer {
       };
 
       this.snapshot.loans.push(loan);
+      this.snapshot.tasks.push(pickupTask);
       this.snapshot.events.unshift(event);
 
       return new Response(
@@ -499,6 +515,22 @@ export class MockBackendServer {
       item.state = "ON_LOAN";
       item.version += 1;
       if (req) req.status = "ON_LOAN";
+
+      // Resolve loan's PICKUP_DUE task and create RETURN_DUE task
+      for (const t of this.snapshot.tasks) {
+        if (t.loan_id === loan.id && t.kind === "PICKUP_DUE") {
+          t.status = "RESOLVED";
+        }
+      }
+      const returnTask: CoordinationTask = {
+        id: `task-return-${loan.id}`,
+        loan_id: loan.id,
+        kind: "RETURN_DUE",
+        status: "PENDING",
+        due_at: loan.due_at,
+        created_at: new Date().toISOString(),
+      };
+      this.snapshot.tasks.push(returnTask);
 
       const event: DomainEvent = {
         id: `evt-${Date.now()}-3`,
@@ -564,6 +596,13 @@ export class MockBackendServer {
       item.state = "AWAITING_INSPECTION";
       item.version += 1;
       if (req) req.status = "RETURNED";
+
+      // Resolve loan's RETURN_DUE task
+      for (const t of this.snapshot.tasks) {
+        if (t.loan_id === loan.id && t.kind === "RETURN_DUE") {
+          t.status = "RESOLVED";
+        }
+      }
 
       const event: DomainEvent = {
         id: `evt-${Date.now()}-4`,

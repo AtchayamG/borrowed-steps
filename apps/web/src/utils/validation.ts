@@ -3,6 +3,15 @@ import type {
   IntakeInterpretResponse,
   EquipmentKind,
   MissingField,
+  Snapshot,
+  CoordinationTask,
+  CoordinationTaskKind,
+  CoordinationTaskStatus,
+  Equipment,
+  BorrowRequest,
+  Loan,
+  DomainEvent,
+  AgentMode,
 } from "../types/api";
 
 const VALID_EQUIPMENT_KINDS: ReadonlySet<string> = new Set([
@@ -363,5 +372,248 @@ export function validateIntakeResponse(data: unknown): IntakeInterpretResponse {
       inventory_tool_calls: prov.inventory_tool_calls as number,
       completed_at: prov.completed_at as string,
     },
+  };
+}
+
+const VALID_TASK_KINDS: ReadonlySet<string> = new Set([
+  "PICKUP_DUE",
+  "RETURN_DUE",
+]);
+
+const VALID_TASK_STATUSES: ReadonlySet<string> = new Set([
+  "PENDING",
+  "DUE",
+  "RESOLVED",
+]);
+
+const ALLOWED_TASK_KEYS: ReadonlySet<string> = new Set([
+  "id",
+  "loan_id",
+  "kind",
+  "status",
+  "due_at",
+  "created_at",
+]);
+
+/**
+ * Strictly validates an incoming snapshot payload against the frozen M2B contract.
+ * Validates object fields, enums, ISO timestamps, and required tasks array.
+ * Rejects missing or malformed tasks (empty array is valid).
+ * Throws ApiClientError(502, "SNAPSHOT_INVALID_OUTPUT") on any contract discrepancy.
+ */
+export function validateSnapshot(data: unknown): Snapshot {
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    throw new ApiClientError(
+      502,
+      "SNAPSHOT_INVALID_OUTPUT",
+      "Invalid snapshot response: root payload must be an object.",
+      true,
+    );
+  }
+
+  const res = data as Record<string, unknown>;
+
+  if (!Array.isArray(res.equipment)) {
+    throw new ApiClientError(
+      502,
+      "SNAPSHOT_INVALID_OUTPUT",
+      "Invalid snapshot: missing or invalid 'equipment' array.",
+      true,
+    );
+  }
+
+  if (!Array.isArray(res.requests)) {
+    throw new ApiClientError(
+      502,
+      "SNAPSHOT_INVALID_OUTPUT",
+      "Invalid snapshot: missing or invalid 'requests' array.",
+      true,
+    );
+  }
+
+  if (!Array.isArray(res.loans)) {
+    throw new ApiClientError(
+      502,
+      "SNAPSHOT_INVALID_OUTPUT",
+      "Invalid snapshot: missing or invalid 'loans' array.",
+      true,
+    );
+  }
+
+  if (!Array.isArray(res.events)) {
+    throw new ApiClientError(
+      502,
+      "SNAPSHOT_INVALID_OUTPUT",
+      "Invalid snapshot: missing or invalid 'events' array.",
+      true,
+    );
+  }
+
+  if (
+    typeof res.agent_mode !== "string" ||
+    !["disabled", "strands_ollama", "not_implemented"].includes(res.agent_mode)
+  ) {
+    throw new ApiClientError(
+      502,
+      "SNAPSHOT_INVALID_OUTPUT",
+      "Invalid snapshot: missing or invalid 'agent_mode'.",
+      true,
+    );
+  }
+
+  // M2B Contract: required tasks: CoordinationTask[]
+  if (!("tasks" in res) || res.tasks === null || res.tasks === undefined) {
+    throw new ApiClientError(
+      502,
+      "SNAPSHOT_INVALID_OUTPUT",
+      "Invalid snapshot: required field 'tasks' is missing.",
+      true,
+    );
+  }
+
+  if (!Array.isArray(res.tasks)) {
+    throw new ApiClientError(
+      502,
+      "SNAPSHOT_INVALID_OUTPUT",
+      "Invalid snapshot: 'tasks' must be an array.",
+      true,
+    );
+  }
+
+  const validatedTasks: CoordinationTask[] = [];
+
+  for (let i = 0; i < res.tasks.length; i++) {
+    const rawTask = res.tasks[i];
+    if (!rawTask || typeof rawTask !== "object" || Array.isArray(rawTask)) {
+      throw new ApiClientError(
+        502,
+        "SNAPSHOT_INVALID_OUTPUT",
+        `Invalid snapshot task at index ${i}: task must be an object.`,
+        true,
+      );
+    }
+
+    const taskObj = rawTask as Record<string, unknown>;
+
+    // Reject unknown keys (public objects never include workspace_id per M2B contract)
+    for (const key of Object.keys(taskObj)) {
+      if (!ALLOWED_TASK_KEYS.has(key)) {
+        throw new ApiClientError(
+          502,
+          "SNAPSHOT_INVALID_OUTPUT",
+          `Invalid snapshot task at index ${i}: unexpected field '${key}'.`,
+          true,
+        );
+      }
+    }
+
+    // Check all required keys exist
+    for (const reqKey of ALLOWED_TASK_KEYS) {
+      if (
+        !(reqKey in taskObj) ||
+        taskObj[reqKey] === undefined ||
+        taskObj[reqKey] === null
+      ) {
+        throw new ApiClientError(
+          502,
+          "SNAPSHOT_INVALID_OUTPUT",
+          `Invalid snapshot task at index ${i}: missing required field '${reqKey}'.`,
+          true,
+        );
+      }
+    }
+
+    // id: non-empty string
+    if (typeof taskObj.id !== "string" || taskObj.id.trim().length === 0) {
+      throw new ApiClientError(
+        502,
+        "SNAPSHOT_INVALID_OUTPUT",
+        `Invalid snapshot task at index ${i}: 'id' must be a non-empty string.`,
+        true,
+      );
+    }
+
+    // loan_id: non-empty string
+    if (
+      typeof taskObj.loan_id !== "string" ||
+      taskObj.loan_id.trim().length === 0
+    ) {
+      throw new ApiClientError(
+        502,
+        "SNAPSHOT_INVALID_OUTPUT",
+        `Invalid snapshot task at index ${i}: 'loan_id' must be a non-empty string.`,
+        true,
+      );
+    }
+
+    // kind: "PICKUP_DUE" | "RETURN_DUE"
+    if (
+      typeof taskObj.kind !== "string" ||
+      !VALID_TASK_KINDS.has(taskObj.kind)
+    ) {
+      throw new ApiClientError(
+        502,
+        "SNAPSHOT_INVALID_OUTPUT",
+        `Invalid snapshot task at index ${i}: 'kind' must be 'PICKUP_DUE' or 'RETURN_DUE'.`,
+        true,
+      );
+    }
+
+    // status: "PENDING" | "DUE" | "RESOLVED"
+    if (
+      typeof taskObj.status !== "string" ||
+      !VALID_TASK_STATUSES.has(taskObj.status)
+    ) {
+      throw new ApiClientError(
+        502,
+        "SNAPSHOT_INVALID_OUTPUT",
+        `Invalid snapshot task at index ${i}: 'status' must be 'PENDING', 'DUE', or 'RESOLVED'.`,
+        true,
+      );
+    }
+
+    // due_at: aware UTC ISO timestamp
+    if (
+      typeof taskObj.due_at !== "string" ||
+      !isValidIsoTimestamp(taskObj.due_at, true)
+    ) {
+      throw new ApiClientError(
+        502,
+        "SNAPSHOT_INVALID_OUTPUT",
+        `Invalid snapshot task at index ${i}: 'due_at' must be a valid UTC ISO-8601 timestamp.`,
+        true,
+      );
+    }
+
+    // created_at: aware UTC ISO timestamp
+    if (
+      typeof taskObj.created_at !== "string" ||
+      !isValidIsoTimestamp(taskObj.created_at, true)
+    ) {
+      throw new ApiClientError(
+        502,
+        "SNAPSHOT_INVALID_OUTPUT",
+        `Invalid snapshot task at index ${i}: 'created_at' must be a valid UTC ISO-8601 timestamp.`,
+        true,
+      );
+    }
+
+    validatedTasks.push({
+      id: taskObj.id,
+      loan_id: taskObj.loan_id,
+      kind: taskObj.kind as CoordinationTaskKind,
+      status: taskObj.status as CoordinationTaskStatus,
+      due_at: taskObj.due_at,
+      created_at: taskObj.created_at,
+    });
+  }
+
+  return {
+    equipment: res.equipment as Equipment[],
+    requests: res.requests as BorrowRequest[],
+    loans: res.loans as Loan[],
+    events: res.events as DomainEvent[],
+    agent_mode: res.agent_mode as AgentMode,
+    tasks: validatedTasks,
   };
 }

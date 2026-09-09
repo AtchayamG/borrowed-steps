@@ -209,7 +209,8 @@ With `BS_ASSISTANT_ENABLED` unset or false:
 - **no provider SDK is imported at all**, so the service runs with none of the
   assistant dependencies installed.
 
-`health.milestone` is `"M2A"` in both modes. `agent_mode` reports configuration
+`health.milestone` is `"M2B"` in both modes. It names the milestone this service
+implements, not one that has been accepted. `agent_mode` reports configuration
 only: it never claims the provider is reachable or that a call would succeed.
 
 ### Enabled startup
@@ -320,6 +321,72 @@ This is prompt construction only. `format`, `stream=False`, temperature 0, the
 budgets, the grounding and every validation are unchanged, and nothing here
 claims the model extracts more accurately as a result — that is a question for a
 separately authorised live proof.
+
+## Coordination tasks and the owned runner (M2B)
+
+Two persisted in-app notices per loan, and one small thread that processes them.
+Nothing is sent anywhere: there is no email, SMS, calendar or notification
+provider in this service, and a notice is a record, not a message.
+
+**Settings.** `BS_TASKS_ENABLED` defaults to **true**; set it to `false`, `0`,
+`off` or `no` to start without the runner. It needs no provider, opens no socket
+and costs nothing, which is why it is on by default. The tick interval (30 s),
+the stop timeout (10 s) and the per-tick candidate limit (100) are fixed
+constants in `config.py`, not environment variables.
+
+**Migration.** Schema version 2 adds the `tasks` table with its enum checks,
+`UNIQUE(loan_id, kind)`, a composite foreign key on `(workspace_id, loan_id)`
+that makes cross-workspace rows impossible at rest, and indexes for due
+discovery and snapshot reads. Version 1 is untouched and an existing database
+keeps every row. The upgrade backfills once, and only for loans that are still
+open: a `RESERVED` loan gets a pending pickup notice due at that loan's own
+creation instant, an `ON_LOAN` loan gets a pending return notice due at the
+loan's due date. `RETURNED` and `CLOSED` loans get nothing, and no due event is
+written for a deadline that passed before this code existed. `created_at` on a
+backfilled row is the migration instant, because that is when the row appeared.
+Restarting creates no duplicates - the migration is gated by
+`schema_migrations`, and the unique index is the durable guarantee behind that.
+
+**Lifecycle.** Reservation opens a `PICKUP_DUE` notice due immediately - arrange
+the pickup now, which is not a promised pickup time and not an overdue penalty.
+Pickup resolves it and opens a `RETURN_DUE` notice carrying the loan's real due
+instant. Return resolves that one. Inspection that closes a loan defensively
+resolves anything still open. All of this happens **inside the same transaction**
+as the state change, version bump, event and idempotency record, so an exact
+replay creates nothing again and a refused or conflicting command rolls the
+notice back with everything else. Tasks never change equipment, request or loan
+state.
+
+**Processing.** A tick asks for at most 100 pending tasks due at or before now -
+equality counts as due - as identifiers only, then reopens each one's own
+workspace transaction and re-reads everything there. It transitions
+`PENDING -> DUE` with a conditional update and writes the due event in the same
+transaction, only when the transition really succeeded. A task whose loan has
+moved on resolves quietly, with no event: announcing a pickup that already
+happened would tell the volunteer something untrue. A busy database rolls back,
+is counted and logged as contention, and is retried on a later tick. Log lines
+are counts only - no workspace, loan or borrower data, and no prompt text.
+
+**Runner.** One `threading.Thread` owned by the FastAPI lifespan: an immediate
+tick at startup, then an interruptible 30-second wait between ticks. Shutdown
+sets its stop event and joins with a 10-second bound, off the event loop, and
+reports honestly if the thread is still running - the daemon flag is never
+offered as proof of cleanup. The provider drain runs in a `finally`, so a runner
+that refuses to stop cannot cause inference cleanup to be skipped. An unexpected
+tick error is logged and the next tick still runs.
+
+**Smoke.** `scripts/m2b_smoke.py` starts a real uvicorn process on an unused
+loopback port with `BS_ASSISTANT_ENABLED=false`, against a disposable database,
+and drives the real HTTP routes. Between the reservation and the assertion it
+makes **no HTTP call at all**, reading the SQLite file directly, so what moves
+the tasks can only be the runner. It then asks the server to stop and requires
+the lifespan to report a clean shutdown. It makes zero model calls. Run it from
+`services/agent` and read the result in
+`test-evidence/m2b/m2b-smoke.json`:
+
+```
+rtk .venv/Scripts/python.exe scripts/m2b_smoke.py
+```
 
 ### Optional single recovery
 

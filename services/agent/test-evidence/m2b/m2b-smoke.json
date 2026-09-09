@@ -1,0 +1,85 @@
+{
+  "task_id": "BS-007",
+  "started_at": "2026-09-09T07:31:00Z",
+  "port": 50260,
+  "assistant_enabled": false,
+  "tasks_enabled": true,
+  "real_inference_invocations": 0,
+  "steps": [
+    "server healthy, assistant disabled",
+    "fresh workspace has tasks: []",
+    "human-approved reservation created over HTTP",
+    "runner marked PICKUP_DUE with no HTTP request in flight (30.17s)",
+    "human recorded pickup; return notice opened",
+    "runner marked RETURN_DUE with no HTTP request in flight (30.16s)"
+  ],
+  "health": {
+    "status": "ok",
+    "milestone": "M2B",
+    "agent_mode": "disabled"
+  },
+  "loan_due_at": "2026-09-09T07:31:41Z",
+  "pickup_due_after_seconds": 30.17,
+  "return_due_after_seconds": 30.16,
+  "tasks_at_end": [
+    [
+      "PICKUP_DUE",
+      "RESOLVED",
+      "2026-09-09T07:31:01Z"
+    ],
+    [
+      "RETURN_DUE",
+      "DUE",
+      "2026-09-09T07:31:41Z"
+    ]
+  ],
+  "events_at_end": [
+    "REQUEST_CREATED",
+    "RESERVED",
+    "PICKUP_DUE",
+    "PICKED_UP",
+    "RETURN_DUE"
+  ],
+  "snapshot_tasks": [
+    {
+      "id": "aa8173e865b54289f72e8a2e",
+      "loan_id": "238a5b1f72149303e13e8e09",
+      "kind": "PICKUP_DUE",
+      "status": "RESOLVED",
+      "due_at": "2026-09-09T07:31:01Z",
+      "created_at": "2026-09-09T07:31:01Z"
+    },
+    {
+      "id": "244d3cc9e38a337b55214bbb",
+      "loan_id": "238a5b1f72149303e13e8e09",
+      "kind": "RETURN_DUE",
+      "status": "DUE",
+      "due_at": "2026-09-09T07:31:41Z",
+      "created_at": "2026-09-09T07:31:31Z"
+    }
+  ],
+  "shutdown": "the server exited on its own with code 3",
+  "shutdown_was_graceful": true,
+  "server_log_tail": [
+    "INFO:     Started server process [17828]",
+    "INFO:     Waiting for application startup.",
+    "INFO:     Application startup complete.",
+    "INFO:     Uvicorn running on http://127.0.0.1:50260 (Press CTRL+C to quit)",
+    "INFO:     127.0.0.1:50261 - \"GET /api/health HTTP/1.1\" 200 OK",
+    "INFO:     127.0.0.1:50261 - \"POST /api/workspaces HTTP/1.1\" 201 Created",
+    "INFO:     127.0.0.1:50261 - \"POST /api/requests HTTP/1.1\" 200 OK",
+    "INFO:     127.0.0.1:50261 - \"POST /api/reservations HTTP/1.1\" 200 OK",
+    "INFO:     borrowed_steps.tasks Coordination tick: considered=1 due=1 stale_resolved=0 unchanged=0 contended=0 stopped_early=False",
+    "INFO:     127.0.0.1:56874 - \"POST /api/loans/238a5b1f72149303e13e8e09/pickup HTTP/1.1\" 200 OK",
+    "INFO:     borrowed_steps.tasks Coordination tick: considered=1 due=1 stale_resolved=0 unchanged=0 contended=0 stopped_early=False",
+    "INFO:     127.0.0.1:49617 - \"GET /api/snapshot HTTP/1.1\" 200 OK",
+    "INFO:     Shutting down",
+    "INFO:     Waiting for application shutdown.",
+    "INFO:     Application shutdown complete.",
+    "INFO:     Finished server process [17828]"
+  ],
+  "lifespan_shutdown_completed": true,
+  "shutdown_reported_unclean": false,
+  "verdict": "PASSED",
+  "finished_at": "2026-09-09T07:32:02Z"
+}

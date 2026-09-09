@@ -11,7 +11,9 @@ __all__ = [
     "BORROWER_LABEL_MAX_LENGTH",
     "INSPECTABLE_STATES",
     "INSPECTION_OUTCOMES",
+    "OPEN_TASK_STATUSES",
     "PICKUP_LOCATION_MAX_LENGTH",
+    "CoordinationTask",
     "EntityType",
     "Equipment",
     "EquipmentKind",
@@ -22,7 +24,11 @@ __all__ = [
     "LoanStatus",
     "Request",
     "RequestStatus",
+    "TaskKind",
+    "TaskStatus",
+    "due_action",
     "inspection_action",
+    "required_loan_status",
 ]
 
 
@@ -64,6 +70,30 @@ class LoanStatus(StrEnum):
     CLOSED = "CLOSED"
 
 
+class TaskKind(StrEnum):
+    """The two coordination notices this service keeps.
+
+    Both are in-app records for the volunteer. Nothing here is sent anywhere:
+    there is no email, SMS, calendar or notification provider in this service.
+    """
+
+    PICKUP_DUE = "PICKUP_DUE"
+    RETURN_DUE = "RETURN_DUE"
+
+
+class TaskStatus(StrEnum):
+    """Lifecycle of one coordination task.
+
+    ``PENDING`` means the runner has not yet written the notice; the underlying
+    human action is already available. ``DUE`` means the notice was processed.
+    ``RESOLVED`` means the human action it was tracking happened.
+    """
+
+    PENDING = "PENDING"
+    DUE = "DUE"
+    RESOLVED = "RESOLVED"
+
+
 class EntityType(StrEnum):
     """Entity an event refers to."""
 
@@ -82,6 +112,8 @@ class EventAction(StrEnum):
     INSPECTED_AVAILABLE = "INSPECTED_AVAILABLE"
     INSPECTED_REPAIR = "INSPECTED_REPAIR"
     INSPECTED_QUARANTINED = "INSPECTED_QUARANTINED"
+    PICKUP_DUE = "PICKUP_DUE"
+    RETURN_DUE = "RETURN_DUE"
 
 
 BORROWER_LABEL_MAX_LENGTH = 60
@@ -108,9 +140,36 @@ _INSPECTION_ACTIONS: dict[EquipmentState, EventAction] = {
 }
 
 
+OPEN_TASK_STATUSES: tuple[TaskStatus, ...] = (TaskStatus.PENDING, TaskStatus.DUE)
+
+# The loan state each notice is about. A pickup notice only makes sense while
+# the item is still waiting to be collected; a return notice only while it is
+# out. Anything else means the human action already happened, and the notice is
+# resolved without a due event rather than announced late.
+_REQUIRED_LOAN_STATUS: dict[TaskKind, LoanStatus] = {
+    TaskKind.PICKUP_DUE: LoanStatus.RESERVED,
+    TaskKind.RETURN_DUE: LoanStatus.ON_LOAN,
+}
+
+_DUE_ACTIONS: dict[TaskKind, EventAction] = {
+    TaskKind.PICKUP_DUE: EventAction.PICKUP_DUE,
+    TaskKind.RETURN_DUE: EventAction.RETURN_DUE,
+}
+
+
 def inspection_action(outcome: EquipmentState) -> EventAction:
     """Event action recorded for an inspection ``outcome``."""
     return _INSPECTION_ACTIONS[outcome]
+
+
+def required_loan_status(kind: TaskKind) -> LoanStatus:
+    """The loan status that still makes ``kind`` applicable."""
+    return _REQUIRED_LOAN_STATUS[kind]
+
+
+def due_action(kind: TaskKind) -> EventAction:
+    """Event action written when ``kind`` really becomes due."""
+    return _DUE_ACTIONS[kind]
 
 
 @dataclass(frozen=True, slots=True)
@@ -145,6 +204,24 @@ class Loan:
     request_id: str
     equipment_id: str
     status: LoanStatus
+    due_at: datetime
+    created_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class CoordinationTask:
+    """One persisted in-app notice about a loan.
+
+    It records only what the volunteer needs to coordinate: which loan, which
+    kind of notice, whether the notice has been processed, and when it applies.
+    It carries no borrower detail, and it never changes equipment, request or
+    loan state - a task is a record, not an actor.
+    """
+
+    id: str
+    loan_id: str
+    kind: TaskKind
+    status: TaskStatus
     due_at: datetime
     created_at: datetime
 

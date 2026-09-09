@@ -34,10 +34,19 @@ def db_path(tmp_path: Path) -> Path:
 
 @pytest.fixture
 def settings(db_path: Path) -> Settings:
+    """Baseline settings, with the coordination runner off.
+
+    ``tasks_enabled`` really defaults to true; it is turned off here so that
+    the tests asserting exact event counts and lifecycle behaviour stay about
+    the action under test rather than racing a background thread. The runner's
+    own tests and the smoke script switch it back on, and one test asserts the
+    production default is true.
+    """
     return Settings(
         db_path=db_path,
         allowed_origins=(ALLOWED_ORIGIN,),
         cookie_secure=False,
+        tasks_enabled=False,
     )
 
 

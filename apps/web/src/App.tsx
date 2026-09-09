@@ -18,6 +18,7 @@ import { IntakeAssistant } from "./components/IntakeAssistant";
 import { RequestForm } from "./components/RequestForm";
 import { RequestList } from "./components/RequestList";
 import { LoanList } from "./components/LoanList";
+import { CoordinationSection } from "./components/CoordinationSection";
 import { EventHistory } from "./components/EventHistory";
 import { AllocationModal } from "./components/AllocationModal";
 import { InspectionModal } from "./components/InspectionModal";
@@ -54,6 +55,7 @@ export const App: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [draftForForm, setDraftForForm] = useState<IntakeDraft | null>(null);
   const [sessionGeneration, setSessionGeneration] = useState(1);
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
 
   // Store selected entity IDs; derive current entity instances from latest snapshot
   const [allocatingRequestId, setAllocatingRequestId] = useState<string | null>(
@@ -99,6 +101,7 @@ export const App: React.FC = () => {
     try {
       const data = await api.getSnapshot();
       setSnapshot(data);
+      setLastSyncedAt(new Date());
       setIsExpiredSession(false);
     } catch (err: unknown) {
       if (err instanceof ApiClientError) {
@@ -158,6 +161,7 @@ export const App: React.FC = () => {
     try {
       const res = await api.createWorkspace();
       setSnapshot(res.snapshot);
+      setLastSyncedAt(new Date());
       setIsExpiredSession(false);
       setSnapshotError(null);
       setSessionGeneration((prev) => prev + 1);
@@ -235,6 +239,7 @@ export const App: React.FC = () => {
           try {
             const freshSnapshot = await api.getSnapshot();
             setSnapshot(freshSnapshot);
+            setLastSyncedAt(new Date());
           } catch {
             // ignore refetch err
           }
@@ -323,6 +328,7 @@ export const App: React.FC = () => {
       try {
         const freshSnapshot = await api.getSnapshot();
         setSnapshot(freshSnapshot);
+        setLastSyncedAt(new Date());
         setSuccessMessage(successText);
         setTimeout(() => setSuccessMessage(null), 6000);
       } catch (refreshErr: unknown) {
@@ -434,7 +440,7 @@ export const App: React.FC = () => {
   return (
     <div className="app-root">
       <Header
-        milestone={health?.milestone || "M2A"}
+        milestone={health?.milestone || "M2B"}
         agentMode={
           health?.agent_mode || snapshot?.agent_mode || "not_implemented"
         }
@@ -568,12 +574,28 @@ export const App: React.FC = () => {
                 gap: "0.75rem",
               }}
             >
-              <span
-                style={{ fontSize: "0.875rem", color: "var(--text-muted)" }}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.25rem",
+                }}
               >
-                Active Session Scoped to Server Cookie &bull; Synthetic
-                Evaluation Mode
-              </span>
+                <span
+                  style={{ fontSize: "0.875rem", color: "var(--text-muted)" }}
+                >
+                  Active Session Scoped to Server Cookie &bull; Synthetic
+                  Evaluation Mode
+                </span>
+                {lastSyncedAt && (
+                  <span
+                    data-testid="sync-freshness"
+                    style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}
+                  >
+                    Last synced: {lastSyncedAt.toLocaleTimeString()}
+                  </span>
+                )}
+              </div>
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -626,6 +648,16 @@ export const App: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {/* Coordination Operational Tasks (M2B) */}
+              <CoordinationSection
+                tasks={snapshot.tasks}
+                loans={snapshot.loans}
+                requests={snapshot.requests}
+                equipment={snapshot.equipment}
+                lastSyncedAt={lastSyncedAt}
+                isLoading={isLoading || isMutating}
+              />
 
               {/* Middle Grid: Pending Requests & Active Loans */}
               <div className="grid-two">

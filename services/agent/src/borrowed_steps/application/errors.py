@@ -13,7 +13,22 @@ __all__ = [
     "IdempotencyConflictError",
     "NotFoundError",
     "SessionRequiredError",
+    "StorageBusyError",
 ]
+
+
+class StorageBusyError(Exception):
+    """A write transaction could not be taken while another writer held it.
+
+    Deliberately not a ``CodedError``: it is not a new HTTP outcome, and adding
+    one would change the frozen error contract. Callers that can simply try
+    again later - the coordination tick - catch it; everything else lets it
+    surface exactly as the underlying storage error did before, through the
+    generic handler.
+
+    It exists so the application layer can recognise contention without
+    importing a database driver.
+    """
 
 
 class NotFoundError(CodedError):

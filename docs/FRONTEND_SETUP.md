@@ -1,6 +1,6 @@
-# Frontend Setup — Borrowed Steps (M1 & M2A Web Client)
+# Frontend Setup — Borrowed Steps (M1, M2A & M2B Web Client)
 
-This document provides setup, development, testing, and build instructions for the Borrowed Steps M1 & M2A React frontend under `apps/web`.
+This document provides setup, development, testing, and build instructions for the Borrowed Steps M1, M2A & M2B React frontend under `apps/web`.
 
 ## Environment Prerequisites & Pinned Tool Versions
 
@@ -10,14 +10,14 @@ This document provides setup, development, testing, and build instructions for t
 - **Vite**: `v7.3.6` (directly declared in devDependencies)
 - **Vitest**: `v3.2.7`
 - **Prettier**: `v3.5.2`
-- **Backend Dependency**: Requires the Borrowed Steps FastAPI backend running at `http://127.0.0.1:8000` supporting M1 lifecycle routes and frozen M2A route `POST /api/intake/interpret`. Vite dev server proxies `/api` requests to `127.0.0.1:8000`. If backend is stopped, the client renders an actionable Connection Error banner with a Retry button.
+- **Backend Dependency**: Requires the Borrowed Steps FastAPI backend running at `http://127.0.0.1:8000` supporting M1 lifecycle routes, frozen M2A route `POST /api/intake/interpret`, and frozen M2B snapshot shape with `tasks: CoordinationTask[]`. Vite dev server proxies `/api` requests to `127.0.0.1:8000`. If backend is stopped, the client renders an actionable Connection Error banner with a Retry button.
 
 ## Directory Navigation
 
 All commands should be executed from the `apps/web` directory:
 
 ```powershell
-cd "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-004-agy\apps\web"
+cd "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-008-agy\apps\web"
 ```
 
 Prefix shell commands with `rtk` (e.g. `rtk proxy npm ...`) per repository conventions.
@@ -54,6 +54,18 @@ Intake endpoint `POST /api/intake/interpret` is an advisory read-only call:
 - Returns unsaved draft suggestion with validated execution provenance (`framework`, `provider`, `model`, `inventory_tool_calls`, `completed_at`).
 - Populate form requires deliberate human action ("Use Draft (Populate Form)"); explicit submission remains separate (`POST /api/requests`).
 
+## M2B Coordination Interface (In-App Operational Tasks)
+
+Per frozen `docs/M2B_CONTRACT.md`, the web client extends snapshot data models and introduces the Coordination section:
+- **Typed Validation**: `validateSnapshot()` strictly validates `tasks: CoordinationTask[]` on incoming snapshots. Missing or malformed tasks array triggers structured error `502 SNAPSHOT_INVALID_OUTPUT`; empty array `tasks: []` is valid. Rejects unauthorized fields (e.g., `workspace_id`).
+- **Active Operational Tasks**:
+  - `Arrange pickup` (`PICKUP_DUE`): Displays request pickup location, borrower label, and equipment label. Labeled with `PENDING` badge indicating immediately actionable in person by volunteer.
+  - `Return reminder` / `Return due` (`RETURN_DUE`): Displays borrower label, equipment label, and exact UTC due instant. Server status strictly governs badge (`DUE` or `PENDING`) without client-side clock comparisons.
+- **In-App Scope Notice**: Explicitly notifies volunteers that tasks and reminders are tracked in-app within the current session only (no external SMS/email delivery).
+- **Resolved Tasks**: Completed tasks are separated into an inspectable `<details>` group with `RESOLVED` badges.
+- **Zero Dummy Controls**: The coordination component contains zero action/submit buttons; lifecycle transitions happen exclusively via verified volunteer actions in the Loan List.
+- **Snapshot Sync Freshness**: Status bar displays "Last synced: [time]" relative to the last deliberate sync or post-action refresh.
+
 ## Verification Pipeline
 
 ### 1. Code Formatting Check
@@ -79,7 +91,7 @@ rtk proxy npm run typecheck
 ```
 
 ### 4. Unit & Interaction Test Suite (Vitest & Testing Library)
-Run the 87 automated tests across 10 suites with test-only network interception:
+Run the 105 automated tests across 11 suites with test-only network interception:
 ```powershell
 rtk proxy npm test
 ```
@@ -92,7 +104,7 @@ rtk proxy npm run build
 Production assets are output to `apps/web/dist/`. Zero test fixtures or mocks are bundled into production.
 
 ### 6. Focused Real-Browser Verification
-Run automated headless Edge/Chrome checks measuring desktop and 390px mobile layout, keyboard focus trapping, Escape key modal dismissal, focus restoration, backend-offline handling, and M2A synthetic intake flow:
+Run automated headless Edge/Chrome checks measuring desktop and 390px mobile layout, keyboard focus trapping, Escape key modal dismissal, focus restoration, backend-offline handling, M2A synthetic intake flow, and M2B Coordination rendering:
 ```powershell
 rtk proxy npm run test:browser
 ```
@@ -107,3 +119,4 @@ Screenshots and verification evidence are stored in `apps/web/test-evidence/`.
 - **Human-in-the-Loop Intake**: Model interpretation produces ephemeral advisory drafts only; never auto-creates requests or reservations. Form population requires a deliberate human action, and final request submission is explicit. Missing/null fields require human clarification.
 - **Instant Preservation**: Datetime conversions between UTC ISO strings and HTML `datetime-local` inputs preserve exact epoch instants without timezone shifts.
 - **Session Scoping (401)**: When a session expires, active intake text is preserved and an actionable re-initialization prompt is rendered in active flow without automatic reset.
+- **Coordination Task Authority**: Client strictly renders tasks from the active scoped snapshot; never fabricates task entities, computes overdue state from local clocks, or claims external dispatch.

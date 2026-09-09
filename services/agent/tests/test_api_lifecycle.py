@@ -25,7 +25,7 @@ def test_health_declares_milestone_and_agent_mode(client: TestClient) -> None:
     assert response.status_code == 200
     assert body(response) == {
         "status": "ok",
-        "milestone": "M2A",
+        "milestone": "M2B",
         "agent_mode": "disabled",
     }
 
@@ -36,11 +36,14 @@ def test_workspace_creation_seeds_the_equipment_room(client: TestClient) -> None
     assert set(payload["workspace"]) == {"id"}
 
     snap = payload["snapshot"]
-    assert set(snap) == {"equipment", "requests", "loans", "events", "agent_mode"}
+    assert set(snap) == {"equipment", "requests", "loans", "events", "tasks", "agent_mode"}
     assert snap["agent_mode"] == "disabled"
     assert snap["requests"] == []
     assert snap["loans"] == []
     assert snap["events"] == []
+    # A fresh workspace has no coordination to do. Empty is the real answer,
+    # not a missing field the client has to guess about.
+    assert snap["tasks"] == []
 
     seeded = [(item["kind"], item["state"]) for item in snap["equipment"]]
     assert seeded == [

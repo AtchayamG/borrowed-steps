@@ -194,7 +194,7 @@ def test_enabled_mode_is_reported_in_health_and_snapshot(
 ) -> None:
     client, _ = assistant
     health = body(client.get("/api/health"))
-    assert health == {"status": "ok", "milestone": "M2A", "agent_mode": "strands_ollama"}
+    assert health == {"status": "ok", "milestone": "M2B", "agent_mode": "strands_ollama"}
     start_workspace(client)
     assert snapshot(client)["agent_mode"] == "strands_ollama"
 

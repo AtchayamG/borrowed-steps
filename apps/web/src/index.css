@@ -298,6 +298,24 @@ textarea {
   color: #78716c;
 }
 
+.tag-pending {
+  background-color: #eff6ff;
+  border-color: #93c5fd;
+  color: #1e40af;
+}
+
+.tag-due {
+  background-color: var(--red-tag-bg);
+  border-color: var(--red-tag-border);
+  color: var(--red-tag-text);
+}
+
+.tag-resolved {
+  background-color: #f5f5f4;
+  border-color: #d6d3d1;
+  color: #57534e;
+}
+
 /* Layout Cards */
 .card {
   background-color: var(--bg-surface);

@@ -1,4 +1,18 @@
 # TEST_STATUS
+## Latest checkpoint - M2B LOCAL ACCEPTED; public hosting decision next
+2026-09-09. CURRENT_PROJECT: Borrowed Steps. CURRENT_MILESTONE: M2B local complete / M3 pending.
+CURRENT_TASK_ID: BS-007 and BS-008 accepted; no worker running. Backend b371b7c (production6ad75bc), frontend5ce9611 integrated into canonical integration/m1; commit titled "Accept local M2B integration and persisted coordination".
+CURRENT_CHECKPOINT_STATUS: COMPLETED (local M2B only).
+COMPLETED_ACCEPTANCE_CRITERIA:382 backend/108 frontend tests, relevant static/build checks, exact source comparison, real Edge/Vite/FastAPI/SQLite lifecycle with both due tasks processed while browser closed, restart/no duplicates, return/QUARANTINED/CLOSED, both tasks RESOLVED, seven events, reload/session401/mobile PASS.
+TEST_RESULTS: PASS; docs/M2B_INTEGRATION.md and services/agent/test-evidence/m2b-integration. Own services stopped; no inference/spend. All29 historical allocations closed.
+REMAINING_ACCEPTANCE_CRITERIA: M3 verified zero-spend public persistent hosting/provider/availability/security and fresh live E2E; AWS account completion separate from Builder ID; LumaLoad video, MAX audits and Devpost gates. Benchbook/Schoolbag follow flagship.
+UNCOMMITTED_WORK_STATE: canonical combined source/evidence/checkpoints committed; worker branches preserved. Program-control review scripts/checkpoints saved outside Git. No push.
+BLOCKERS: Existing host/domain availability answer pending; no hosting entitlement or AWS grant assumed. Prior reserve snapshot low; preserve final-audit capacity, no reset consumed.
+NEXT_SAFE_ACTION: User switch MEDIUM -> HIGH for bounded public hosting/release architecture decision based on actual existing resources; do not restart Phase0 or any correction loop. No additional model call or provisioning under old allocations.
+NEXT_CODEX_MODE: ASTRA_HIGH
+REASON: Local implementation/integration complete; choosing public deployment and release boundaries is the next architecture decision.
+
+
 ## Latest checkpoint - M2B contract frozen; BS-007/BS-008 manual dispatch
 Recorded 2026-09-09. This section supersedes earlier next-action instructions.
 CURRENT_PROJECT: Borrowed Steps
