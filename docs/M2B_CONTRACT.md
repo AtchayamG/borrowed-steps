@@ -1,3 +1,5 @@
+> 2026-09-09: [M3 hosted contract](M3_HOSTED_CONTRACT.md) defines the approved hosted-mode amendments and foundation tasks. Local behavior below remains unchanged; public deployment is pending.
+
 # M2B frozen contract - persisted coordination (2026-09-09)
 
 Approved by Codex at user-confirmed ASTRA_HIGH. This is the implementation target for BS-007 (backend) and BS-008 (web), not a claim that M2B is already implemented. M2A remains accepted locally at f1e9428. All 29 historical live inference calls are spent and all allowances closed; these tasks authorize zero new inference.

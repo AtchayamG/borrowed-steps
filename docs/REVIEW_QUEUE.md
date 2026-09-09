@@ -1,3 +1,11 @@
+## Latest checkpoint — M3 foundations ready for manual workers
+2026-09-09. BS-009 7c15d67 reviewed at confirmed ASTRA_HIGH; accepted design investigation with direct corrections in docs/BS-009_ACCEPTANCE.md and M3_HOSTED_CONTRACT.md. BS-010 accepted c297462. Local application/evidence remains unchanged.
+CURRENT_TASKS: BS-011 Claude PostgreSQL adapter + real local DB tests; BS-012 AGY Groq transport + offline SDK/wire tests. Parallel, disjoint worktrees. Full prompts in program tasks/. No automatic invocation. No model call, provisioning, push or deployment. All29 historical allocations closed.
+DECISIONS: hosted Vercel/Neon/GitHub scheduler/Groq direction, best-effort 15-minute target, workspace write serialization, real transport send budget, strict truthful provenance, hosted-only rollback. Public account/terms/quota verification, global inference admission, full integration, release/security proof, videos and submission remain gated.
+NEXT_SAFE_ACTION: user runs both complete task prompts. On return read report/four checkpoints/diff; no long pasted output. Docker engine unavailable at review; real Postgres proof must not be replaced by mocks or silently skipped. Reassign unavailable worker under saved user recovery rules. Keep artifacts ready for review; no further speculative coding in Codex.
+NEXT_CODEX_MODE: ASTRA_LIGHT
+REASON: HIGH architecture decision and parallel decomposition complete; routine worker coordination next.
+
 ## Latest checkpoint — BS-010 documentation accepted after direct correction
 2026-09-09. CURRENT_TASK_ID: BS-010. STATUS: COMPLETED. Canonical documentation integrated from AGY bf10d2f with direct Codex factual corrections; see docs/BS-010_ACCEPTANCE.md. Accepted M2B application source remains unchanged from 17a6838.
 CHECKS: local links, SVG XML and Chrome visual inspection PASS; Mermaid manually reviewed. Setup commands checked against source/manifests. No new application tests, inference, spend, push or deployment. All29 historical probe allocations closed.

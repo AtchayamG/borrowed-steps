@@ -1,3 +1,5 @@
+> 2026-09-09: [M3 hosted contract](M3_HOSTED_CONTRACT.md) defines the approved hosted-mode amendments and foundation tasks. Local behavior below remains unchanged; public deployment is pending.
+
 # M3 hosted-only direction - 2026-09-09
 User explicitly rejects using their own computer as a public origin because it cannot stay online through judging. This supersedes every pending request for an always-on personal host/domain and the local Cloudflare Tunnel candidate.
 Public runtime must use hosted free services and a platform-provided hostname; no personal machine, tunnel to it, paid plan, card activation, trial auto-conversion or assumption of granted credits.
