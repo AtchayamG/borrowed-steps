@@ -1,0 +1,42 @@
+{
+  "task_id": "BS-M2A-BROWSER-CODEX",
+  "implementation_commit": "6e0ddb3315f28b1146e13418bf6a5ab84c3ebb32",
+  "attempt": 24,
+  "case": "browser-explicit-fields",
+  "result": "BLOCKED",
+  "input": "Meena R needs a wheelchair, pickup at the Velachery equipment room, return by 2026-09-16T01:56:37Z.",
+  "dueAt": "2026-09-16T01:56:37Z",
+  "before": {
+    "status": 200,
+    "body": {
+      "equipment": [
+        {
+          "id": "1d1dd18293971f76225e9c7e",
+          "label": "Wheelchair W-01",
+          "kind": "WHEELCHAIR",
+          "state": "AVAILABLE",
+          "version": 1
+        },
+        {
+          "id": "628e8db24b7c50f9c5092597",
+          "label": "Walker K-04",
+          "kind": "WALKER",
+          "state": "AVAILABLE",
+          "version": 1
+        },
+        {
+          "id": "2445193180a54ed4f010b771",
+          "label": "Crutches C-07",
+          "kind": "CRUTCHES",
+          "state": "QUARANTINED",
+          "version": 1
+        }
+      ],
+      "requests": [],
+      "loans": [],
+      "events": [],
+      "agent_mode": "strands_ollama"
+    }
+  },
+  "error": "Error: Unknown key: \"Control+A\""
+}
