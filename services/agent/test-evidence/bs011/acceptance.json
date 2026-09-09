@@ -1,0 +1,51 @@
+{
+  "task": "BS-011",
+  "executor": "Codex direct takeover, user-confirmed ASTRA_HIGH",
+  "date": "2026-09-09",
+  "base_commit": "12b6a59",
+  "environment": {
+    "python": "3.11.15",
+    "postgresql": "16.10",
+    "psycopg": "3.2.10",
+    "psycopg_binary": "3.2.10",
+    "database": "Owned disposable loopback cluster; random per-test databases",
+    "inference_calls": 0,
+    "cloud_calls": 0,
+    "spend_inr": 0
+  },
+  "final_checks": {
+    "python -m pytest -q": {"passed": 431, "failed": 0, "skipped": 0, "warnings": 2, "seconds": 50.85},
+    "retained_tests": 413,
+    "new_postgres_module_tests": 18,
+    "real_database_cases": 13,
+    "offline_url_rejection_cases": 5,
+    "python -m ruff check src tests scripts": "PASS",
+    "python -m ruff format --check src tests scripts": "PASS, 68 files",
+    "python -m mypy src tests scripts": "PASS, strict + warn_unreachable, 68 files",
+    "uv pip check --python .venv/Scripts/python.exe": "PASS, 72 packages"
+  },
+  "assertions": [
+    "Concurrent, repeated and failed migrations; read-only version readiness; future-version refusal",
+    "Full use-case lifecycle, session expiry and fresh-process persistence",
+    "Two allocators: one winner; independent workspace writes do not wait on the same lock",
+    "Two identical operations: one mutation/event and exact response replay; different hash conflict",
+    "Injected event failure rolls back state and idempotency",
+    "Two due processors: one event; event failure rolls back due claim",
+    "Human pickup/return after discovery prevents stale notice",
+    "Repeatable snapshot, bounded lock contention and connection closure on success/error/timeout",
+    "Database rejects duplicate active loan and cross-workspace loan/task references",
+    "Due discovery ordering/bounds and conditional claim/resolution",
+    "Explicit migration CLI missing/invalid/success/repeat paths with sanitized output"
+  ],
+  "earlier_attempts": [
+    "Initial test collection used a wrong identifier class name; corrected in new tests",
+    "First full run: 430 passed, one existing subprocess test failed because project was not installed in new venv",
+    "Installed project editable with --no-deps; unchanged tests then all passed",
+    "Two retained Starlette deprecation warnings; no test skips"
+  ],
+  "limits": [
+    "Use-case and real local PostgreSQL proof, not hosted HTTP proof",
+    "Existing factory, routes, SQLite tests, provider source and root manifests unchanged",
+    "Neon provisioning, global admission, production wiring and public deployment remain pending"
+  ]
+}

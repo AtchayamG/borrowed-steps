@@ -1,3 +1,21 @@
+## Latest checkpoint — BS-011 completed by Codex takeover
+2026-09-09. PostgreSQL foundation accepted at user-confirmed ASTRA_HIGH.
+Claude stopped mid-task due usage/tool limits; Codex preserved his originals and
+completed the work in worker/codex/BS-011-takeover, based on canonical 12b6a59.
+All 431 backend tests passed (413 retained +18 new, zero skips), including actual
+PostgreSQL 16.10 lifecycle/concurrency/rollback/persistence tests. Ruff lint/format,
+strict mypy (68 files) and dependency checks passed. See docs/workers/BS-011.md,
+docs/POSTGRES_SETUP.md and services/agent/test-evidence/bs011/acceptance.json.
+Only bounded new foundation files and documentation changed. No source wiring,
+model/cloud calls, spend, push or deployment; all29 old allocations remain closed.
+All per-test databases removed; Codex's isolated PostgreSQL service stopped.
+Claude's checkout/server remain untouched. BS-012 accepted foundation retained.
+NEXT_SAFE_ACTION: Finish canonical commit/checkpoint reconciliation, then resume
+manual orchestration for hosted integration. Do not rerun interrupted BS-011.
+Public hosted factory/admission/provider/scheduler and release gates remain pending.
+NEXT_CODEX_MODE: ASTRA_LIGHT
+REASON: Substantive foundation work complete; routine orchestration next.
+
 ## Latest checkpoint — BS-012 accepted offline after direct correction
 BS-012 AGY a6d90a0 corrected by Codex at ASTRA_MEDIUM in 70e108a. Canonical includes standalone transport, dependency overlay and tests; see docs/BS-012_ACCEPTANCE.md. Full suite 413 passed; Ruff lint/format, strict mypy and dependency check passed. Fixed stalled-read deadline, cleanup retry ownership, target/model pins and finite limits; real Strands retry budget proved. No production wiring, live inference, spend or deployment. All29 historical probes remain closed.
 Claude BS-011 PostgreSQL completion not reported. NEXT_SAFE_ACTION: read its report, four checkpoints and diff when user reports completion; no repeated AGY correction round. Integration/admission/hosted live proof remains gated.
