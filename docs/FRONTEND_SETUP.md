@@ -14,10 +14,10 @@ This document provides setup, development, testing, and build instructions for t
 
 ## Directory Navigation
 
-All commands should be executed from the `apps/web` directory:
+From the repository root, enter `apps/web` before running the commands below:
 
 ```powershell
-cd "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-008-agy\apps\web"
+cd apps/web
 ```
 
 Prefix shell commands with `rtk` (e.g. `rtk proxy npm ...`) per repository conventions.

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1050" height="690" viewBox="0 0 1050 690" role="img" aria-labelledby="title desc">
+<title id="title">Borrowed Steps: current local runtime</title><desc id="desc">Human workflow through FastAPI and application rules to SQLite. Optional advisory Strands intake reads inventory. A background runner persists due tasks and events.</desc>
+<defs><marker id="a" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#475569"/></marker></defs>
+<rect width="1050" height="690" fill="#f8fafc"/><g font-family="Segoe UI, sans-serif" fill="#0f172a">
+<text x="40" y="43" font-size="26" font-weight="700">Borrowed Steps | Current local runtime</text><text x="40" y="72" font-size="16">M2B accepted locally. Public hosting remains pending.</text>
+<rect x="40" y="100" width="420" height="85" rx="10" fill="white" stroke="#64748b"/>
+<text x="58" y="132" font-size="20" font-weight="600">React UI</text>
+<text x="58" y="161" font-size="15">Human decisions; relative /api calls</text>
+<rect x="40" y="230" width="420" height="85" rx="10" fill="white" stroke="#64748b"/>
+<text x="58" y="262" font-size="20" font-weight="600">FastAPI</text>
+<text x="58" y="291" font-size="15">Workspace session and Origin guards</text>
+<rect x="40" y="360" width="420" height="85" rx="10" fill="white" stroke="#64748b"/>
+<text x="58" y="392" font-size="20" font-weight="600">Application and domain</text>
+<text x="58" y="421" font-size="15">Lifecycle rules; Store port transactions</text>
+<rect x="40" y="510" width="420" height="85" rx="10" fill="white" stroke="#64748b"/>
+<text x="58" y="542" font-size="20" font-weight="600">SQLite adapter and database</text>
+<text x="58" y="571" font-size="15">Persisted records, tasks, events, retry identity</text>
+<rect x="590" y="100" width="420" height="85" rx="10" fill="white" stroke="#64748b"/>
+<text x="608" y="132" font-size="20" font-weight="600">Optional Strands / local Ollama</text>
+<text x="608" y="161" font-size="15">Read-only inventory tool; validated draft</text>
+<rect x="590" y="360" width="420" height="85" rx="10" fill="white" stroke="#64748b"/>
+<text x="608" y="392" font-size="20" font-weight="600">Owned TaskRunner</text>
+<text x="608" y="421" font-size="15">Due tasks and events; no lifecycle decisions</text>
+<path d="M250 185V230" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+<path d="M250 315V360" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+<path d="M250 445V510" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+<path d="M460 270H540V142H590" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+<path d="M800 185V290H500V550H460" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+<path d="M800 445V575H460" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+<text x="55" y="211" font-size="14">Vite proxy</text><text x="600" y="278" font-size="14">Inventory read</text><text x="600" y="559" font-size="14">Task + event transaction</text>
+<text x="40" y="635" font-size="16">Assistant drafts return through the API for human review; they never write lifecycle state.</text><text x="40" y="663" font-size="16">Arrows show runtime flow. Application ports keep infrastructure outside domain rules.</text></g></svg>

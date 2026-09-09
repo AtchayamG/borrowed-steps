@@ -1,15 +1,12 @@
-# Backend setup — services/agent (Borrowed Steps M1)
+# Backend setup — services/agent (Borrowed Steps M1, M2A and M2B)
 
-Local, persisted M1 API. No cloud service, no provider credential, no model call
-takes part in any request. `agent_mode` is `not_implemented` and stays that way
-until the M2 Strands gate.
+Local persistent API with optional Strands/Ollama advisory intake and background coordination. The assistant is disabled by default; structured lending requires no model call. See the milestone sections below for accepted capabilities and historical evidence. Public hosting remains pending.
 
 ## Requirements
 
 - Windows 10/11 with Python 3.11 or newer on `PATH` (verified on 3.11.15).
 - No database server: persistence is one SQLite file created on first start.
-- No network access at runtime. Only the one-off dependency install reaches
-  PyPI, the official registry.
+- Structured lending uses the local API and SQLite. Optional assistant inference contacts the pinned local Ollama endpoint. Dependency installation requires registry access.
 
 ## Install (Windows, PowerShell)
 

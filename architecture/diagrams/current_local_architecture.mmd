@@ -1,0 +1,8 @@
+flowchart TB
+    UI["React UI: human decisions"] -->|"relative /api through Vite"| API["FastAPI: session and Origin guards"]
+    API --> APP["Application use cases and domain rules"]
+    APP -->|"transactions via Store port"| DB["SQLite adapter and persistent database"]
+    RUN["Owned TaskRunner: due processing"] -->|"task and event transaction"| DB
+    API -.->|"optional advisory intake"| AI["Strands and local Ollama"]
+    AI -->|"read-only inventory tool"| DB
+    AI -.->|"validated draft; separate human submission"| UI

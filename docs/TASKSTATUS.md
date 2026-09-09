@@ -1,3 +1,11 @@
+## Latest checkpoint — BS-010 documentation accepted after direct correction
+2026-09-09. CURRENT_TASK_ID: BS-010. STATUS: COMPLETED. Canonical documentation integrated from AGY bf10d2f with direct Codex factual corrections; see docs/BS-010_ACCEPTANCE.md. Accepted M2B application source remains unchanged from 17a6838.
+CHECKS: local links, SVG XML and Chrome visual inspection PASS; Mermaid manually reviewed. Setup commands checked against source/manifests. No new application tests, inference, spend, push or deployment. All29 historical probe allocations closed.
+CURRENT_WORKER: Claude BS-009 hosted migration proposal; completion not reported. AGY BS-010 complete. Public infrastructure must be free hosted platforms independent of the user's computer. DB/scheduler/provider selection and entitlement verification pending.
+NEXT_SAFE_ACTION: Await/read BS-009 worker report, four checkpoint files and diff on return. Do not restart Phase0 or issue another BS-010 correction loop. Preserve final-review usage. Current confirmed mode ASTRA_MEDIUM; recommend lowering now.
+NEXT_CODEX_MODE: ASTRA_LIGHT
+REASON: Documentation review complete; routine worker status inspection is next. Request HIGH only before the substantive hosted architecture decision.
+
 # TASKSTATUS
 ## Latest checkpoint - M2B LOCAL ACCEPTED; public hosting decision next
 2026-09-09. CURRENT_PROJECT: Borrowed Steps. CURRENT_MILESTONE: M2B local complete / M3 pending.
