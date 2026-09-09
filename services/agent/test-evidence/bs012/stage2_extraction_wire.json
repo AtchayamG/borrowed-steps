@@ -1,0 +1,88 @@
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "Extract loan info"
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "text": "Deepa K needs crutches at Main Hall due 2026-09-15T10:00:00Z",
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "model": "openai/gpt-oss-20b",
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "schema": {
+        "description": "Loan-request fields with source evidence; use null for unstated fields.",
+        "properties": {
+          "borrower_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Borrower's name, copied verbatim from message. Null if not stated.",
+            "title": "Borrower Label"
+          },
+          "equipment_kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Exact equipment phrase from message; null if none or multiple distinct kinds.",
+            "title": "Equipment Kind"
+          },
+          "pickup_location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Pickup place, copied verbatim from message. Null if not stated.",
+            "title": "Pickup Location"
+          },
+          "due_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Explicit timezone-aware ISO timestamp (Z or offset) copied verbatim.",
+            "title": "Due At"
+          }
+        },
+        "required": [
+          "borrower_label",
+          "equipment_kind",
+          "pickup_location",
+          "due_at"
+        ],
+        "title": "_Extraction",
+        "type": "object",
+        "additionalProperties": false
+      },
+      "name": "_Extraction",
+      "strict": true
+    }
+  },
+  "stream": false
+}

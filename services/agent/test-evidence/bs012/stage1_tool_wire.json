@@ -1,0 +1,36 @@
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "Inventory assistant"
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "text": "Check wheelchairs",
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "model": "openai/gpt-oss-20b",
+  "stream": true,
+  "stream_options": {
+    "include_usage": true
+  },
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "read_inventory",
+        "description": "Counts of equipment in room.",
+        "parameters": {
+          "properties": {},
+          "type": "object",
+          "required": []
+        }
+      }
+    }
+  ]
+}

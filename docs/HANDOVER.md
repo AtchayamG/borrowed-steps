@@ -1,3 +1,9 @@
+## Latest checkpoint — BS-012 accepted offline after direct correction
+BS-012 AGY a6d90a0 corrected by Codex at ASTRA_MEDIUM in 70e108a. Canonical includes standalone transport, dependency overlay and tests; see docs/BS-012_ACCEPTANCE.md. Full suite 413 passed; Ruff lint/format, strict mypy and dependency check passed. Fixed stalled-read deadline, cleanup retry ownership, target/model pins and finite limits; real Strands retry budget proved. No production wiring, live inference, spend or deployment. All29 historical probes remain closed.
+Claude BS-011 PostgreSQL completion not reported. NEXT_SAFE_ACTION: read its report, four checkpoints and diff when user reports completion; no repeated AGY correction round. Integration/admission/hosted live proof remains gated.
+NEXT_CODEX_MODE: ASTRA_LIGHT
+REASON: Bounded review complete; preserve usage for integration and final audits.
+
 ## Latest checkpoint — M3 foundations ready for manual workers
 2026-09-09. BS-009 7c15d67 reviewed at confirmed ASTRA_HIGH; accepted design investigation with direct corrections in docs/BS-009_ACCEPTANCE.md and M3_HOSTED_CONTRACT.md. BS-010 accepted c297462. Local application/evidence remains unchanged.
 CURRENT_TASKS: BS-011 Claude PostgreSQL adapter + real local DB tests; BS-012 AGY Groq transport + offline SDK/wire tests. Parallel, disjoint worktrees. Full prompts in program tasks/. No automatic invocation. No model call, provisioning, push or deployment. All29 historical allocations closed.
