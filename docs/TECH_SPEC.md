@@ -1,4 +1,5 @@
 # Technical specification
+Current amendments: M2A_CONTRACT.md and dated amendments describe the locally accepted intake slice; M2B_CONTRACT.md is the next frozen implementation target. The M1 statements below are historical baseline specifications, not current health/agent-mode claims. Hosting remains an independent gate.
 M1 implements frozen API contract exactly.
 Backend: FastAPI/Pydantic boundary, stdlib domain/sqlite3 persistence, reproducible project-local Python venv/dependencies. Minimal FastAPI/uvicorn/httpx/pytest/Ruff/mypy tooling as needed; no Strands model calls in M1.
 Frontend: React/ReactDOM, strict TypeScript/Vite/CSS, Vitest/Testing Library and focused browser checks. Pin compatible versions for Node 22.22.3, commit package-lock. No root workspace.

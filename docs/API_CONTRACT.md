@@ -1,8 +1,9 @@
-# Frozen API contract v1 — M1
+# Frozen API contract v1 — M1 business routes, with M2 amendments
+M2A_CONTRACT.md and its dated amendments govern the accepted intake implementation. M2B_CONTRACT.md freezes the additive task snapshot and M2B health label for the next implementation; these are not implemented at this documentation checkpoint. Business transitions below retain their original shapes.
 Relative same-origin JSON routes. UTC ISO-8601 timestamps. due_at must be future and <=30 days ahead. IDs opaque strings. Reject unknown fields.
 Reads and mutations return 200 except workspace creation 201.
 Error: {error:{code:string,message:string}} with 401 no/expired session, 403 wrong origin, 404 missing scoped entity, 409 conflict, 422 validation. No framework trace.
-All POST except workspaces require Idempotency-Key (8–100 chars). Same workspace/key/route/body returns exact saved status/body with no extra event; changed route/body ->409 IDEMPOTENCY_CONFLICT. Hash canonical parsed input. Validation failures may remain uncached.
+All POST except workspaces and the read-only /api/intake/interpret require Idempotency-Key (8–100 chars). Same workspace/key/route/body returns exact saved status/body with no extra event; changed route/body ->409 IDEMPOTENCY_CONFLICT. Hash canonical parsed input. Validation failures may remain uncached.
 If mutation Origin supplied it must match configured frontend origin. Cookie/session expires after 24h. Production TLS/abuse protections are release gate.
 
 ## Shapes
@@ -16,11 +17,11 @@ borrower_label 1–60 chars synthetic; pickup_location 1–120 chars; no medical
 Loan: {id,request_id,equipment_id,status,due_at,created_at}
 status: RESERVED | ON_LOAN | RETURNED | CLOSED
 Event: {id,entity_type,entity_id,action,at}
-Snapshot: {equipment:Equipment[],requests:Request[],loans:Loan[],events:Event[],agent_mode:"not_implemented"}
+Snapshot at accepted M2A: {equipment:Equipment[],requests:Request[],loans:Loan[],events:Event[],agent_mode:"disabled"|"strands_ollama"}. M2B adds required tasks as specified in M2B_CONTRACT.md. Legacy clients may recognize "not_implemented"; current agent_mode describes configuration only.
 Events newest first; no private input echoed. Other list ordering stable by created/id.
 
 ## Routes
-GET /api/health -> {status:"ok",milestone:"M1",agent_mode:"not_implemented"}, public.
+GET /api/health -> {status:"ok",milestone:"M2A",agent_mode:"disabled"|"strands_ollama"}, public at the accepted implementation. M2B implementation changes only milestone to "M2B".
 POST /api/workspaces body {} -> {workspace:{id},snapshot:Snapshot}. Sets opaque unpredictable server-issued bs_session cookie. Seed one AVAILABLE WHEELCHAIR, one AVAILABLE WALKER, one QUARANTINED CRUTCHES; no requests/loans. Separate workspace per creation.
 GET /api/snapshot -> Snapshot scoped by cookie.
 

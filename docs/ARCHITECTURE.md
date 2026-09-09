@@ -1,4 +1,5 @@
 # Architecture — BS-000 accepted by Codex 2026-09-07
+M2B decision (2026-09-09): docs/M2B_CONTRACT.md freezes transactional persisted pickup/return tasks, an owned bounded stdlib runner and additive snapshot/UI. Implementation is assigned to BS-007/BS-008. No external notifications or automatic human decisions. docs/PUBLIC_HOSTING_FEASIBILITY.md records conditional hosting and open entitlement/release gates.
 M2A amendment: docs/M2A_CONTRACT.md freezes a read-only RequestInterpreter with a real local Strands/Ollama adapter. Default disabled; explicit human draft review; no queue/persistence for suggestions. M2B persisted pickup/due processing and public provider/hosting remain separate gates.
 One Python REST service plus React SPA, SQLite for M1 local persistence. Backend later can serve built SPA, avoiding unnecessary service boundaries.
 Python 3.11+, FastAPI boundary, stdlib domain dataclasses/enums, application use cases/ports, sqlite3 adapter. React strict TypeScript/Vite/CSS/native controls, no component/state framework without need.
