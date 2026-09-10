@@ -1,0 +1,46 @@
+
+> borrowed-steps-web@0.1.0 test:browser
+> node scripts/browser-verify.js
+
+--- STARTING REAL BROWSER VERIFICATION (BS-002-R3) ---
+Using browser executable: C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe
+Serving production dist build (fixture-backed) at http://127.0.0.1:4173
+Serving unmocked real Vite server with proxy targeting unavailable upstream (127.0.0.1:58999) at http://127.0.0.1:4183
+(!) Failed to run dependency scan. Skipping dependency pre-bundling. Error:   Failed to scan for dependencies from entries:
+  D:/Work/Codex/Hackathon Projects/Agents For Humans/00_PROGRAM_CONTROL/worktrees/BS-018-agy/apps/web/index.html
+
+  [31mX [41;31m[[41;97mERROR[41;31m][0m [1mThe server is being restarted or closed. Request is outdated[0m [1m[35m[plugin vite:dep-scan][0m
+
+    src/components/IntakeAssistant.tsx:5:39:
+[37m      5 â”‚ import { validateIntakeResponse } from [32m"../utils/validation"[37m;
+        â•µ                                        [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mThe server is being restarted or closed. Request is outdated[0m [1m[35m[plugin vite:dep-scan][0m
+
+    src/utils/validation.ts:1:31:
+[37m      1 â”‚ import { ApiClientError } from [32m"../api/client"[37m;
+        â•µ                                [32m~~~~~~~~~~~~~~~[0m
+
+
+    at failureErrorWithLog (D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-018-agy\apps\web\node_modules\esbuild\lib\main.js:1752:15)
+    at D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-018-agy\apps\web\node_modules\esbuild\lib\main.js:1211:25
+    at runOnEndCallbacks (D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-018-agy\apps\web\node_modules\esbuild\lib\main.js:1592:45)
+    at buildResponseToResult (D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-018-agy\apps\web\node_modules\esbuild\lib\main.js:1209:7)
+    at D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-018-agy\apps\web\node_modules\esbuild\lib\main.js:1221:9
+    at new Promise (<anonymous>)
+    at requestCallbacks.on-end (D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-018-agy\apps\web\node_modules\esbuild\lib\main.js:1220:54)
+    at handleRequest (D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-018-agy\apps\web\node_modules\esbuild\lib\main.js:911:17)
+    at handleIncomingPacket (D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-018-agy\apps\web\node_modules\esbuild\lib\main.js:936:7)
+    at Socket.readFromStdout (D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-018-agy\apps\web\node_modules\esbuild\lib\main.js:864:7)
+
+BROWSER VERIFICATION FAILED: Error: Failed to launch the browser process:  Code: 0
+
+stderr:
+
+
+TROUBLESHOOTING: https://pptr.dev/troubleshooting
+
+    at ChildProcess.onClose (file:///D:/Work/Codex/Hackathon%20Projects/Agents%20For%20Humans/00_PROGRAM_CONTROL/worktrees/BS-018-agy/apps/web/node_modules/@puppeteer/browsers/lib/launch.js:347:24)
+    at ChildProcess.emit (node:events:531:35)
+    at ChildProcess._handle.onexit (node:internal/child_process:293:12)

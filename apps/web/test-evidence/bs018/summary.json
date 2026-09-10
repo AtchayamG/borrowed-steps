@@ -1,0 +1,87 @@
+{
+  "task": "BS-018",
+  "worker": "AGY, senior frontend/build developer",
+  "model": "Gemini 3.8 Flash High (serving identity hidden/unverified per contract)",
+  "effort": "HIGH",
+  "toolchain": {
+    "node": "v22.22.3",
+    "npm": "10.9.8"
+  },
+  "changes": {
+    "puppeteer-core": {
+      "from": "^24.4.0",
+      "to": "^25.10.0"
+    },
+    "vitest": {
+      "from": "^3.2.7",
+      "to": "^5.0.0"
+    }
+  },
+  "audit_summary": {
+    "baseline": {
+      "full_vulnerabilities": 5,
+      "prod_vulnerabilities": 0,
+      "high": 3,
+      "moderate": 2
+    },
+    "final": {
+      "full_vulnerabilities": 0,
+      "prod_vulnerabilities": 0,
+      "high": 0,
+      "moderate": 0
+    }
+  },
+  "command_results": {
+    "npm audit --json": {
+      "baseline_exit": 1,
+      "final_exit": 0
+    },
+    "npm audit --omit=dev --json": {
+      "baseline_exit": 0,
+      "final_exit": 0
+    },
+    "npm ci": {
+      "exit_code": 0
+    },
+    "npm run typecheck": {
+      "exit_code": 0
+    },
+    "npm run lint": {
+      "exit_code": 0
+    },
+    "npm run format:check": {
+      "exit_code": 0
+    },
+    "npm run test": {
+      "exit_code": 0,
+      "test_files": 12,
+      "passed_tests": 108,
+      "failed_tests": 0,
+      "skipped_tests": 0
+    },
+    "npm run build": {
+      "exit_code": 0,
+      "bundle_size_kb": 216.39
+    },
+    "npm run test:browser": {
+      "exit_code": 0,
+      "checks_passed": 7
+    }
+  },
+  "evidence_files": [
+    "test-evidence/bs018/baseline-npm-audit.json",
+    "test-evidence/bs018/baseline-npm-audit-omit-dev.json",
+    "test-evidence/bs018/final-npm-audit.json",
+    "test-evidence/bs018/final-npm-audit-omit-dev.json",
+    "test-evidence/bs018/test-summary.txt",
+    "test-evidence/bs018/desktop-1280x800.png",
+    "test-evidence/bs018/mobile-390x844.png",
+    "test-evidence/bs018/modal-keyboard-verified.png",
+    "test-evidence/bs018/modal-422-refusal-verified.png",
+    "test-evidence/bs018/offline-banner.png",
+    "test-evidence/bs018/m2a-intake-flow-verified.png",
+    "test-evidence/bs018/m2a-intake-mobile-390px.png",
+    "test-evidence/bs018/m2b-coordination-desktop.png",
+    "test-evidence/bs018/m2b-coordination-mobile-390px.png"
+  ]
+}

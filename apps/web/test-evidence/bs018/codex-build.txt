@@ -1,0 +1,13 @@
+
+> borrowed-steps-web@0.1.0 build
+> tsc -b && vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+âœ“ 44 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.63 kB â”‚ gzip:  0.41 kB
+dist/assets/index-CEgaRneU.css    9.01 kB â”‚ gzip:  2.42 kB
+dist/assets/index-Cpcwfpl8.js   206.75 kB â”‚ gzip: 61.41 kB
+âœ“ built in 519ms

@@ -1,0 +1,12 @@
+
+> borrowed-steps-web@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.0 D:/Work/Codex/Hackathon Projects/Agents For Humans/00_PROGRAM_CONTROL/worktrees/BS-018-agy/apps/web
+
+
+ Test Files  12 passed (12)
+      Tests  108 passed (108)
+   Start at  21:31:28
+   Duration  5.22s (environment 50%, tests 30%, setup 11%, transform 6%, import 3%)

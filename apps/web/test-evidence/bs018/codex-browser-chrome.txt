@@ -1,0 +1,105 @@
+
+> borrowed-steps-web@0.1.0 test:browser
+> node scripts/browser-verify.js
+
+--- STARTING REAL BROWSER VERIFICATION (BS-002-R3) ---
+Using browser executable: C:/Program Files/Google/Chrome/Application/chrome.exe
+Serving production dist build (fixture-backed) at http://127.0.0.1:4173
+Serving unmocked real Vite server with proxy targeting unavailable upstream (127.0.0.1:58999) at http://127.0.0.1:4183
+Real Browser Engine Version: Chrome/152.0.7977.83
+
+[TEST 1] Testing Desktop 1280x800 layout and overflow...
+Desktop metrics: scrollWidth=1280px, innerWidth=1280px, overflow=false
+Saved screenshot: D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-018-agy\apps\web\test-evidence\desktop-1280x800.png
+
+[TEST 2] Testing Keyboard accessibility and Modal focus traps...
+Inspection Modal opened via keyboard Enter.
+Initially focused element: outcome-select
+After Tab 1, focused element: inspect-human-approval
+After Tab 2, focused element: Cancel
+After wrap-around Tab, focused element: outcome-select
+After Shift+Tab, focused element: Cancel
+Inspection modal closed via Escape key.
+Restored focused element aria-label: Inspect Adult Axillary Crutches #1
+Allocation Modal opened via keyboard Enter.
+Allocation initial focus: equipment-select
+Allocation modal closed via Escape key.
+
+[TEST 3] Testing Mobile 390x844 viewport and overflow...
+Mobile metrics: scrollWidth=390px, innerWidth=390px, overflow=false
+Saved screenshot: D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-018-agy\apps\web\test-evidence\mobile-390x844.png
+
+[TEST 4] Testing Real Installed Vite Proxy Failure with refusing upstream on http://127.0.0.1:4183...
+Real Vite Proxy /api/snapshot HTTP Status: 500
+Real Vite Proxy Failure Banner: Connection Error: Backend unavailable or proxy connection failed (HTTP 500: Internal Server Error). Ensure backend is running on 127.0.0.1:8000.Verify backend is running on 127.0.0.1:8000 with proxy configured.Retry Connection
+Actionable Retry Button found: Retry Connection
+Clicking 'Retry Connection' and verifying new request dispatch...
+New request successfully dispatched by Retry Connection: http://127.0.0.1:4183/api/snapshot
+Saved screenshot: D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-018-agy\apps\web\test-evidence\offline-banner.png
+
+[TEST 5] Testing in-dialog 422 mutation refusal rendering and input preservation...
+Modal alert element appeared after 422 refusal.
+Modal Alert Content: Submission error (UNPROCESSABLE_ENTITY): Equipment cannot be inspected: current state is not AWAITING_INSPECTION.
+Preserved inputs check: outcome=REPAIR, checked=true
+Saved screenshot: D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-018-agy\apps\web\test-evidence\modal-422-refusal-verified.png
+Modal dismissed via Cancel button after refusal.
+
+[TEST 6] Testing M2A Synthetic Intake Assistant, deliberate 'Use draft', and form population...
+Header status display: Agent Mode: strands_ollama•Human-in-the-Loop
+Unsaved Intake Suggestion box rendered.
+Validated Provenance Content: Assistant Provenance (Validated Call)Framework: strandsProvider: ollamaModel: llama3.2:3bInventory Tool Calls: 1Completed At: 2026-09-10T16:03:06.530Z
+Borrower value before Use Draft: Ananya R. (Velachery Resident)
+Populated form fields: borrower='Ananya R.', equipment='WHEELCHAIR'
+Saved screenshot: D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-018-agy\apps\web\test-evidence\m2a-intake-flow-verified.png
+M2A Mobile 390px layout check: { scrollWidth: 390, innerWidth: 390, hasHorizontalOverflow: false }
+Saved screenshot: D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-018-agy\apps\web\test-evidence\m2a-intake-mobile-390px.png
+
+[TEST 7] Testing M2B Coordination Section (active/resolved tasks, badges, in-app scope, desktop & 390px mobile)...
+Coordination heading text: Coordination
+Scope notice text: In-app operational tasks for volunteers. Reminders and due notices are tracked within this workspace only (no external email/SMS).
+Active tasks rendered: [
+  {
+    id: 'task-row-task-pickup-01',
+    text: 'Arrange pickup• Task #task-pickup-01Pickup Location: Velachery Community Room, 12 Cross Road, Velachery, Chennai•Borrower: K. Raman (Velachery Main)•Equipment: Standard Aluminum Walker #2 (WALKER)Pickup is immediately actionable. A volunteer records pickup in person in the Loan List below when borrower arrives.PENDING',
+    badge: 'PENDING'
+  },
+  {
+    id: 'task-row-task-return-02',
+    text: 'Return due• Task #task-return-02Due Instant: 2026-09-25T12:00:00Z•Borrower: K. Raman (Velachery Main)•Equipment: Standard Aluminum Walker #2 (WALKER)Equipment return is due. A volunteer will receive return and inspect equipment in the Loan List below.DUE',
+    badge: 'DUE'
+  }
+]
+Resolved summary text: Resolved Coordination Tasks (1)
+Resolved task badge: RESOLVED
+Buttons inside CoordinationSection: []
+Saved screenshot: D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-018-agy\apps\web\test-evidence\m2b-coordination-desktop.png
+M2B Coordination Mobile 390px layout check: { scrollWidth: 390, innerWidth: 390, hasHorizontalOverflow: false }
+Saved screenshot: D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-018-agy\apps\web\test-evidence\m2b-coordination-mobile-390px.png
+
+--- ALL REAL BROWSER CHECKS PASSED ---
+┌─────────┬────────────────────────────────────────────────┬────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ (index) │ name                                           │ status │ details                                                                                                                                        │
+├─────────┼────────────────────────────────────────────────┼────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 0       │ 'Desktop Layout (1280x800)'                    │ 'PASS' │ 'Zero overflow (scrollWidth=1280px)'                                                                                                           │
+│ 1       │ 'Keyboard Navigation & Modal Trapping'         │ 'PASS' │ 'Focus trap, Tab wrap, Escape closing, and focus restoration verified across Inspection and Allocation modals'                                 │
+│ 2       │ 'Mobile Layout (390x844)'                      │ 'PASS' │ 'Zero overflow (scrollWidth=390px, innerWidth=390px)'                                                                                          │
+│ 3       │ 'Real Installed Vite Proxy Failure (HTTP 500)' │ 'PASS' │ 'Real Vite createServer HTTP 500 ECONNREFUSED rendered actionable Connection Error banner; Retry Connection dispatched fresh request'          │
+│ 4       │ 'Modal 422 Refusal In-Dialog Rendering'        │ 'PASS' │ '422 UNPROCESSABLE_ENTITY rendered inside modal role=alert, inputs preserved, page-level banner suppressed, Cancel dismisses cleanly'          │
+│ 5       │ 'M2A Synthetic Intake & Human Review'          │ 'PASS' │ 'Synthetic intake interpretation, validated provenance display, deliberate Use Draft form population, and 390px mobile usability verified'     │
+│ 6       │ 'M2B Coordination Desktop & Mobile 390px'      │ 'PASS' │ 'Active PICKUP_DUE (PENDING) and RETURN_DUE (DUE) tasks, resolved details, in-app scope notice, zero dummy buttons, and 390px mobile verified' │
+└─────────┴────────────────────────────────────────────────┴────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+9:33:03 pm [vite] http proxy error: /api/health
+Error: connect ECONNREFUSED 127.0.0.1:58999
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+9:33:03 pm [vite] http proxy error: /api/snapshot
+Error: connect ECONNREFUSED 127.0.0.1:58999
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+9:33:03 pm [vite] http proxy error: /api/health
+Error: connect ECONNREFUSED 127.0.0.1:58999
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+9:33:03 pm [vite] http proxy error: /api/snapshot
+Error: connect ECONNREFUSED 127.0.0.1:58999
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+9:33:04 pm [vite] http proxy error: /api/snapshot
+Error: connect ECONNREFUSED 127.0.0.1:58999
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)

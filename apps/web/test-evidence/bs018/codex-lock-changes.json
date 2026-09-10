@@ -1,0 +1,695 @@
+[
+  {
+    "path": "",
+    "old": "0.1.0",
+    "new": "0.1.0",
+    "old_dev": null,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/@puppeteer/browsers",
+    "old": "2.13.2",
+    "new": "3.2.2",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/@puppeteer/browsers/node_modules/semver",
+    "old": "7.8.5",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/@tootallnate/quickjs-emscripten",
+    "old": "0.23.0",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/@types/node",
+    "old": "26.5.0",
+    "new": "26.5.0",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/@types/yauzl",
+    "old": "2.10.3",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/@vitest/expect",
+    "old": "3.2.7",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/@vitest/mocker",
+    "old": "3.2.7",
+    "new": "5.0.0",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/@vitest/pretty-format",
+    "old": "3.2.7",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/@vitest/runner",
+    "old": "3.2.7",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/@vitest/snapshot",
+    "old": "3.2.7",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/@vitest/spy",
+    "old": "3.2.7",
+    "new": "5.0.0",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/@vitest/utils",
+    "old": "3.2.7",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/ansi-regex",
+    "old": "5.0.1",
+    "new": "5.0.1",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/ast-types",
+    "old": "0.13.4",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/bare-events",
+    "old": "2.9.2",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/bare-fs",
+    "old": "4.8.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/bare-path",
+    "old": "3.1.2",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/bare-stream",
+    "old": "2.13.4",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/bare-stream/node_modules/b4a",
+    "old": "1.8.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/bare-url",
+    "old": "2.5.4",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/basic-ftp",
+    "old": "5.3.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/buffer-crc32",
+    "old": "0.2.13",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/cac",
+    "old": "6.7.14",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/chai",
+    "old": "5.3.3",
+    "new": "6.2.2",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/check-error",
+    "old": "2.1.3",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/chromium-bidi",
+    "old": "14.0.0",
+    "new": "17.0.2",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/cliui",
+    "old": "8.0.1",
+    "new": "9.0.1",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/cliui/node_modules/string-width",
+    "old": null,
+    "new": "7.2.0",
+    "old_dev": null,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/data-uri-to-buffer",
+    "old": "6.0.2",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/deep-eql",
+    "old": "5.0.2",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/degenerator",
+    "old": "5.0.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/devtools-protocol",
+    "old": "0.0.1608973",
+    "new": "0.0.1666840",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/emoji-regex",
+    "old": "8.0.0",
+    "new": "10.6.0",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/end-of-stream",
+    "old": "1.4.5",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/es-module-lexer",
+    "old": "1.7.0",
+    "new": "2.3.2",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/escodegen",
+    "old": "2.1.0",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/esprima",
+    "old": "4.0.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/events-universal",
+    "old": "1.0.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/extract-zip",
+    "old": "2.0.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/fast-fifo",
+    "old": "1.3.2",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/fd-slicer",
+    "old": "1.1.0",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/get-east-asian-width",
+    "old": null,
+    "new": "1.6.0",
+    "old_dev": null,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/get-stream",
+    "old": "5.2.0",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/get-uri",
+    "old": "6.0.5",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/ip-address",
+    "old": "10.7.0",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/is-fullwidth-code-point",
+    "old": "3.0.0",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/loupe",
+    "old": "3.2.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/magic-string",
+    "old": "0.30.21",
+    "new": "1.3.1",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/modern-tar",
+    "old": null,
+    "new": "0.8.5",
+    "old_dev": null,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/netmask",
+    "old": "2.1.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/obug",
+    "old": null,
+    "new": "2.2.1",
+    "old_dev": null,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/once",
+    "old": "1.4.0",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/pac-proxy-agent",
+    "old": "7.2.0",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/pac-resolver",
+    "old": "7.0.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/pathe",
+    "old": "2.0.3",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/pathval",
+    "old": "2.0.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/pend",
+    "old": "1.2.0",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/progress",
+    "old": "2.0.3",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/proxy-agent",
+    "old": "6.5.0",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/proxy-agent/node_modules/lru-cache",
+    "old": "7.18.3",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/proxy-from-env",
+    "old": "1.1.0",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/pump",
+    "old": "3.0.4",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/puppeteer-core",
+    "old": "24.43.1",
+    "new": "25.10.0",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/require-directory",
+    "old": "2.1.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/smart-buffer",
+    "old": "4.2.0",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/socks",
+    "old": "2.8.10",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/socks-proxy-agent",
+    "old": "8.0.5",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/source-map",
+    "old": "0.6.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/std-env",
+    "old": "3.10.0",
+    "new": "4.2.0",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/streamx",
+    "old": "2.28.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/string-width",
+    "old": "4.2.3",
+    "new": "8.2.2",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/strip-ansi",
+    "old": "6.0.1",
+    "new": "7.2.0",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/strip-ansi/node_modules/ansi-regex",
+    "old": null,
+    "new": "6.3.0",
+    "old_dev": null,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/strip-literal",
+    "old": "3.1.0",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/strip-literal/node_modules/js-tokens",
+    "old": "9.0.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/tar-fs",
+    "old": "3.1.3",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/tar-stream",
+    "old": "3.2.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/tar-stream/node_modules/b4a",
+    "old": "1.8.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/teex",
+    "old": "1.0.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/text-decoder",
+    "old": "1.2.7",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/text-decoder/node_modules/b4a",
+    "old": "1.8.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/tinybench",
+    "old": "2.9.0",
+    "new": "6.1.4",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/tinyexec",
+    "old": "0.3.2",
+    "new": "1.3.0",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/tinypool",
+    "old": "1.1.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/tinyrainbow",
+    "old": "2.0.0",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/tinyspy",
+    "old": "4.0.6",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/tslib",
+    "old": "2.8.1",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/undici-types",
+    "old": "8.9.0",
+    "new": "8.9.0",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/vite-node",
+    "old": "3.2.4",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/vitest",
+    "old": "3.2.7",
+    "new": "5.0.0",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/webdriver-bidi-protocol",
+    "old": "0.4.1",
+    "new": "0.4.3",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/wrap-ansi",
+    "old": "7.0.0",
+    "new": "9.0.2",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/wrap-ansi/node_modules/ansi-styles",
+    "old": null,
+    "new": "6.2.3",
+    "old_dev": null,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/wrap-ansi/node_modules/string-width",
+    "old": null,
+    "new": "7.2.0",
+    "old_dev": null,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/wrappy",
+    "old": "1.0.2",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  },
+  {
+    "path": "node_modules/yargs",
+    "old": "17.7.3",
+    "new": "18.1.0",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/yargs-parser",
+    "old": "21.1.1",
+    "new": "22.0.0",
+    "old_dev": true,
+    "new_dev": true
+  },
+  {
+    "path": "node_modules/yauzl",
+    "old": "2.10.0",
+    "new": null,
+    "old_dev": true,
+    "new_dev": null
+  }
+]

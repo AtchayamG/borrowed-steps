@@ -15,7 +15,9 @@ const EDGE_PATH =
   "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
 const CHROME_PATH =
   "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
-const executablePath = fs.existsSync(EDGE_PATH) ? EDGE_PATH : CHROME_PATH;
+const executablePath =
+  process.env.BS_BROWSER_EXECUTABLE ||
+  (fs.existsSync(EDGE_PATH) ? EDGE_PATH : CHROME_PATH);
 
 if (!fs.existsSync(EVIDENCE_DIR)) {
   fs.mkdirSync(EVIDENCE_DIR, { recursive: true });
