@@ -1,0 +1,55 @@
+{
+  "task": "BS-016",
+  "worker": "AGY, senior backend developer",
+  "model": "Gemini 3.8 Flash High (serving identity hidden/unverified per contract)",
+  "effort": "HIGH",
+  "date": "2026-09-10",
+  "base_commit": "5f25b7c",
+  "environment": {
+    "python": "3.11.15",
+    "postgresql": "16.10",
+    "psycopg": "3.2.10",
+    "psycopg_binary": "3.2.10",
+    "database": "Owned disposable loopback cluster (port 54345); random per-test databases",
+    "inference_calls": 0,
+    "cloud_calls": 0,
+    "spend_inr": 0
+  },
+  "final_checks": {
+    "python -m pytest tests/ -q": {
+      "passed": 534,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 2,
+      "seconds": 108.45
+    },
+    "retained_tests": 522,
+    "new_tests": 12,
+    "python -m ruff check src tests scripts": "PASS, 76 files",
+    "python -m ruff format --check src tests scripts": "PASS, 76 files",
+    "python -m mypy src tests scripts": "PASS, strict + warn_unreachable, 76 files",
+    "uv pip check --python .venv/Scripts/python.exe": "PASS, 72 packages"
+  },
+  "assertions": [
+    "POST /api/internal/tasks/tick and GET /api/internal/tasks/status are registered only when BS_RUNTIME=hosted",
+    "Operational routes are omitted from OpenAPI schema (include_in_schema=False) and return 404 in BS_RUNTIME=local mode",
+    "Zero-database cold-start authentication: unauthenticated, malformed, duplicate header, cookie-only, or invalid bearer token requests reject with generic 401 UNAUTHORIZED before opening any PostgreSQL connection or touching driver code (verified with psycopg.connect probe)",
+    "Unset or unconfigured BS_TASK_TICK_TOKEN rejects operational requests with generic 503 SERVICE_UNAVAILABLE before opening any database connection",
+    "BS_TASK_TICK_TOKEN is validated as 32..256 ASCII URL-safe characters [A-Za-z0-9_-], preserved without trimming, and redacted from logs, repr, and error messages",
+    "Factory initialization (create_app) executes zero database I/O, enabling instant cold starts without network trips",
+    "Standard business routes enforce schema readiness at request-time via synchronous FastAPI dependency (require_hosted_schema) offloaded to threadpool, returning generic 503 SERVICE_UNAVAILABLE on unmigrated (version 0) or future schemas",
+    "Health endpoint (/api/health) remains pure DB-free liveness probe returning HTTP 200 regardless of database readiness",
+    "Operational endpoints invoke HostedSchedulerService.check_schema() with tight scheduler SQL limits (2s connect / 500ms statement / 250ms lock) and reject unmigrated schemas with generic 503",
+    "Operational endpoints strictly disregard all request body and query parameters; candidate limit (100), processing budget (20s), and lease duration (60s) cannot be overridden",
+    "POST /api/internal/tasks/tick maps outcome success/partial to 200 OK, busy/stale_lease to 409 Conflict, and failed/error/evidence-write-failure to 503 Service Unavailable",
+    "Tick response payload contains outcome, capacity_limited, and aggregate counts; internal run_id and driver error details are strictly omitted",
+    "GET /api/internal/tasks/status is strictly read-only: returns current status dictionary without running tasks or mutating state, and returns 503 on database read error",
+    "All operational responses return Cache-Control: no-store header",
+    "Inactive GitHub Actions workflow example created at docs/workflows/hosted-tick.yml.example with 15-minute offset schedule (7,22,37,52 * * * *), workflow_dispatch, empty permissions ({}), concurrency serialization, BS_SCHEDULER_ENABLED == 'true' gate, curl connect timeout 10s / max-time 55s, no retries, no redirect following, no response-body logging, and explicit 2xx verification"
+  ],
+  "limits": [
+    "Locally verified scheduler HTTP packaging against disposable local PostgreSQL cluster",
+    "Live hosting deployment (Neon PostgreSQL, Vercel frontend), live GitHub Actions schedule activation, shared inference admission, and video gates remain deferred per contract",
+    "Zero model inference calls executed ($0 cloud spend)"
+  ]
+}

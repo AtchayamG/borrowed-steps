@@ -357,3 +357,48 @@ assert app.state.tasks is None
         check=False,
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_task_tick_token_configuration_and_redaction() -> None:
+    # 1. Unset by default (None) in both local and hosted
+    local_settings = load_settings({})
+    assert local_settings.task_tick_token is None
+
+    hosted_settings = load_settings(VALID_HOSTED_ENV)
+    assert hosted_settings.task_tick_token is None
+
+    # 2. Valid token 32 to 256 URL-safe characters
+    token_32 = "a" * 32
+    token_256 = "b" * 256
+    token_url_safe = "Abc-123_xyz-789_ABC-XYZ-0123456789"
+    for tok in (token_32, token_256, token_url_safe):
+        s = load_settings(dict(VALID_HOSTED_ENV, BS_TASK_TICK_TOKEN=tok))
+        assert s.task_tick_token == tok
+        assert tok not in repr(s)
+        assert tok not in str(s)
+        assert "task_tick_token" not in repr(s)
+        assert "task_tick_token" not in str(s)
+
+    # 3. Invalid tokens fail closed without echoing token in error message
+    secret_bad_token = "short_secret_with_private_bits"
+    with pytest.raises(ValueError, match="BS_TASK_TICK_TOKEN") as exc_info:
+        load_settings(dict(VALID_HOSTED_ENV, BS_TASK_TICK_TOKEN=secret_bad_token))
+    assert secret_bad_token not in str(exc_info.value)
+    assert secret_bad_token not in "".join(traceback.format_exception(exc_info.value))
+
+    # Reject > 256
+    oversized = "a" * 257
+    with pytest.raises(ValueError, match="BS_TASK_TICK_TOKEN"):
+        load_settings(dict(VALID_HOSTED_ENV, BS_TASK_TICK_TOKEN=oversized))
+
+    # Reject non-ASCII / non-URL-safe characters
+    for invalid in [
+        "a" * 31 + " ",  # whitespace at end (no trimming)
+        " " + "a" * 31,  # whitespace at start (no trimming)
+        "a" * 31 + "@",  # non-URL-safe char
+        "a" * 31 + "/",  # slash
+        "a" * 31 + "\n",  # newline
+        "a" * 31 + "\u00e9",  # non-ASCII unicode
+    ]:
+        with pytest.raises(ValueError, match="BS_TASK_TICK_TOKEN"):
+            load_settings(dict(VALID_HOSTED_ENV, BS_TASK_TICK_TOKEN=invalid))

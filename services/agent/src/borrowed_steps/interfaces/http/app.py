@@ -11,13 +11,18 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import hashlib
+import hmac
 import json
 import logging
+import re
 import threading
 from collections.abc import AsyncIterator, Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from fastapi import FastAPI, Response
+if TYPE_CHECKING:
+    from borrowed_steps.infrastructure.hosted_scheduler import HostedSchedulerService
+
+from fastapi import Depends, FastAPI, Response
 from fastapi import Request as HttpRequest
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -147,6 +152,7 @@ _CODE_BY_STATUS: dict[int, str] = {
     405: "METHOD_NOT_ALLOWED",
     409: "STATE_CONFLICT",
     422: "VALIDATION_ERROR",
+    503: "SERVICE_UNAVAILABLE",
 }
 
 
@@ -335,14 +341,13 @@ def create_app(
     store: Store
     runner: TaskRunner | None = None
     assistant: RequestInterpreter | None = None
+    scheduler: HostedSchedulerService | None = None
     if resolved.runtime == "hosted":
         if resolved.database_url is None:
             raise ValueError("Hosted runtime requires an explicit database_url.")
         from borrowed_steps.infrastructure.postgres_store import PostgresStore
 
-        pg_store = PostgresStore(resolved.database_url)
-        pg_store.check_schema()
-        store = pg_store
+        store = PostgresStore(resolved.database_url)
         agent_mode = AGENT_MODE_DISABLED
         milestone = MILESTONE_HOSTED
     else:
@@ -357,6 +362,16 @@ def create_app(
         clock=clock if clock is not None else SystemClock(),
         ids=ids if ids is not None else SecretsIdGenerator(),
     )
+
+    if resolved.runtime == "hosted":
+        from borrowed_steps.infrastructure.hosted_scheduler import HostedSchedulerService
+
+        assert resolved.database_url is not None
+        scheduler = HostedSchedulerService(
+            resolved.database_url,
+            clock=services.clock,
+            ids=services.ids,
+        )
 
     if resolved.runtime == "local":
         if resolved.tasks_enabled:
@@ -454,6 +469,18 @@ def create_app(
     # Exposed so a test can assert the real owned thread started and stopped,
     # rather than inferring it from a log line.
     app.state.tasks = runner
+    app.state.scheduler = scheduler
+
+    def require_hosted_schema() -> None:
+        if resolved.runtime == "hosted":
+            from borrowed_steps.infrastructure.postgres_migrations import SchemaVersionError
+            from borrowed_steps.infrastructure.postgres_store import PostgresStore
+
+            if isinstance(store, PostgresStore):
+                try:
+                    store.check_schema()
+                except (SchemaVersionError, RuntimeError):
+                    raise StarletteHTTPException(status_code=503) from None
 
     def check_origin(http_request: HttpRequest) -> None:
         origin = http_request.headers.get("origin")
@@ -557,7 +584,11 @@ def create_app(
         """
         return JSONResponse({"status": "ok", "milestone": milestone, "agent_mode": agent_mode})
 
-    @app.post("/api/workspaces", status_code=201)
+    @app.post(
+        "/api/workspaces",
+        status_code=201,
+        dependencies=[Depends(require_hosted_schema)],
+    )
     def post_workspace(http_request: HttpRequest, body: WorkspaceBody) -> JSONResponse:
         """Create an isolated synthetic workspace and issue its session cookie.
 
@@ -587,7 +618,7 @@ def create_app(
         )
         return response
 
-    @app.get("/api/snapshot")
+    @app.get("/api/snapshot", dependencies=[Depends(require_hosted_schema)])
     def get_snapshot(http_request: HttpRequest) -> JSONResponse:
         """Everything the caller's workspace can see."""
         session = require_session(http_request)
@@ -595,7 +626,7 @@ def create_app(
             snapshot = read_snapshot(uow)
         return JSONResponse(_snapshot_json(snapshot, agent_mode))
 
-    @app.post("/api/intake/interpret")
+    @app.post("/api/intake/interpret", dependencies=[Depends(require_hosted_schema)])
     async def post_interpret(http_request: HttpRequest, body: InterpretBody) -> JSONResponse:
         """Suggest a draft request from free text. Read-only.
 
@@ -607,7 +638,7 @@ def create_app(
         suggestion, never repeat an effect.
         """
         check_origin(http_request)
-        session = require_session(http_request)
+        session = await asyncio.to_thread(require_session, http_request)
         if assistant is None:
             msg = "The intake assistant is not enabled on this server."
             raise AssistantDisabledError(msg)
@@ -708,7 +739,7 @@ def create_app(
             headers=headers if headers else None,
         )
 
-    @app.post("/api/requests")
+    @app.post("/api/requests", dependencies=[Depends(require_hosted_schema)])
     def post_request(http_request: HttpRequest, body: CreateRequestBody) -> Response:
         """Record a structured borrower request."""
         check_origin(http_request)
@@ -728,7 +759,7 @@ def create_app(
 
         return run_mutation(session, key, http_request.url.path, _digest(body), action)
 
-    @app.post("/api/reservations")
+    @app.post("/api/reservations", dependencies=[Depends(require_hosted_schema)])
     def post_reservation(http_request: HttpRequest, body: ReservationBody) -> Response:
         """A human allocates one available item to one open request."""
         check_origin(http_request)
@@ -752,7 +783,7 @@ def create_app(
 
         return run_mutation(session, key, http_request.url.path, _digest(body), action)
 
-    @app.post("/api/loans/{loan_id}/pickup")
+    @app.post("/api/loans/{loan_id}/pickup", dependencies=[Depends(require_hosted_schema)])
     def post_pickup(loan_id: str, http_request: HttpRequest, body: TransitionBody) -> Response:
         """A human confirms the borrower collected the item."""
         check_origin(http_request)
@@ -775,7 +806,7 @@ def create_app(
 
         return run_mutation(session, key, http_request.url.path, _digest(body), action)
 
-    @app.post("/api/loans/{loan_id}/return")
+    @app.post("/api/loans/{loan_id}/return", dependencies=[Depends(require_hosted_schema)])
     def post_return(loan_id: str, http_request: HttpRequest, body: TransitionBody) -> Response:
         """A human takes the item back. It stays unavailable until inspected."""
         check_origin(http_request)
@@ -798,7 +829,10 @@ def create_app(
 
         return run_mutation(session, key, http_request.url.path, _digest(body), action)
 
-    @app.post("/api/equipment/{equipment_id}/inspection")
+    @app.post(
+        "/api/equipment/{equipment_id}/inspection",
+        dependencies=[Depends(require_hosted_schema)],
+    )
     def post_inspection(
         equipment_id: str, http_request: HttpRequest, body: InspectionBody
     ) -> Response:
@@ -823,5 +857,155 @@ def create_app(
             }
 
         return run_mutation(session, key, http_request.url.path, _digest(body), action)
+
+    if resolved.runtime == "hosted":
+        from borrowed_steps.infrastructure.postgres_migrations import SchemaVersionError
+
+        def _authenticate_operational(http_request: HttpRequest) -> JSONResponse | None:
+            if resolved.task_tick_token is None:
+                return _error(
+                    503,
+                    "SERVICE_UNAVAILABLE",
+                    _GENERIC_FAILURE,
+                    headers={"Cache-Control": "no-store"},
+                )
+            auth_headers = http_request.headers.getlist("authorization")
+            if len(auth_headers) != 1:
+                return _error(
+                    401,
+                    "UNAUTHORIZED",
+                    _GENERIC_FAILURE,
+                    headers={"Cache-Control": "no-store"},
+                )
+            auth = auth_headers[0]
+            prefix = "Bearer "
+            if not auth.startswith(prefix):
+                return _error(
+                    401,
+                    "UNAUTHORIZED",
+                    _GENERIC_FAILURE,
+                    headers={"Cache-Control": "no-store"},
+                )
+            token = auth[len(prefix) :]
+            if not (
+                32 <= len(token) <= 256 and bool(re.fullmatch(r"[A-Za-z0-9_-]{32,256}", token))
+            ):
+                return _error(
+                    401,
+                    "UNAUTHORIZED",
+                    _GENERIC_FAILURE,
+                    headers={"Cache-Control": "no-store"},
+                )
+            if not hmac.compare_digest(
+                token.encode("utf-8"),
+                resolved.task_tick_token.encode("utf-8"),
+            ):
+                return _error(
+                    401,
+                    "UNAUTHORIZED",
+                    _GENERIC_FAILURE,
+                    headers={"Cache-Control": "no-store"},
+                )
+            return None
+
+        @app.post("/api/internal/tasks/tick", include_in_schema=False)
+        def post_internal_tasks_tick(http_request: HttpRequest) -> JSONResponse:
+            auth_err = _authenticate_operational(http_request)
+            if auth_err is not None:
+                return auth_err
+
+            if scheduler is None:
+                return _error(
+                    503,
+                    "SERVICE_UNAVAILABLE",
+                    _GENERIC_FAILURE,
+                    headers={"Cache-Control": "no-store"},
+                )
+
+            try:
+                result = scheduler.tick()
+            except SchemaVersionError:
+                return _error(
+                    503,
+                    "SERVICE_UNAVAILABLE",
+                    _GENERIC_FAILURE,
+                    headers={"Cache-Control": "no-store"},
+                )
+            except Exception:
+                _LOGGER.error("Scheduler tick failed")
+                return _error(
+                    503,
+                    "SERVICE_UNAVAILABLE",
+                    _GENERIC_FAILURE,
+                    headers={"Cache-Control": "no-store"},
+                )
+
+            report_dict: dict[str, Any] | None = None
+            if result.report is not None:
+                report_dict = {
+                    "considered": result.report.considered,
+                    "marked_due": result.report.marked_due,
+                    "resolved_stale": result.report.resolved_stale,
+                    "unchanged": result.report.unchanged,
+                    "contended": result.report.contended,
+                    "stopped_early": result.report.stopped_early,
+                }
+
+            content = {
+                "outcome": result.outcome,
+                "capacity_limited": result.capacity_limited,
+                "report": report_dict,
+            }
+
+            if result.outcome in {"success", "partial"}:
+                status_code = 200
+            elif result.outcome in {"busy", "stale_lease"}:
+                status_code = 409
+            else:
+                status_code = 503
+
+            return JSONResponse(
+                status_code=status_code,
+                content=content,
+                headers={"Cache-Control": "no-store"},
+            )
+
+        @app.get("/api/internal/tasks/status", include_in_schema=False)
+        def get_internal_tasks_status(http_request: HttpRequest) -> JSONResponse:
+            auth_err = _authenticate_operational(http_request)
+            if auth_err is not None:
+                return auth_err
+
+            if scheduler is None:
+                return _error(
+                    503,
+                    "SERVICE_UNAVAILABLE",
+                    _GENERIC_FAILURE,
+                    headers={"Cache-Control": "no-store"},
+                )
+
+            try:
+                status_obj = scheduler.read_status()
+            except SchemaVersionError:
+                return _error(
+                    503,
+                    "SERVICE_UNAVAILABLE",
+                    _GENERIC_FAILURE,
+                    headers={"Cache-Control": "no-store"},
+                )
+            except Exception:
+                _LOGGER.error("Scheduler status read failed")
+                return _error(
+                    503,
+                    "SERVICE_UNAVAILABLE",
+                    _GENERIC_FAILURE,
+                    headers={"Cache-Control": "no-store"},
+                )
+
+            return JSONResponse(
+                status_code=200,
+                content=status_obj.to_dict(),
+                headers={"Cache-Control": "no-store"},
+            )
 
     return app

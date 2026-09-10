@@ -174,6 +174,12 @@ def validate_settings(settings: Settings) -> None:
             raise ValueError("Hosted assistant is disabled in this increment.")
         _validate_hosted_origins(settings.allowed_origins)
 
+    if settings.task_tick_token is not None and not (
+        32 <= len(settings.task_tick_token) <= 256
+        and bool(re.fullmatch(r"[A-Za-z0-9_-]{32,256}", settings.task_tick_token))
+    ):
+        raise ValueError("BS_TASK_TICK_TOKEN must be 32 to 256 ASCII URL-safe characters.")
+
 
 @dataclass(frozen=True, slots=True)
 class Settings:
@@ -193,6 +199,7 @@ class Settings:
     store: str = DEFAULT_STORE
     database_url: str | None = field(default=None, repr=False)
     assistant_provider: str = DEFAULT_ASSISTANT_PROVIDER
+    task_tick_token: str | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         validate_settings(self)
@@ -338,4 +345,5 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         store=store,
         database_url=database_url,
         assistant_provider=provider,
+        task_tick_token=source.get("BS_TASK_TICK_TOKEN"),
     )

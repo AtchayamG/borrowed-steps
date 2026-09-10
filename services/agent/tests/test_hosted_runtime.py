@@ -16,7 +16,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from borrowed_steps.config import Settings
-from borrowed_steps.infrastructure.postgres_migrations import SchemaVersionError
 from borrowed_steps.infrastructure.postgres_store import PostgresStore
 from borrowed_steps.interfaces.http.app import (
     AGENT_MODE_DISABLED,
@@ -61,11 +60,23 @@ def pg_url() -> Iterator[str]:
 
 
 def test_hosted_initialization_isolation_and_schema_gates(tmp_path: Path) -> None:
-    # 1. Unmigrated database (version 0) refuses startup without creating tables
+    # 1. Unmigrated DB allows factory startup; health succeeds; business requests fail 503
     with disposable_database() as raw_url:
         settings_raw = _hosted_settings(raw_url)
-        with pytest.raises(SchemaVersionError):
-            create_app(settings_raw)
+        app_raw = create_app(settings_raw)
+        with TestClient(app_raw, base_url=ORIGIN) as client_raw:
+            # Health check is DB-free liveness
+            health = client_raw.get("/api/health")
+            assert health.status_code == 200
+
+            # Business routes fail with generic 503 on wrong schema
+            ws_res = client_raw.post("/api/workspaces", json={}, headers={"Origin": ORIGIN})
+            assert ws_res.status_code == 503
+            assert ws_res.json()["error"]["code"] == "SERVICE_UNAVAILABLE"
+
+            snap_res = client_raw.get("/api/snapshot")
+            assert snap_res.status_code == 503
+            assert snap_res.json()["error"]["code"] == "SERVICE_UNAVAILABLE"
 
         # Verify no tables were created in the database
         with psycopg.connect(raw_url) as conn:
@@ -75,14 +86,20 @@ def test_hosted_initialization_isolation_and_schema_gates(tmp_path: Path) -> Non
             assert row is not None
             assert row[0] == 0
 
-        # 2. Database with newer schema (version 3) refuses startup
+        # 2. Database with newer schema (version 3) allows startup; business requests fail 503
         with psycopg.connect(raw_url, autocommit=True) as conn:
             conn.execute(
                 "CREATE TABLE schema_migrations (version INT PRIMARY KEY, applied_at TIMESTAMPTZ)"
             )
             conn.execute("INSERT INTO schema_migrations VALUES (3, now())")
-        with pytest.raises(SchemaVersionError):
-            create_app(settings_raw)
+        app_v3 = create_app(settings_raw)
+        with TestClient(app_v3, base_url=ORIGIN) as client_v3:
+            health = client_v3.get("/api/health")
+            assert health.status_code == 200
+
+            ws_res = client_v3.post("/api/workspaces", json={}, headers={"Origin": ORIGIN})
+            assert ws_res.status_code == 503
+            assert ws_res.json()["error"]["code"] == "SERVICE_UNAVAILABLE"
 
     # 3. Migrated database: verify SqliteStore, apply_migrations, TaskRunner never invoked
     with migrated_database() as valid_url:

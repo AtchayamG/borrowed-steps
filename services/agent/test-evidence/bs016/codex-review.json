@@ -1,0 +1,24 @@
+{
+  "worker_source": "edd3a05",
+  "status": "ACCEPTED_LOCAL",
+  "pytest": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "541",
+    "time": "115.354",
+    "timestamp": "2026-09-10T16:12:07.429974+05:30",
+    "hostname": "LAPTOP-V1HLTHEH"
+  },
+  "lint": "pass",
+  "format": "pass",
+  "strict_mypy_files": 76,
+  "compatible_packages": 72,
+  "workflow_offline_cases": 16,
+  "model_calls": 0,
+  "cloud_activation": false,
+  "spend_inr": 0,
+  "pre_fix_regression_result": "3 failed,78 passed: two log leaks and intake schema bypass",
+  "scope": "local scheduler HTTP packaging; not live release or inference admission"
+}

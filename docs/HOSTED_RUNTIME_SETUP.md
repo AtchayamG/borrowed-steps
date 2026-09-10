@@ -16,6 +16,7 @@ The application supports two mutually exclusive runtime modes: `local` and `host
 | `BS_COOKIE_SECURE` | `0` | `1` | Enforces `Secure` flag on session cookies |
 | `BS_ALLOWED_ORIGINS` | `http://localhost:5173,...` | Non-empty HTTPS list | Comma-separated list of allowed frontend HTTPS origins |
 | `BS_TASKS_ENABLED` | `1` | `0` | Background task runner; explicitly disabled in hosted increment |
+| `BS_TASK_TICK_TOKEN` | None | Optional | Bearer secret for operational scheduler HTTP routes (32..256 chars) |
 | `BS_ASSISTANT_ENABLED` | `0` | `0` | Assistant inference; disabled in this increment |
 | `BS_ASSISTANT_PROVIDER` | `ollama` | `groq` | Provider selector; hosted reserves `groq` without loading SDK |
 
@@ -33,8 +34,8 @@ In hosted mode, each origin in `BS_ALLOWED_ORIGINS` must satisfy:
 When `create_app()` initializes in hosted mode:
 1. **Configuration Validation**: Evaluates settings against all hosted requirements. Direct `Settings` construction cannot bypass these invariants.
 2. **Lazy PostgreSQL Driver Import**: `PostgresStore` is imported dynamically inside `create_app` only when `runtime == "hosted"`, keeping the base local install free of compulsory PostgreSQL dependencies.
-3. **Read-Only Schema Verification**: Invokes `store.check_schema()` before serving any request. Schema version must equal the current expected version (2 after BS-014). Unmigrated databases (version 0) or future schemas (version > 2) fail startup with `SchemaVersionError`. No DDL or migrations are ever run at runtime or during health checks.
-4. **TaskRunner Disabled**: `runner` remains `None`. No scheduler thread is spawned, and `app.state.tasks` is `None`.
+3. **Zero-DB Cold-Start Initialization & Request-Time Schema Readiness**: Factory initialization executes zero database I/O, allowing instantaneous cold-starts. Standard business routes verify schema readiness at request-time via a synchronous threadpool dependency (`require_hosted_schema`). Unmigrated databases (version 0) or future schemas (version > 2) fail business requests with a generic 503 `SERVICE_UNAVAILABLE`. Operational routes (`/api/internal/tasks/*`) perform schema readiness checks via `HostedSchedulerService.check_schema()` using tight scheduler timeouts (2s connect / 500ms statement / 250ms lock). No DDL or migrations are ever run at runtime or during health checks.
+4. **TaskRunner Disabled**: `runner` remains `None`. No scheduler thread is spawned, and `app.state.tasks` is `None`. Hosted operational routes (`/api/internal/tasks/tick` and `/api/internal/tasks/status`) are packaged and exposed directly on the HTTP app.
 5. **Assistant Disabled**: `assistant` remains `None`. The `/api/intake/interpret` endpoint returns `503 ASSISTANT_DISABLED` without performing inference or mutating state. Injected interpreters in test harnesses cannot bypass this gate.
 6. **Health Endpoint**: `GET /api/health` returns:
    ```json
@@ -44,7 +45,7 @@ When `create_app()` initializes in hosted mode:
      "agent_mode": "disabled"
    }
    ```
-   Health checks are pure liveness probes and never trigger database migration checks.
+   Health checks are pure liveness probes and never trigger database migration checks or open database connections.
 
 ## Local Installation & Verification
 

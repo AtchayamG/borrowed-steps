@@ -1,0 +1,89 @@
+# Example GitHub Actions workflow for invoking the hosted tasks tick endpoint.
+# INACTIVE BY DEFAULT: This file is an example stored in docs/workflows/ and MUST NOT
+# be placed in .github/workflows/ until public deployment and activation are explicitly approved.
+# Gated by repository variable BS_SCHEDULER_ENABLED == 'true'.
+
+name: Hosted Tasks Tick
+
+on:
+  schedule:
+    # Trigger at 7, 22, 37, 52 minutes past every UTC hour
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: hosted-tasks-tick
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    name: Invoke Hosted Tick
+    if: vars.BS_SCHEDULER_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Trigger Task Tick
+        shell: bash
+        env:
+          APP_BASE_URL: ${{ vars.BS_APP_BASE_URL }}
+          TICK_TOKEN: ${{ secrets.BS_TASK_TICK_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # Fail closed if required parameters are missing
+          if [ -z "${APP_BASE_URL:-}" ]; then
+            echo "Error: BS_APP_BASE_URL variable is not configured or empty" >&2
+            exit 1
+          fi
+
+          if [ -z "${TICK_TOKEN:-}" ]; then
+            echo "Error: BS_TASK_TICK_TOKEN secret is not configured or empty" >&2
+            exit 1
+          fi
+
+          if (( ${#TICK_TOKEN} < 32 || ${#TICK_TOKEN} > 256 )) ||
+             [[ ! "${TICK_TOKEN}" =~ ^[A-Za-z0-9_-]+$ ]]; then
+            echo "Error: Invalid task tick token configuration" >&2
+            exit 1
+          fi
+
+          # Strictly validate URL scheme (must be https://)
+          case "${APP_BASE_URL}" in
+            https://*) ;;
+            *)
+              echo "Error: BS_APP_BASE_URL must start with https://" >&2
+              exit 1
+              ;;
+          esac
+
+          # Strip trailing slash if present
+          CLEAN_BASE_URL="${APP_BASE_URL%/}"
+
+          # Invoke tick endpoint:
+          # - Connect timeout: 10s, max time: 55s
+          # - No retries, no redirect following (omit -L)
+          # - No response body logging (-o /dev/null), discard stdout/stderr leak
+          # - Strict Bearer token authentication
+          if ! HTTP_STATUS=$(curl -q --globoff --proto '=https' -s -o /dev/null -w "%{http_code}" \
+            --connect-timeout 10 \
+            --max-time 55 \
+            --retry 0 \
+            -X POST \
+            -H "Authorization: Bearer ${TICK_TOKEN}" \
+            -H "Accept: application/json" \
+            "${CLEAN_BASE_URL}/api/internal/tasks/tick" 2>/dev/null); then
+            echo "Hosted tick transport failed" >&2
+            exit 1
+          fi
+
+          # Explicitly verify 2xx success status code
+          if [[ "${HTTP_STATUS}" =~ ^2[0-9][0-9]$ ]]; then
+            echo "Hosted tick invocation succeeded with HTTP ${HTTP_STATUS}"
+            exit 0
+          else
+            echo "Hosted tick invocation failed with HTTP ${HTTP_STATUS}" >&2
+            exit 1
+          fi

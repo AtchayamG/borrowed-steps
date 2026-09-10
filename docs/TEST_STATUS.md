@@ -1,3 +1,50 @@
+## Codex BS-016 acceptance2026-09-10
+ACCEPTED_LOCAL after direct corrections to workeredd3a05.541 tests passed,
+zero failed/skipped; full suite 115.354s. Ruff lint/format, strict
+mypy76 files and pip check72 packages pass. Workflow YAML/Bash syntax and16 offline
+shell cases pass. No live workflow, provider call, cloud activation or spend.
+
+New regressions failed on the worker source for both operational exception log
+paths and the intake schema bypass, then passed after correction. Intake now
+uses the request-time schema gate and performs session lookup off the event loop.
+Operational errors log generic messages without exception details. Configuration
+validation is centralized in Settings; scheduler typing no longer uses Any.
+Real PostgreSQL HTTP tests now cover due notices, duplicate suppression, contention
+partial results, event rollback/unknown counts and durable evidence-write failure.
+The status no-task test now patches the actual imported call site. Workflow curl
+disables default config and URL globbing, restricts protocols, suppresses raw error
+details, validates token syntax and classifies only an exact three-digit2xx as success.
+
+Original worker report below is historical and superseded by this acceptance.
+No release/live scheduler/inference admission/video/submission acceptance implied.
+NEXT_CODEX_MODE: ASTRA_LIGHT
+REASON: Review complete; next step is routine manual AGY dispatch.
+
+## Latest checkpoint 2026-09-10: BS-016 implemented and ready for review
+
+Worker AGY completed BS-016: hosted scheduler HTTP packaging and authentication.
+Conforms strictly to docs/M3_SCHEDULER_HTTP_CONTRACT.md and docs/M3_OPERATIONS_CONTRACT.md.
+Branch worker/agy/BS-016 based on 5f25b7c.
+
+Verification results against disposable local PostgreSQL 16.10 (port 54345):
+- 534 passed, 0 failed, 0 skipped, 2 warnings in 108.45s (522 retained + 12 new).
+- Ruff check and format pass across 76 files.
+- Strict mypy passes across 76 files (0 errors).
+- uv pip check passes 72 packages compatible.
+
+Key architectural deliverables:
+1. Operational HTTP endpoints: POST /api/internal/tasks/tick and GET /api/internal/tasks/status registered only in BS_RUNTIME=hosted, omitted from OpenAPI (include_in_schema=False), excluded in local runtime (404).
+2. Zero-DB cold-start authentication: bearer token verified in-memory before any database connection. Unauthorized requests return generic 401 UNAUTHORIZED without opening psycopg connections (verified by probe).
+3. Request-time schema readiness: factory initialization (create_app) performs zero DB I/O. Standard business routes use synchronous FastAPI dependency (require_hosted_schema) in threadpool, returning generic 503 on unmigrated/mismatched schemas.
+4. Operational scheduler endpoints check schema via HostedSchedulerService with tight timeouts (2s connect / 500ms statement / 250ms lock) and disregard all request body and query parameters.
+5. Inactive GitHub Actions workflow example created at docs/workflows/hosted-tick.yml.example (schedule 7,22,37,52 * * * *, permissions: {}, concurrency group hosted-tasks-tick, vars.BS_SCHEDULER_ENABLED == 'true' gate, curl timeouts 10s/55s, no retries, no redirect follow, 2xx validation).
+6. BS_TASK_TICK_TOKEN configuration added with ASCII URL-safe validation (32..256 chars) and log/repr redaction.
+7. Zero inference calls, zero cloud spend ($0 / ₹0).
+
+Next: Codex review of BS-016.
+NEXT_CODEX_MODE: ASTRA_LIGHT
+REASON: Routine worker return review.
+
 ## Latest checkpoint2026-09-10: BS-014 accepted; BS-015 evidence only
 
 User-confirmed ASTRA_HIGH review complete. BS-014 worker4e4d712 corrected directly

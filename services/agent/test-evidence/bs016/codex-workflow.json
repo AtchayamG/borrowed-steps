@@ -1,0 +1,103 @@
+{
+  "mode": "offline function stub; zero network calls",
+  "yaml": "pass",
+  "bash_syntax": "pass",
+  "cases": [
+    {
+      "case": 1,
+      "expected_success": true,
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "case": 2,
+      "expected_success": true,
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "case": 3,
+      "expected_success": true,
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "case": 4,
+      "expected_success": false,
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "case": 5,
+      "expected_success": false,
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "case": 6,
+      "expected_success": false,
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "case": 7,
+      "expected_success": false,
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "case": 8,
+      "expected_success": false,
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "case": 9,
+      "expected_success": false,
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "case": 10,
+      "expected_success": false,
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "case": 11,
+      "expected_success": false,
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "case": 12,
+      "expected_success": false,
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "case": 13,
+      "expected_success": false,
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "case": 14,
+      "expected_success": false,
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "case": 15,
+      "expected_success": false,
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "case": 16,
+      "expected_success": false,
+      "exit_code": 1,
+      "passed": true
+    }
+  ]
+}
