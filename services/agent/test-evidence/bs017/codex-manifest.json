@@ -1,0 +1,246 @@
+{
+  "total_files": 38,
+  "total_uncompressed_bytes": 507219,
+  "categories": {
+    "counts": {
+      "source": 32,
+      "config": 3,
+      "static": 3
+    },
+    "bytes": {
+      "source": 290460,
+      "config": 375,
+      "static": 216384
+    }
+  },
+  "files": [
+    {
+      "path": ".python-version",
+      "category": "config",
+      "size_bytes": 5,
+      "sha256": "7b55f8e67b5623c4bef3fa691288da9437d79d3aba156de48d481db32ac7d16d"
+    },
+    {
+      "path": "app.py",
+      "category": "source",
+      "size_bytes": 2243,
+      "sha256": "42ac64d1bb1dca5495978a81bb755a4e55d77b6859a54a512316aa9e7b7ee36c"
+    },
+    {
+      "path": "borrowed_steps/__init__.py",
+      "category": "source",
+      "size_bytes": 142,
+      "sha256": "9e4ba381eb746102374a6cb8cd3f30ef6ba8a5a374da2400d15f377d65a157c5"
+    },
+    {
+      "path": "borrowed_steps/application/__init__.py",
+      "category": "source",
+      "size_bytes": 75,
+      "sha256": "9b7c068e8d52f9b948cc31fc0e818ef6f4629a6502ad3263b30f104e91739355"
+    },
+    {
+      "path": "borrowed_steps/application/coordination.py",
+      "category": "source",
+      "size_bytes": 6168,
+      "sha256": "55bea6ec154f4fc0d8382315e133efed249aaf18ff7f48e79387056c1d4423d5"
+    },
+    {
+      "path": "borrowed_steps/application/errors.py",
+      "category": "source",
+      "size_bytes": 2182,
+      "sha256": "20a5446731292637dc9e6256e9afa8e32866860a09d361500f7be3b682dfc9b2"
+    },
+    {
+      "path": "borrowed_steps/application/grounding.py",
+      "category": "source",
+      "size_bytes": 6940,
+      "sha256": "dcb2355e492879284ababd162d0e8e772ef34d1ad83747ab204303410e6b0c30"
+    },
+    {
+      "path": "borrowed_steps/application/interpreter.py",
+      "category": "source",
+      "size_bytes": 3786,
+      "sha256": "4b5b8d6ad9e27c5ec4ce34b113989e5d480754e46596b1d7142b38e08a61e8b5"
+    },
+    {
+      "path": "borrowed_steps/application/ports.py",
+      "category": "source",
+      "size_bytes": 6374,
+      "sha256": "622bc5846500952893e4bb35e6306b247d58875a0e8d2bafc42da238ae266776"
+    },
+    {
+      "path": "borrowed_steps/application/use_cases.py",
+      "category": "source",
+      "size_bytes": 11545,
+      "sha256": "8d09634c83419d1a3a13d1b362e34ff074e97be3e11fb1be5fb2e68c4144e248"
+    },
+    {
+      "path": "borrowed_steps/config.py",
+      "category": "source",
+      "size_bytes": 15764,
+      "sha256": "ad082b5715905c9fda2aff99008b673080ae648efbd845123a400a054bd5587b"
+    },
+    {
+      "path": "borrowed_steps/domain/__init__.py",
+      "category": "source",
+      "size_bytes": 88,
+      "sha256": "c39d133785dea90ea3d542cc04ea1cf6671ef4391bea6726f2bab52539b1a503"
+    },
+    {
+      "path": "borrowed_steps/domain/errors.py",
+      "category": "source",
+      "size_bytes": 1471,
+      "sha256": "d7e4b36434f207a64586ac3acf61fa895cc4305eaa82eaa8142615df1ebcbe1a"
+    },
+    {
+      "path": "borrowed_steps/domain/models.py",
+      "category": "source",
+      "size_bytes": 6210,
+      "sha256": "e12860a401f1a9b8c209a563fcaf38f60fffce50fb027f91af2ad215eac45465"
+    },
+    {
+      "path": "borrowed_steps/domain/rules.py",
+      "category": "source",
+      "size_bytes": 5860,
+      "sha256": "4005bb9959d15d00078b4d8e7b08b9ded616cf8def54532f8659e24ec26d04d4"
+    },
+    {
+      "path": "borrowed_steps/infrastructure/__init__.py",
+      "category": "source",
+      "size_bytes": 66,
+      "sha256": "fe199f20a5285a8019708f71a0da4f50f46593b9068d526359fcf63021b2aea8"
+    },
+    {
+      "path": "borrowed_steps/infrastructure/groq_model.py",
+      "category": "source",
+      "size_bytes": 24936,
+      "sha256": "efebe7ee377009373c59788e1812e66a1a61ddb28563b2566ddfd57c6573670b"
+    },
+    {
+      "path": "borrowed_steps/infrastructure/hosted_scheduler.py",
+      "category": "source",
+      "size_bytes": 22068,
+      "sha256": "654cf2dc228c333cff8e08cee9f5ae5cbcbb9a026acf1398d2fbd194e9f233b0"
+    },
+    {
+      "path": "borrowed_steps/infrastructure/inventory.py",
+      "category": "source",
+      "size_bytes": 1374,
+      "sha256": "8b966181c154ad99cfa191c0f3a2a2bc9bdfc2bf417db846d554abbca9cc0332"
+    },
+    {
+      "path": "borrowed_steps/infrastructure/owned_ollama.py",
+      "category": "source",
+      "size_bytes": 10962,
+      "sha256": "dd7d9eab33688a917b754e5f6d591bb9f66737bab84c60f6c1623ab94cf7e010"
+    },
+    {
+      "path": "borrowed_steps/infrastructure/postgres_migrations.py",
+      "category": "source",
+      "size_bytes": 14036,
+      "sha256": "85cec43dfcf3a7e2475762288b847c620385d41f4329b8b50eb5d5929a2f54d7"
+    },
+    {
+      "path": "borrowed_steps/infrastructure/postgres_store.py",
+      "category": "source",
+      "size_bytes": 24628,
+      "sha256": "811fd9f584865421467bf1365d239dac17a82fc9634be183bfc4d41238bb0a0d"
+    },
+    {
+      "path": "borrowed_steps/infrastructure/sqlite_store.py",
+      "category": "source",
+      "size_bytes": 25004,
+      "sha256": "73da671326ba0fb0ca0f8cf696a88bab15ced1bb10794bb0e862203832e3f3e3"
+    },
+    {
+      "path": "borrowed_steps/infrastructure/strands_interpreter.py",
+      "category": "source",
+      "size_bytes": 36994,
+      "sha256": "31226f998fab7694b8cc13f2be1c29c8053bc28ec8b2141fe3150d817958f4ff"
+    },
+    {
+      "path": "borrowed_steps/infrastructure/system.py",
+      "category": "source",
+      "size_bytes": 589,
+      "sha256": "908581fdfdc59409105310eea463dfcec342bd5e66d9d3ce389ba2906804b23f"
+    },
+    {
+      "path": "borrowed_steps/infrastructure/task_runner.py",
+      "category": "source",
+      "size_bytes": 4948,
+      "sha256": "1a97f80c3385165810f8c8058e0f2a8ab3da515d6a83a20bf700f7d4adb5a381"
+    },
+    {
+      "path": "borrowed_steps/interfaces/__init__.py",
+      "category": "source",
+      "size_bytes": 76,
+      "sha256": "9501dc9a0f0f3e6c022031a71eb19ec9f9ee596b076cdfc9caa9a6f344898eb0"
+    },
+    {
+      "path": "borrowed_steps/interfaces/http/__init__.py",
+      "category": "source",
+      "size_bytes": 52,
+      "sha256": "346773985d4acdc13740beaefe160083e9bca483918bc7c14bee42a023999fb3"
+    },
+    {
+      "path": "borrowed_steps/interfaces/http/app.py",
+      "category": "source",
+      "size_bytes": 40141,
+      "sha256": "f187a941716d0fe7891369f70a0ff820301cedd6a02cb1488152fb8a02dcca92"
+    },
+    {
+      "path": "borrowed_steps/interfaces/http/inference_slot.py",
+      "category": "source",
+      "size_bytes": 9970,
+      "sha256": "b43707c2b768ab4218fb2b712f41ba31811d47de6e66efb8b830f0819816530d"
+    },
+    {
+      "path": "borrowed_steps/interfaces/http/schemas.py",
+      "category": "source",
+      "size_bytes": 3510,
+      "sha256": "b224665e53bda3b52afe57eccc80f4b8d6a760347b7c63f0a53c4d0815bdadf4"
+    },
+    {
+      "path": "borrowed_steps/isotime.py",
+      "category": "source",
+      "size_bytes": 1125,
+      "sha256": "b4b111dba69575a86bfe143f525dbe4b35e88e70e16c4591960fac660b066565"
+    },
+    {
+      "path": "borrowed_steps/main.py",
+      "category": "source",
+      "size_bytes": 1133,
+      "sha256": "36cee5011336599318c1a77482944454d688a0df425442ecd73198bed8a3df09"
+    },
+    {
+      "path": "public/assets/index-CEgaRneU.css",
+      "category": "static",
+      "size_bytes": 9007,
+      "sha256": "2b1277946704450c1c3a8012d87d3c0cfd909c980ddc49e3ffa71d47d377bff2"
+    },
+    {
+      "path": "public/assets/index-Cpcwfpl8.js",
+      "category": "static",
+      "size_bytes": 206746,
+      "sha256": "7c09946a18163c92957094a2ce081fb79b56718a2befe88530d336e77ee6d606"
+    },
+    {
+      "path": "public/index.html",
+      "category": "static",
+      "size_bytes": 631,
+      "sha256": "3f8cbba836b4bdcc28159d04d5ba84b112764a0a25ec6c139e3f3897511f8a6b"
+    },
+    {
+      "path": "requirements.txt",
+      "category": "config",
+      "size_bytes": 313,
+      "sha256": "bc05cebe2272a101245805ede16804514750ce360a0ffa18f0ddeb0ad35be589"
+    },
+    {
+      "path": "vercel.json",
+      "category": "config",
+      "size_bytes": 57,
+      "sha256": "9c5ef9c95efe9858c26f36fb5399a6da56bcc128fc4a3017a6c66477347f8b2f"
+    }
+  ]
+}

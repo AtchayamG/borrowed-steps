@@ -1,0 +1,8 @@
+.venv/
+.venv*/
+output/
+output*/
+staging/
+staging*/
+__pycache__/
+*.py[cod]

@@ -1,0 +1,8 @@
+PASS static artifacts present; native platform routing UNRUN
+{"installed_distribution_bytes": 19173174, "installed_packages": {"annotated-doc": "0.0.5", "annotated-types": "0.8.0", "anyio": "4.15.1", "click": "8.5.0", "fastapi": "0.141.1", "h11": "0.16.0", "idna": "3.19", "psycopg": "3.2.10", "psycopg-binary": "3.2.10", "pydantic": "2.13.5", "pydantic-core": "2.46.5", "starlette": "1.6.0", "typing-extensions": "4.16.0", "typing-inspection": "0.4.4", "tzdata": "2026.3", "uvicorn": "0.52.4"}, "platform": "win32", "python": "3.12.10"}
+PASS exact Python3.12 runtime closure and dependency metadata check
+PASS seven configuration refusals; SQLite/Postgres access guarded
+PASS isolated import/health/JSON404/lifespan; six unauthorized requests, zero DB/provider access
+PASS staged PostgreSQL migrations/lifecycle/replay/conflict/human approval/tick/fresh-instance status
+PASS complete manifest before/after: 38 files; 507219 source/assets bytes
+ALL LOCAL CHECKS PASSED; Vercel/Linux build, CDN routing, account limits and deployment UNRUN

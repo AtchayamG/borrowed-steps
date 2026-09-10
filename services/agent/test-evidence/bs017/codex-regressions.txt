@@ -1,0 +1,22 @@
+test_alternate_input_refused (test_hosted_package.PackageSafety.test_alternate_input_refused) ... ok
+test_existing_empty_output_refused (test_hosted_package.PackageSafety.test_existing_empty_output_refused) ... ok
+test_existing_output_is_untouched (test_hosted_package.PackageSafety.test_existing_output_is_untouched) ... ok
+test_extra_permitted_file_rejected (test_hosted_package.PackageSafety.test_extra_permitted_file_rejected) ... ok
+test_extra_secret_rejected (test_hosted_package.PackageSafety.test_extra_secret_rejected) ... ok
+test_manifest_traversal_and_totals_rejected (test_hosted_package.PackageSafety.test_manifest_traversal_and_totals_rejected) ... ok
+test_missing_template_refused_before_output_created (test_hosted_package.PackageSafety.test_missing_template_refused_before_output_created) ... ok
+test_nonlocal_or_option_database_url_refused (test_hosted_package.PackageSafety.test_nonlocal_or_option_database_url_refused) ... ok
+test_numeric_loopback_database_url_allowed (test_hosted_package.PackageSafety.test_numeric_loopback_database_url_allowed) ... ok
+test_outputs_outside_or_in_source_refused (test_hosted_package.PackageSafety.test_outputs_outside_or_in_source_refused) ... ok
+test_reparse_ancestor_refused (test_hosted_package.PackageSafety.test_reparse_ancestor_refused) ... ok
+test_same_size_tamper_rejected (test_hosted_package.PackageSafety.test_same_size_tamper_rejected) ... ok
+test_source_bytes_and_repeat_match (test_hosted_package.PackageSafety.test_source_bytes_and_repeat_match) ... ok
+test_source_database_refused (test_hosted_package.PackageSafety.test_source_database_refused) ... ok
+test_source_secret_refused_before_output_created (test_hosted_package.PackageSafety.test_source_secret_refused_before_output_created) ... ok
+test_static_secret_refused (test_hosted_package.PackageSafety.test_static_secret_refused) ... ok
+test_symbolic_link_refused (test_hosted_package.PackageSafety.test_symbolic_link_refused) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.398s
+
+OK

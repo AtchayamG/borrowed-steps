@@ -1,0 +1,63 @@
+{
+  "status": "SUPERSEDED_WORKER_CLAIMS_NOT_ACCEPTANCE",
+  "superseded_by": "docs/BS-017_ACCEPTANCE.md and codex-* evidence",
+  "original_worker_report": {
+    "task": "BS-017",
+    "worker": "AGY, senior backend/build developer",
+    "model": "Gemini 3.8 Flash High (serving identity hidden/unverified per contract)",
+    "effort": "HIGH",
+    "date": "2026-09-10",
+    "base_commit": "05aacf4",
+    "environment": {
+      "python": "3.12.10",
+      "postgresql": "16.10",
+      "psycopg": "3.2.10",
+      "psycopg_binary": "3.2.10",
+      "node": "20.18.0",
+      "database": "Owned disposable loopback cluster (port 54347); random per-test databases",
+      "inference_calls": 0,
+      "cloud_calls": 0,
+      "spend_inr": 0
+    },
+    "assembly": {
+      "total_files": 38,
+      "total_uncompressed_bytes": 507209,
+      "categories": {
+        "counts": {
+          "source": 32,
+          "config": 3,
+          "static": 3
+        },
+        "bytes": {
+          "source": 290355,
+          "config": 470,
+          "static": 216384
+        }
+      },
+      "repeatability": "100% hash equivalence across two independent assemblies"
+    },
+    "verification_gates": {
+      "gate_1_frontend_assets": "PASS (index.html, 1 CSS, 1 JS, vercel.json)",
+      "gate_2_runtime_dependency_closure": "PASS (Python 3.12, 16 runtime packages, 0 dev/provider leaks, uv pip check clean)",
+      "gate_3_staged_import_and_config_refusal": "PASS (refuses missing runtime, local runtime, tasks enabled, assistant enabled, and missing DB without creating SQLite)",
+      "gate_4_health_and_invalid_api_routing": "PASS (/api/health returns M3/disabled, invalid API returns application/json 404)",
+      "gate_5_zero_db_cold_start": "PASS (zero psycopg connections opened for unauthenticated/bad/duplicate auth)",
+      "gate_6_real_postgresql_smoke": "PASS (workspace creation, request, replay, conflict, refusal, reservation, pickup, return, inspection, authorized tick, fresh-instance status)",
+      "gate_7_package_hygiene_and_manifest": "PASS (38 files, 507,209 uncompressed bytes verified)"
+    },
+    "assertions": [
+      "Isolated deploy/vercel template with .gitignore, .python-version (3.12), minimal 15-package Linux closure requirements.txt (+ win32 tzdata marker), vercel.json rewrite /api/:path* -> /app.py, and app.py",
+      "Assembly script scripts/assemble_hosted.py copies strictly allowed files (no dev tools, no tests, no evidence, no virtualenvs, no node_modules, no .git, no symlinks)",
+      "app.py refuses missing or local BS_RUNTIME before importing create_app, guaranteeing zero SQLite creation and zero TaskRunner spawn",
+      "Zero database connections on unauthorized/malformed/duplicate operational requests verified via psycopg.connect spy probe",
+      "Truthful health probe reports milestone M3 and agent_mode disabled with zero DB access",
+      "Full human equipment lifecycle verified against real PostgreSQL database in disposable loopback cluster",
+      "Strict  spend: zero inference calls, zero cloud services, zero external network requests"
+    ],
+    "limits": [
+      "Local packaging and verification only; Vercel CLI link/deploy and GitHub Actions activation remain unrun per contract",
+      "Disabled-assistant mode only (agent_mode=disabled); Strands-enabled deployment is not validated by this template",
+      "Actual free-account eligibility and live performance headroom remain documented future release gates"
+    ]
+  }
+}
