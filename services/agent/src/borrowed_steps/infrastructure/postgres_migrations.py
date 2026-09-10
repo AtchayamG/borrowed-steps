@@ -31,7 +31,7 @@ __all__ = [
     "read_schema_version",
 ]
 
-EXPECTED_SCHEMA_VERSION = 1
+EXPECTED_SCHEMA_VERSION = 2
 """Schema version this build of the adapter requires."""
 
 # A fixed, arbitrary 64-bit key. Advisory locks share one namespace per
@@ -201,7 +201,39 @@ _SCHEMA_V1: tuple[str, ...] = (
     " 'Exact stored response bytes. TEXT, never JSONB: a replay must not be reserialised.'",
 )
 
-_MIGRATIONS: tuple[tuple[str, ...], ...] = (_SCHEMA_V1,)
+# Version 2: Singleton scheduler control and execution evidence row.
+# No intake, borrower text, session IDs, database URLs or unbounded run history.
+_SCHEMA_V2: tuple[str, ...] = (
+    """
+    CREATE TABLE scheduler_control (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        active_run_id TEXT,
+        active_run_started_at TIMESTAMPTZ,
+        active_run_expires_at TIMESTAMPTZ,
+        last_run_id TEXT,
+        last_outcome TEXT NOT NULL DEFAULT 'never_run'
+            CHECK (last_outcome IN (
+                'never_run', 'running', 'success', 'partial', 'failed', 'expired'
+            )),
+        last_completed_at TIMESTAMPTZ,
+        last_success_at TIMESTAMPTZ,
+        last_considered INTEGER NOT NULL DEFAULT 0,
+        last_marked_due INTEGER NOT NULL DEFAULT 0,
+        last_resolved_stale INTEGER NOT NULL DEFAULT 0,
+        last_unchanged INTEGER NOT NULL DEFAULT 0,
+        last_contended INTEGER NOT NULL DEFAULT 0,
+        last_stopped_early BOOLEAN NOT NULL DEFAULT FALSE
+    )
+    """,
+    """
+    INSERT INTO scheduler_control (id) VALUES (1) ON CONFLICT (id) DO NOTHING
+    """,
+    "COMMENT ON TABLE scheduler_control IS"
+    " 'Singleton scheduler control and aggregate execution evidence."
+    " No borrower, workspace or session data.'",
+)
+
+_MIGRATIONS: tuple[tuple[str, ...], ...] = (_SCHEMA_V1, _SCHEMA_V2)
 
 
 def _connect(database_url: str) -> psycopg.Connection[TupleRow]:

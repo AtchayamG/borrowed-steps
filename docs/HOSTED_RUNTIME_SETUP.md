@@ -33,7 +33,7 @@ In hosted mode, each origin in `BS_ALLOWED_ORIGINS` must satisfy:
 When `create_app()` initializes in hosted mode:
 1. **Configuration Validation**: Evaluates settings against all hosted requirements. Direct `Settings` construction cannot bypass these invariants.
 2. **Lazy PostgreSQL Driver Import**: `PostgresStore` is imported dynamically inside `create_app` only when `runtime == "hosted"`, keeping the base local install free of compulsory PostgreSQL dependencies.
-3. **Read-Only Schema Verification**: Invokes `store.check_schema()` before serving any request. Schema version must equal 1. Unmigrated databases (version 0) or future schemas (version > 1) fail startup with `SchemaVersionError`. No DDL or migrations are ever run at runtime or during health checks.
+3. **Read-Only Schema Verification**: Invokes `store.check_schema()` before serving any request. Schema version must equal the current expected version (2 after BS-014). Unmigrated databases (version 0) or future schemas (version > 2) fail startup with `SchemaVersionError`. No DDL or migrations are ever run at runtime or during health checks.
 4. **TaskRunner Disabled**: `runner` remains `None`. No scheduler thread is spawned, and `app.state.tasks` is `None`.
 5. **Assistant Disabled**: `assistant` remains `None`. The `/api/intake/interpret` endpoint returns `503 ASSISTANT_DISABLED` without performing inference or mutating state. Injected interpreters in test harnesses cannot bypass this gate.
 6. **Health Endpoint**: `GET /api/health` returns:

@@ -75,12 +75,12 @@ def test_hosted_initialization_isolation_and_schema_gates(tmp_path: Path) -> Non
             assert row is not None
             assert row[0] == 0
 
-        # 2. Database with newer schema (version 2) refuses startup
+        # 2. Database with newer schema (version 3) refuses startup
         with psycopg.connect(raw_url, autocommit=True) as conn:
             conn.execute(
                 "CREATE TABLE schema_migrations (version INT PRIMARY KEY, applied_at TIMESTAMPTZ)"
             )
-            conn.execute("INSERT INTO schema_migrations VALUES (2, now())")
+            conn.execute("INSERT INTO schema_migrations VALUES (3, now())")
         with pytest.raises(SchemaVersionError):
             create_app(settings_raw)
 

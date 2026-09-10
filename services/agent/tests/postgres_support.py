@@ -12,7 +12,11 @@ import psycopg
 import pytest
 from psycopg import sql
 
-from borrowed_steps.infrastructure.postgres_migrations import apply_migrations
+from borrowed_steps.infrastructure.postgres_migrations import (
+    _SCHEMA_V1,
+    EXPECTED_SCHEMA_VERSION,
+    apply_migrations,
+)
 
 
 def get_test_postgres_url() -> str:
@@ -40,9 +44,25 @@ def disposable_database(base_url: str | None = None) -> Iterator[str]:
 
 
 @contextmanager
+def v1_database(base_url: str | None = None) -> Iterator[str]:
+    """Create a disposable database, apply ONLY schema version 1, and yield URL."""
+    with disposable_database(base_url) as url:
+        with psycopg.connect(url) as conn, conn.transaction():
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS schema_migrations"
+                " (version INTEGER PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL)"
+            )
+            for stmt in _SCHEMA_V1:
+                conn.execute(stmt)
+            conn.execute("INSERT INTO schema_migrations (version, applied_at) VALUES (1, now())")
+        yield url
+
+
+@contextmanager
 def migrated_database(base_url: str | None = None) -> Iterator[str]:
-    """Create a disposable database, apply schema version 1 migrations, and yield URL."""
+    """Create a disposable database, apply schema migrations, and yield URL."""
     with disposable_database(base_url) as url:
         version = apply_migrations(url)
-        assert version == 1, f"Expected migration version 1, got {version}"
+        msg = f"Expected migration version {EXPECTED_SCHEMA_VERSION}, got {version}"
+        assert version == EXPECTED_SCHEMA_VERSION, msg
         yield url

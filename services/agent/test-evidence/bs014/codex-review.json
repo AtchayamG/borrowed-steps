@@ -1,0 +1,31 @@
+{
+  "status": "ACCEPTED_LOCAL_FOUNDATION",
+  "worker_source": "4e4d712",
+  "corrected_source": "7226f41",
+  "combined_tests": {
+    "passed": 522,
+    "failed": 0,
+    "skipped": 0,
+    "warnings": 2,
+    "seconds": 91.73
+  },
+  "quality": {
+    "ruff": "pass",
+    "format": "pass",
+    "strict_mypy_files": 75,
+    "pip_check_packages": 72
+  },
+  "postgres": "16.10 synthetic disposable loopback",
+  "provider_calls": 0,
+  "spend_inr": 0,
+  "timeout_scope": "42s conditional SQL-path accounting; no arbitrary OS/network/production guarantee",
+  "runtime_activation": false,
+  "admission_design_accepted": false,
+  "extra_regressions": [
+    "finite budget validation",
+    "event rollback and unknown counts",
+    "multi-statement timeout accumulation",
+    "connection error sanitization",
+    "fresh-process persistence"
+  ]
+}

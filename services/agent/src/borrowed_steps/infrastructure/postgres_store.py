@@ -451,9 +451,21 @@ class PostgresUnitOfWork:
 class PostgresStore:
     """Durable storage for every workspace, on one PostgreSQL database."""
 
-    __slots__ = ("_database_url",)
+    __slots__ = (
+        "_connect_timeout_s",
+        "_database_url",
+        "_lock_timeout_ms",
+        "_statement_timeout_ms",
+    )
 
-    def __init__(self, database_url: str) -> None:
+    def __init__(
+        self,
+        database_url: str,
+        *,
+        connect_timeout_s: int | None = None,
+        statement_timeout_ms: int | None = None,
+        lock_timeout_ms: int | None = None,
+    ) -> None:
         """Validate the URL and keep it. Nothing connects, nothing migrates.
 
         A constructor that quietly created a schema would make "is the database
@@ -463,20 +475,32 @@ class PostgresStore:
         """
         require_transport_security(database_url)
         self._database_url = database_url
+        self._connect_timeout_s = connect_timeout_s
+        self._statement_timeout_ms = statement_timeout_ms
+        self._lock_timeout_ms = lock_timeout_ms
 
-    def _connect(self) -> psycopg.Connection[DictRow]:
+    def _connect(self, *, connect_timeout_s: int | None = None) -> psycopg.Connection[DictRow]:
         """One short-lived connection, bounded from the moment it opens.
 
         Not pooled and not kept alive: a unit of work opens a connection, does
         its work and closes it. ``prepare_threshold=None`` keeps the client
         from creating prepared statements without assuming pooler support.
         """
+        fallback_timeout = (
+            self._connect_timeout_s if self._connect_timeout_s is not None else _CONNECT_TIMEOUT_S
+        )
+        timeout = connect_timeout_s if connect_timeout_s is not None else fallback_timeout
         return psycopg.connect(
             self._database_url,
             autocommit=False,
-            connect_timeout=_CONNECT_TIMEOUT_S,
+            connect_timeout=timeout,
             prepare_threshold=None,
             row_factory=dict_row,
+            options=(
+                f"-c statement_timeout={self._statement_timeout_ms}"
+                if self._statement_timeout_ms is not None
+                else ""
+            ),
         )
 
     def check_schema(self) -> None:
@@ -492,13 +516,39 @@ class PostgresStore:
             )
 
     @contextmanager
-    def _connection(self, *, read_only: bool = False) -> Iterator[psycopg.Connection[DictRow]]:
+    def _connection(
+        self,
+        *,
+        read_only: bool = False,
+        connect_timeout_s: int | None = None,
+        statement_timeout_ms: int | None = None,
+        lock_timeout_ms: int | None = None,
+    ) -> Iterator[psycopg.Connection[DictRow]]:
+        stmt_timeout = (
+            statement_timeout_ms
+            if statement_timeout_ms is not None
+            else (
+                self._statement_timeout_ms
+                if self._statement_timeout_ms is not None
+                else _STATEMENT_TIMEOUT_MS
+            )
+        )
+        lock_timeout = (
+            lock_timeout_ms
+            if lock_timeout_ms is not None
+            else (self._lock_timeout_ms if self._lock_timeout_ms is not None else _LOCK_TIMEOUT_MS)
+        )
         try:
-            with self._connect() as conn:
+            conn_cm = (
+                self._connect(connect_timeout_s=connect_timeout_s)
+                if connect_timeout_s is not None
+                else self._connect()
+            )
+            with conn_cm as conn:
                 if read_only:
                     conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
-                conn.execute(f"SET LOCAL lock_timeout = '{_LOCK_TIMEOUT_MS}ms'")
-                conn.execute(f"SET LOCAL statement_timeout = '{_STATEMENT_TIMEOUT_MS}ms'")
+                conn.execute(f"SET LOCAL lock_timeout = '{lock_timeout}ms'")
+                conn.execute(f"SET LOCAL statement_timeout = '{stmt_timeout}ms'")
                 yield conn
         except psycopg.Error as exc:
             if _is_contention(exc):
@@ -506,8 +556,21 @@ class PostgresStore:
             raise RuntimeError("PostgreSQL storage operation failed") from None
 
     @contextmanager
-    def transaction(self, workspace_id: str, *, write: bool = True) -> Iterator[PostgresUnitOfWork]:
-        with self._connection(read_only=not write) as conn:
+    def transaction(
+        self,
+        workspace_id: str,
+        *,
+        write: bool = True,
+        connect_timeout_s: int | None = None,
+        statement_timeout_ms: int | None = None,
+        lock_timeout_ms: int | None = None,
+    ) -> Iterator[PostgresUnitOfWork]:
+        with self._connection(
+            read_only=not write,
+            connect_timeout_s=connect_timeout_s,
+            statement_timeout_ms=statement_timeout_ms,
+            lock_timeout_ms=lock_timeout_ms,
+        ) as conn:
             if write:
                 row = conn.execute(
                     "SELECT id FROM workspaces WHERE id = %s FOR UPDATE", (workspace_id,)

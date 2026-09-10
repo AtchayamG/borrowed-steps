@@ -1,0 +1,56 @@
+{
+  "task": "BS-014",
+  "worker": "AGY, senior backend developer",
+  "model": "Gemini 3.8 Flash High (serving identity hidden/unverified per contract)",
+  "effort": "HIGH",
+  "date": "2026-09-10",
+  "base_commit": "f18c303",
+  "environment": {
+    "python": "3.11.15",
+    "postgresql": "16.10",
+    "psycopg": "3.2.10",
+    "psycopg_binary": "3.2.10",
+    "database": "Owned disposable loopback cluster (port 54340); random per-test databases",
+    "inference_calls": 0,
+    "cloud_calls": 0,
+    "spend_inr": 0
+  },
+  "final_checks": {
+    "python -m pytest -q": {
+      "passed": 508,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 2,
+      "seconds": 84.80
+    },
+    "retained_tests": 493,
+    "new_hosted_scheduler_tests": 15,
+    "python -m ruff check src tests scripts": "PASS, 73 files",
+    "python -m ruff format --check src tests scripts": "PASS, 73 files",
+    "python -m mypy src tests scripts": "PASS, strict + warn_unreachable, 73 files",
+    "uv pip check --python .venv/Scripts/python.exe": "PASS, 72 packages"
+  },
+  "assertions": [
+    "PostgreSQL schema migration version 2 appends scheduler_control singleton row without modifying schema V1 or reseeding workspaces",
+    "V1->V2 migration fixture verifies all business records (workspaces, equipment, sessions, requests, loans, tasks, events, idempotency) and exact strings survive intact",
+    "Read-only check_schema() verifies exact schema version 2; refuses unmigrated (v0), legacy (v1), or future (v3) schemas without mutating the database",
+    "HostedSchedulerService is independently callable; does not start HTTP server, does not construct TaskRunner, does not call inference providers",
+    "Smallest durable state: singleton scheduler_control table tracks active run ID, start, lease deadline, last outcome/completion, last success, and aggregate counts",
+    "Read status function is strictly read-only: does not run tasks, carries no secrets, credentials, tokens, database URLs, session IDs, borrower text, or entity IDs",
+    "Admission and finalization are short atomic transactions; no database transaction spans the full tick",
+    "Concurrent tick execution admits one run at a time; competing instances receive 'busy' outcome under an active unexpired lease",
+    "Monotonic processing budget (20s) stops beginning new candidates; in-flight transaction completes safely; returns 'partial' outcome",
+    "Finite execution bound proven: 20s monotonic budget + 15s candidate transaction timeout + 10s finalization timeout <= 45s total worst-case bound",
+    "Outcome semantics enforced: complete uncontended tick is 'success'; contention, stopped_early, or capacity_limited (>= 100) is 'partial'; error is 'failed'",
+    "Expired 60s lease can be superseded by a new run; stale tokens cannot overwrite newer run evidence or completions",
+    "Freshness warning threshold (30 minutes of DB time) reports stale_warning=True while keeping last outcome visible",
+    "Persistence failure on evidence recording raises RuntimeError and refuses to report durable success to caller",
+    "Human borrower actions (pickup/return) racing with discovered tasks safely prevent duplicate notices or state conflicts"
+  ],
+  "limits": [
+    "Locally verified hosted task scheduler foundation against disposable local PostgreSQL cluster",
+    "HTTP endpoint (/api/internal/tasks/tick), Bearer authentication, and GitHub Actions cron workflow are deferred to future tasks per contract",
+    "Assistant and autonomous background runner remain disabled; zero model inference calls executed",
+    "Zero cloud spend incurred"
+  ]
+}
