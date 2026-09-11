@@ -1,4 +1,16 @@
-## Latest: BS-026 Bounded PostgreSQL Inference Admission Storage
+## Latest checkpoint: BS-026 accepted after bounded repair (2026-09-12)
+
+BS-026 is accepted locally on `integration/m1` at `d5633a4`. The durable
+admission ledger is ready for hosted wiring, with public activation still gated.
+The only worker-return defect was cleanup evidence missing from storage/replay;
+Codex repaired it and independently passed 25 focused PostgreSQL tests. The next
+queue item is a bounded hosted-integration task for AGY; do not reopen the
+admission design or spend a live inference allowance.
+
+NEXT_CODEX_MODE: ASTRA_LIGHT
+REASON: Routine manual dispatch follows a completed bounded review.
+
+## Historical worker return: BS-026 Bounded PostgreSQL Inference Admission Storage
 
 TASK_ID: BS-026
 STATUS: READY_FOR_REVIEW

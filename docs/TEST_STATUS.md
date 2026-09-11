@@ -1,4 +1,11 @@
-## Latest: BS-026 Bounded PostgreSQL Inference Admission Storage
+## Latest checkpoint: BS-026 accepted after bounded repair (2026-09-12)
+
+See `docs/BS-026_ACCEPTANCE.md`. Independent canonical verification: 25 focused
+PostgreSQL/migration tests passed; Ruff, strict mypy and diff checks passed. The
+worker’s full collection is environment-blocked by missing `openai` in its
+virtualenv. No provider or hosted runtime test was attempted.
+
+## Historical worker return: BS-026 Bounded PostgreSQL Inference Admission Storage
 
 TASK_ID: BS-026
 STATUS: READY_FOR_REVIEW

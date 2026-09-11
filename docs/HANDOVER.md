@@ -1,4 +1,23 @@
-## Latest: BS-026 Bounded PostgreSQL Inference Admission Storage
+## Latest checkpoint: BS-026 accepted after bounded repair (2026-09-12)
+
+Read `docs/BS-026_ACCEPTANCE.md`. Canonical `integration/m1` includes commits
+`2107a6a` and `d5633a4`. The storage boundary and cleanup-evidence replay defect
+are fixed; 25 focused PostgreSQL/migration tests pass independently. The worker
+environment’s full-suite collection remains blocked by its missing `openai`
+package, so no broader all-green claim is made.
+
+Next safe action: prepare one bounded hosted-integration task for AGY. It may wire
+the accepted admission store into the existing hosted factory and interpreter
+boundary, but must keep public assistant activation disabled, make no provider
+call, make no deployment, and preserve the HTTP/UI contracts until separately
+verified.
+
+NEXT_CODEX_MODE: ASTRA_LIGHT
+REASON: BS-026 review and repair are complete; the next operation is routine
+manual task dispatch. Use HIGH again only for a new cross-system architecture
+decision or substantive returned diff.
+
+## Historical worker return: BS-026 Bounded PostgreSQL Inference Admission Storage
 
 TASK_ID: BS-026
 STATUS: READY_FOR_REVIEW
