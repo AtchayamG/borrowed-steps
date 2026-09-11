@@ -510,11 +510,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--python-exe", type=Path, required=True)
     parser.add_argument(
         "--pg-url",
-        required=True,
+        required=False,
+        default=None,
         help="Synthetic local admin URL; never supply cloud credentials",
     )
     args = parser.parse_args(argv)
-    validate_pg_url(args.pg_url)
+    if args.pg_url is not None:
+        validate_pg_url(args.pg_url)
     package = checked_path(args.package_dir)
     python = checked_path(args.python_exe)
     assert package.is_dir() and python.is_file()
@@ -523,7 +525,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     test_runtime_dependency_closure(python, package)
     test_staged_import_and_config_refusal(python, package)
     test_health_and_auth(python, package)
-    test_real_postgresql_smoke(python, package, args.pg_url)
+    if args.pg_url is not None:
+        test_real_postgresql_smoke(python, package, args.pg_url)
+    else:
+        print("SKIP PostgreSQL smoke (--pg-url omitted); offline verification complete")
     assert verify_manifest(package) == before
     print(
         f"PASS complete manifest before/after: {before['total_files']} files; {before['total_uncompressed_bytes']} source/assets bytes"

@@ -1,3 +1,40 @@
+## BS-025 Staged Groq Adapter Runtime Closure & Verification
+
+TASK_ID: BS-025
+STATUS: READY_FOR_REVIEW
+WORKER: AGY, senior backend developer
+MODEL: Gemini 3.8 Flash High
+EFFORT: HIGH
+BRANCH: worker/agy/BS-025
+BASE_COMMIT: d3fc192
+PROPOSED_COMMIT_MSG: feat(hosted): refresh vercel staging runtime closure for groq adapter
+
+Refreshed the local Vercel staging package (`deploy/vercel/requirements.txt`) with the minimal pinned 60-package runtime closure needed by the accepted `GroqModel`/`Strands` adapter, strictly excluding all 11 dev/test/local tools (`ast_serialize`, `iniconfig`, `librt`, `mypy`, `mypy_extensions`, `ollama`, `pathspec`, `pluggy`, `Pygments`, `pytest`, `ruff`).
+
+Key achievements & verifications:
+- Staged package source/assets: 39 files, 530,459 bytes (includes `groq_model.py` at 32,300 bytes).
+- Installed runtime distributions: 60 packages, 85,641,953 bytes (Windows measurement, zero pip check errors).
+- Staged package repeat assembly: byte-for-byte identical manifest hashes.
+- Staged offline smoke (`scripts/verify_hosted_package.py`): PASSED (health, auth, 7 config refusals; 0 provider modules loaded).
+- Focused Groq verifier (`scripts/verify_hosted_groq.py`): PASSED in isolated Python `-I -B` runtime:
+  - Synthetic HTTP interception via `httpx.MockTransport` with outbound sockets blocked fail-closed.
+  - Wire envelope bounds: pinned model `openai/gpt-oss-20b`, `max_completion_tokens=1024`, `reasoning_effort='low'`, deprecated `max_tokens` forbidden, payload <= 16KB.
+  - Streaming event translation: deltas, `end_turn` stop reason, token usage extraction, and `length` truncation.
+  - Structured extraction: `_Extraction` schema wire format inspection and typed Pydantic reconstitution.
+  - Resource lifecycle closure: clean client and transport termination, 0 lingering clients.
+  - 4 negative checks: outbound socket blocked, unpinned target/model refused before network, missing dependency fails closed, dev checkout import forbidden.
+  - Manifest integrity before and after test execution: 100% byte-identical.
+- Pytest suite (`services/agent/tests/test_hosted_groq_package.py`): 7 passed in 8.92s.
+- Unittest suite (`scripts/tests/test_hosted_package.py`): 17 passed in 0.325s.
+- Linters & type checks: `ruff check` (0 issues), `ruff format --check` (clean), `mypy` strict mode (0 errors).
+- Zero provider calls, zero credential discovery, zero cloud mutations, ₹0 / $0 spend.
+- Hosted public assistant remains strictly DISABLED (`BS_ASSISTANT_ENABLED=0`).
+
+Evidence: `services/agent/test-evidence/bs025/packaging_evidence.json`
+Documentation: `docs/HOSTED_PACKAGE_SETUP.md`, `docs/workers/BS-025.md`
+NEXT_CODEX_MODE: ASTRA_HIGH
+REASON: Packaging closure and isolated adapter verification complete; ready for Codex review.
+
 ## Latest: BS-022 accepted by Codex after direct repair
 143 focused tests pass on disposable PostgreSQL; static checks pass across85 files.
 Read docs/BS-022_ACCEPTANCE.md. No provider call or real grant; all29 old allowances

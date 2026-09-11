@@ -1,0 +1,371 @@
+{
+  "task_id": "BS-025",
+  "timestamp": "2026-09-11T17:32:32.820567+00:00",
+  "worker": "AGY, senior backend developer",
+  "model": "Gemini 3.8 Flash High",
+  "effort": "HIGH",
+  "base_commit": "d3fc192",
+  "branch": "worker/agy/BS-025",
+  "objective": "Refresh local Vercel staging package with minimal pinned runtime closure for GroqModel/Strands adapter and prove isolated execution via intercepted synthetic HTTP.",
+  "public_assistant_state": "DISABLED (BS_ASSISTANT_ENABLED=0)",
+  "spend": "\u20b90.00 / $0.00",
+  "live_network_calls": 0,
+  "credentials_accessed": 0,
+  "cloud_mutations": 0,
+  "runtime_closure": {
+    "package_count": 60,
+    "python_version": "3.12.10",
+    "platform": "win32",
+    "requirements_file": "deploy/vercel/requirements.txt",
+    "packages": [
+      {
+        "name": "annotated-doc",
+        "version": "0.0.5"
+      },
+      {
+        "name": "annotated-types",
+        "version": "0.8.0"
+      },
+      {
+        "name": "anyio",
+        "version": "4.15.1"
+      },
+      {
+        "name": "attrs",
+        "version": "26.1.0"
+      },
+      {
+        "name": "aws-bedrock-token-generator",
+        "version": "1.1.0"
+      },
+      {
+        "name": "boto3",
+        "version": "1.43.89"
+      },
+      {
+        "name": "botocore",
+        "version": "1.43.89"
+      },
+      {
+        "name": "certifi",
+        "version": "2026.7.22"
+      },
+      {
+        "name": "cffi",
+        "version": "2.1.1"
+      },
+      {
+        "name": "click",
+        "version": "8.5.0"
+      },
+      {
+        "name": "colorama",
+        "version": "0.4.6"
+      },
+      {
+        "name": "cryptography",
+        "version": "50.0.1"
+      },
+      {
+        "name": "distro",
+        "version": "1.9.0"
+      },
+      {
+        "name": "docstring-parser",
+        "version": "0.18.0"
+      },
+      {
+        "name": "fastapi",
+        "version": "0.141.1"
+      },
+      {
+        "name": "h11",
+        "version": "0.16.0"
+      },
+      {
+        "name": "httpcore",
+        "version": "1.0.9"
+      },
+      {
+        "name": "httpx",
+        "version": "0.28.1"
+      },
+      {
+        "name": "httpx-sse",
+        "version": "0.4.3"
+      },
+      {
+        "name": "idna",
+        "version": "3.19"
+      },
+      {
+        "name": "jiter",
+        "version": "0.16.0"
+      },
+      {
+        "name": "jmespath",
+        "version": "1.1.0"
+      },
+      {
+        "name": "jsonschema",
+        "version": "4.26.0"
+      },
+      {
+        "name": "jsonschema-specifications",
+        "version": "2025.9.1"
+      },
+      {
+        "name": "mcp",
+        "version": "1.30.0"
+      },
+      {
+        "name": "openai",
+        "version": "2.54.0"
+      },
+      {
+        "name": "opentelemetry-api",
+        "version": "1.44.0"
+      },
+      {
+        "name": "opentelemetry-instrumentation",
+        "version": "0.65b0"
+      },
+      {
+        "name": "opentelemetry-instrumentation-threading",
+        "version": "0.65b0"
+      },
+      {
+        "name": "opentelemetry-sdk",
+        "version": "1.44.0"
+      },
+      {
+        "name": "opentelemetry-semantic-conventions",
+        "version": "0.65b0"
+      },
+      {
+        "name": "packaging",
+        "version": "26.3"
+      },
+      {
+        "name": "psycopg",
+        "version": "3.2.10"
+      },
+      {
+        "name": "psycopg-binary",
+        "version": "3.2.10"
+      },
+      {
+        "name": "pycparser",
+        "version": "3.0"
+      },
+      {
+        "name": "pydantic",
+        "version": "2.13.5"
+      },
+      {
+        "name": "pydantic-core",
+        "version": "2.46.5"
+      },
+      {
+        "name": "pydantic-settings",
+        "version": "2.15.0"
+      },
+      {
+        "name": "pyjwt",
+        "version": "2.13.0"
+      },
+      {
+        "name": "python-dateutil",
+        "version": "2.9.0.post0"
+      },
+      {
+        "name": "python-dotenv",
+        "version": "1.2.3"
+      },
+      {
+        "name": "python-multipart",
+        "version": "0.0.32"
+      },
+      {
+        "name": "pywin32",
+        "version": "312",
+        "marker": "sys_platform == 'win32'"
+      },
+      {
+        "name": "pyyaml",
+        "version": "6.0.3"
+      },
+      {
+        "name": "referencing",
+        "version": "0.37.0"
+      },
+      {
+        "name": "rpds-py",
+        "version": "2026.6.3"
+      },
+      {
+        "name": "s3transfer",
+        "version": "0.19.2"
+      },
+      {
+        "name": "six",
+        "version": "1.17.0"
+      },
+      {
+        "name": "sniffio",
+        "version": "1.3.1"
+      },
+      {
+        "name": "sse-starlette",
+        "version": "3.4.11"
+      },
+      {
+        "name": "starlette",
+        "version": "1.6.0"
+      },
+      {
+        "name": "strands-agents",
+        "version": "1.54.0"
+      },
+      {
+        "name": "tqdm",
+        "version": "4.70.0"
+      },
+      {
+        "name": "typing-extensions",
+        "version": "4.16.0"
+      },
+      {
+        "name": "typing-inspection",
+        "version": "0.4.4"
+      },
+      {
+        "name": "tzdata",
+        "version": "2026.3",
+        "marker": "sys_platform == 'win32'"
+      },
+      {
+        "name": "urllib3",
+        "version": "2.7.0"
+      },
+      {
+        "name": "uvicorn",
+        "version": "0.52.4"
+      },
+      {
+        "name": "watchdog",
+        "version": "6.0.0"
+      },
+      {
+        "name": "wrapt",
+        "version": "2.4.0"
+      }
+    ],
+    "excluded_packages": [
+      {
+        "name": "ast_serialize",
+        "reason": "Test/dev serialization utility"
+      },
+      {
+        "name": "iniconfig",
+        "reason": "Pytest configuration dependency"
+      },
+      {
+        "name": "librt",
+        "reason": "Linux real-time runtime test dependency"
+      },
+      {
+        "name": "mypy",
+        "reason": "Static type checker build tool"
+      },
+      {
+        "name": "mypy_extensions",
+        "reason": "Mypy type checking extension"
+      },
+      {
+        "name": "ollama",
+        "reason": "Local Ollama client library; hosted uses GroqModel OpenAI-compatible endpoint"
+      },
+      {
+        "name": "pathspec",
+        "reason": "Pattern matching tool used by dev linters"
+      },
+      {
+        "name": "pluggy",
+        "reason": "Pytest plugin architecture dependency"
+      },
+      {
+        "name": "Pygments",
+        "reason": "Syntax highlighter tool for dev output"
+      },
+      {
+        "name": "pytest",
+        "reason": "Testing framework excluded from serverless runtime bundle"
+      },
+      {
+        "name": "ruff",
+        "reason": "Linter/formatter excluded from runtime bundle"
+      }
+    ]
+  },
+  "package_measurements": {
+    "source_and_assets": {
+      "total_files": 39,
+      "total_bytes": 530459,
+      "categories": {
+        "source": {
+          "count": 35,
+          "bytes": 269451
+        },
+        "config": {
+          "count": 2,
+          "bytes": 4375
+        },
+        "static": {
+          "count": 2,
+          "bytes": 256633
+        }
+      }
+    },
+    "installed_distribution_bytes": 85641953,
+    "repeat_assembly_verified": true
+  },
+  "verification_results": {
+    "scripts_verify_hosted_package": {
+      "status": "PASSED",
+      "frontend_assets": "PASSED",
+      "exact_runtime_closure": "PASSED (60 packages match actual == expected)",
+      "config_refusals": "PASSED (7 configuration refusals enforced)",
+      "isolated_import_and_health": "PASSED (M3/disabled health, JSON 404, auth; 0 provider modules loaded)",
+      "manifest_integrity_pre_post": "PASSED (byte-identical 39 files, 530459 bytes)"
+    },
+    "scripts_verify_hosted_groq": {
+      "status": "PASSED",
+      "manifest_pre_test": "PASSED",
+      "adapter_streaming": "PASSED (SSE chunking, delta reconstruction, end_turn mapping, token usage extraction)",
+      "adapter_bounds": "PASSED (1024 token limit, low reasoning effort, <=16KB payload, deprecated max_tokens rejected)",
+      "structured_output": "PASSED (_Extraction model schema transmitted, typed Pydantic reconstitution)",
+      "refusal_semantics": "PASSED (empty/missing api_key refused, send budget limit enforced, parameter mutations rejected)",
+      "resource_hygiene": "PASSED (adapter and transport cleanly closed, active client count 0)",
+      "negative_checks": {
+        "negative_1_outbound_socket_blocked": "PASSED (socket connect fails closed with RuntimeError)",
+        "negative_2_unpinned_target_refused": "PASSED (unpinned host/model refused before network dispatch)",
+        "negative_3_missing_dependency": "PASSED (missing dependency fails closed with ModuleNotFoundError)",
+        "negative_4_dev_checkout_forbidden": "PASSED (module path enforced to reside strictly within staged PACKAGE)"
+      },
+      "manifest_post_test": "PASSED (byte-identical, 0 file modifications)"
+    },
+    "services_agent_tests_test_hosted_groq_package": {
+      "status": "PASSED",
+      "tests_run": 7,
+      "tests_passed": 7,
+      "tests_failed": 0
+    },
+    "scripts_tests_test_hosted_package": {
+      "status": "PASSED",
+      "tests_run": 17,
+      "tests_passed": 17,
+      "tests_failed": 0
+    }
+  }
+}
