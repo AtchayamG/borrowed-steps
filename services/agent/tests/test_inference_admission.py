@@ -417,6 +417,7 @@ def test_finish_success_flow_and_replays(db: str) -> None:
     assert finished["is_active"] is False
     assert finished["actual_sends"] == 3
     assert finished["actual_total_tokens"] == 1500
+    assert finished["cleanup_completed"] is True
     assert finished["completed_at"] is not None
     assert finished["released_at"] is not None
 
@@ -441,6 +442,7 @@ def test_finish_success_flow_and_replays(db: str) -> None:
             actual_sends=4,
             actual_total_tokens=1500,
         )
+
 
 
 def test_finish_failed_confirmed_flow_and_replays(db: str) -> None:
@@ -505,6 +507,16 @@ def test_finish_uncertain_stays_active_and_blocks_reservations(db: str) -> None:
     assert uncertain["state"] == AdmissionState.UNCERTAIN.value
     assert uncertain["is_active"] is True
     assert uncertain["released_at"] is None
+
+    # Cleanup evidence is part of the durable receipt, including UNCERTAIN rows.
+    with pytest.raises(AdmissionReplayConflictError, match="Terminal evidence replay conflict"):
+        store.finish(
+            req.reservation_id,
+            req.owner_id,
+            AdmissionState.UNCERTAIN,
+            cleanup_completed=True,
+            failure_code=AdmissionFailureCode.EXECUTION_UNKNOWN,
+        )
 
     # Transition from UNCERTAIN to SUCCEEDED or FAILED_CONFIRMED is refused
     with pytest.raises(AdmissionRefusedError, match="Transition from UNCERTAIN refuses"):
@@ -695,7 +707,7 @@ def test_rolling_24h_global_limit(db: str) -> None:
                 """INSERT INTO inference_admissions (
                     reservation_id, workspace_id, owner_id, request_key_hash, payload_hash,
                     reserved_sends, deadline_at, state, is_active, created_at, released_at,
-                    completed_at, actual_sends
+                    completed_at, actual_sends, cleanup_completed
                 ) VALUES (
                     %s, %s, %s, %s, %s, 6,
                     clock_timestamp() - INTERVAL '10 minutes',
@@ -703,7 +715,7 @@ def test_rolling_24h_global_limit(db: str) -> None:
                     clock_timestamp() - INTERVAL '10 minutes',
                     clock_timestamp() - ((%s + 2) * INTERVAL '1 minute'),
                     clock_timestamp() - ((%s + 2) * INTERVAL '1 minute'),
-                    6
+                    6, TRUE
                 )""",
                 (rid, wid, str(uuid4()), kh, kh, i, i),
             )
@@ -728,7 +740,7 @@ def test_rolling_24h_per_workspace_limit(db: str) -> None:
                 """INSERT INTO inference_admissions (
                     reservation_id, workspace_id, owner_id, request_key_hash, payload_hash,
                     reserved_sends, deadline_at, state, is_active, created_at, released_at,
-                    completed_at, actual_sends
+                    completed_at, actual_sends, cleanup_completed
                 ) VALUES (
                     %s, %s, %s, %s, %s, 6,
                     clock_timestamp() - INTERVAL '10 minutes',
@@ -736,7 +748,7 @@ def test_rolling_24h_per_workspace_limit(db: str) -> None:
                     clock_timestamp() - INTERVAL '10 minutes',
                     clock_timestamp() - ((%s + 2) * INTERVAL '1 minute'),
                     clock_timestamp() - ((%s + 2) * INTERVAL '1 minute'),
-                    6
+                    6, TRUE
                 )""",
                 (rid, w1, str(uuid4()), kh, kh, i, i),
             )

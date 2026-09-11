@@ -352,8 +352,9 @@ class InferenceAdmissionStore:
             if row["state"] == state_str:
                 same_sends = row["actual_sends"] == actual_sends
                 same_tokens = row["actual_total_tokens"] == actual_total_tokens
+                same_cleanup = row["cleanup_completed"] == cleanup_completed
                 same_failure = row["failure_code"] == failure_code_str
-                if same_sends and same_tokens and same_failure:
+                if same_sends and same_tokens and same_cleanup and same_failure:
                     return row  # Exact replay
                 raise AdmissionReplayConflictError("Terminal evidence replay conflict")
 
@@ -379,6 +380,7 @@ class InferenceAdmissionStore:
                     is_active = %s,
                     actual_sends = %s,
                     actual_total_tokens = %s,
+                    cleanup_completed = %s,
                     failure_code = %s,
                     completed_at = clock_timestamp(),
                     released_at = CASE WHEN %s THEN clock_timestamp() ELSE NULL END
@@ -389,6 +391,7 @@ class InferenceAdmissionStore:
                     is_active,
                     actual_sends,
                     actual_total_tokens,
+                    cleanup_completed,
                     failure_code_str,
                     is_terminal,
                     reservation_id,

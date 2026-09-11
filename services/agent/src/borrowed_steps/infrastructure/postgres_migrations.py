@@ -304,6 +304,7 @@ _SCHEMA_V4: tuple[str, ...] = (
         released_at TIMESTAMPTZ,
         actual_sends INTEGER CHECK (actual_sends IS NULL OR (actual_sends BETWEEN 0 AND 6)),
         actual_total_tokens BIGINT CHECK (actual_total_tokens IS NULL OR actual_total_tokens >= 0),
+        cleanup_completed BOOLEAN,
         failure_code TEXT CHECK (
             failure_code IS NULL OR failure_code IN (
                 'provider_429', 'provider_failure', 'invalid_output',
@@ -325,6 +326,10 @@ _SCHEMA_V4: tuple[str, ...] = (
             OR (actual_sends IS NOT NULL AND actual_sends BETWEEN 1 AND 6)
         ),
         CHECK (state != 'SUCCEEDED' OR failure_code IS NULL),
+        CHECK (
+            state NOT IN ('SUCCEEDED', 'FAILED_CONFIRMED')
+            OR cleanup_completed IS TRUE
+        ),
         CHECK (state NOT IN ('FAILED_CONFIRMED', 'UNCERTAIN') OR failure_code IS NOT NULL),
         CHECK ((recovered_at IS NULL) = (recovery_operator_id IS NULL)),
         CHECK ((recovered_at IS NULL) = (recovery_reason IS NULL)),
