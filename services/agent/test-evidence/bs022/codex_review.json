@@ -2,7 +2,7 @@
   "task": "BS-022",
   "review_mode": "ASTRA_MEDIUM",
   "provenance": "offline_fixture",
-  "execution_manifest_hash": "ea7a228efefb3fd7e3a8cd72aabb217e0c77bd2ac4206aacfc40c0aa1c215089",
+  "execution_manifest_hash": "47c742026de0c53b4ac2e2800b469441095c3f2fa4fc14532a98ff8de0eed42b",
   "tests": {
     "tests": 143,
     "failures": 0,

@@ -6,7 +6,7 @@
     "canary_receipt.py": "2bc0cdc400a8e125ca7d8ccfacc3289c88681d67295bd0d49e3695b6daf7df0b",
     "groq_canary.py": "d9a07884cbabb84565deefb041201ffd4b352d80a650c55b5a43fb79ba895e8e",
     "groq_model.py": "3282294d43458352c8ea4e571ee73a14ae58f333e9207015b8ae699a8ac2af09",
-    "operator_canary.py": "bfad22eb797e697d172f43a1954dab22a4953a4f7d85032bc5226c2c874c8121",
+    "operator_canary.py": "e9a5e82ec2185284f420fc9491f84d330325680e3b4d620bcd69b1f62a5234bc",
     "requirements-groq.lock": "a9480372704fcdd4b9bed890d0fc967bcd967815853477ade5e53507f48e62b6",
     "requirements-postgres.lock": "3e542e5e421be0d7a89c59110fbaf3ca9b3849165a25abfd624300d0ac7a9d68",
     "requirements.lock": "68105156c292c43bf23f51d39cd3eb7b4389e3875015059a8c20195c1ea435ca",

@@ -26,7 +26,7 @@ port; corrected to 127.0.0.1:55441. Next run passed141 with one stale error-mess
 assertion; corrected that assertion and added deadline coverage. Final143 passed.
 Own server stopped. Existing two dependency deprecation warnings remain.
 
-Execution manifest: ea7a228efefb3fd7e3a8cd72aabb217e0c77bd2ac4206aacfc40c0aa1c215089
+Execution manifest: 47c742026de0c53b4ac2e2800b469441095c3f2fa4fc14532a98ff8de0eed42b
 Current manifest/evidence: services/agent/test-evidence/bs022/codex_manifest.json
 and codex_review.json. Original operator_*.json artifacts remain historical worker
 evidence, not evidence for the repaired source. Full reproduction logs retained
@@ -37,3 +37,7 @@ Next is the Codex-owned live canary decision at HIGH, with explicit dated one-us
 grant bound to this manifest and fresh account/free-tier verification. Do not
 delegate another generic preparation task or label this offline proof as live.
 Unknown total tokens remain NULL; 6144 is an output reservation, not total quota.
+
+Post-integration verification found Git newline normalization changed the runner
+byte hash. Text equality was verified, the canonical manifest regenerated, and
+the worker source bytes synchronized. Current hash above binds canonical bytes.
