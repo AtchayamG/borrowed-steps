@@ -1,4 +1,24 @@
-## Latest checkpoint: BS-026 accepted after bounded repair (2026-09-12)
+## Latest checkpoint: BS-027 ready for review (2026-09-12)
+
+TASK_ID: BS-027
+STATUS: READY_FOR_REVIEW
+WORKER: AGY, senior backend developer
+MODEL: Gemini 3.8 Flash High
+EFFORT: HIGH
+BRANCH: worker/agy/BS-027
+BASE_COMMIT: 236f5fd
+PROPOSED_COMMIT_MSG: feat(interpreter): wire hosted groq interpreter to admission boundary (BS-027)
+
+Implemented and verified the hosted Groq interpreter and admission integration boundary.
+Connected GroqModel and PostgreSQL InferenceAdmissionStore via StrandsGroqInterpreter.
+Public assistant remains strictly disabled (BS_ASSISTANT_ENABLED=0).
+19 tests in test_strands_groq_interpreter.py and 100 full regression tests passed.
+All linters (ruff, mypy strict) clean.
+
+NEXT_CODEX_MODE: ASTRA_HIGH
+REASON: BS-027 ready for Codex review on branch `worker/agy/BS-027`.
+
+## Historical checkpoint: BS-026 accepted after bounded repair (2026-09-12)
 
 BS-026 is accepted locally on `integration/m1` at `d5633a4`. The durable
 admission ledger is ready for hosted wiring, with public activation still gated.

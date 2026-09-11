@@ -1,4 +1,18 @@
-## Latest checkpoint: BS-026 accepted after bounded repair (2026-09-12)
+## Latest checkpoint: BS-027 ready for review (2026-09-12)
+
+Read `docs/workers/BS-027.md`. Hosted Groq interpreter and admission integration
+boundary implemented and verified on branch `worker/agy/BS-027`. Connects accepted
+Groq/Strands transport (`GroqModel`) and accepted PostgreSQL `InferenceAdmissionStore`
+into `StrandsGroqInterpreter` conforming to `RequestInterpreter` and `CleanupOwner`.
+Public assistant remains strictly disabled (`BS_ASSISTANT_ENABLED=0`), returning
+HTTP 503 `ASSISTANT_DISABLED`. All 19 tests in `test_strands_groq_interpreter.py`
+and all 100 regression tests passed. Ruff, mypy strict, and git diff are clean.
+₹0 spend, zero live calls, zero cloud mutations.
+
+NEXT_CODEX_MODE: ASTRA_HIGH
+REASON: Hosted interpreter and admission boundary complete on branch `worker/agy/BS-027`; ready for Codex review.
+
+## Historical checkpoint: BS-026 accepted after bounded repair (2026-09-12)
 
 Read `docs/BS-026_ACCEPTANCE.md`. Canonical `integration/m1` includes commits
 `2107a6a` and `d5633a4`. The storage boundary and cleanup-evidence replay defect

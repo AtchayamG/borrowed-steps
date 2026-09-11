@@ -1,0 +1,157 @@
+================================================================================
+BS-027 INTEGRATION BOUNDARY EVIDENCE RUN
+Timestamp: 2026-09-11T19:22:40.731875+00:00
+================================================================================
+
+[1. RUFF CHECK]
+All checks passed!
+
+[2. RUFF FORMAT CHECK]
+83 files already formatted
+
+[3. MYPY STRICT]
+Success: no issues found in 36 source files
+
+[4. REGRESSION TEST SUITES]
+============================= test session starts =============================
+platform win32 -- Python 3.14.3, pytest-9.1.1, pluggy-1.6.0 -- D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-027-agy\services\agent\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-027-agy\services\agent
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collecting ... collected 81 items
+
+tests/test_strands_adapter.py::test_happy_path_grounds_every_field_and_builds_real_provenance PASSED [  1%]
+tests/test_strands_adapter.py::test_stage_one_asks_for_tools_only_and_never_a_schema PASSED [  2%]
+tests/test_strands_adapter.py::test_stage_two_makes_exactly_one_schema_request_from_the_source_alone PASSED [  3%]
+tests/test_strands_adapter.py::test_both_stages_are_charged_against_one_send_budget PASSED [  4%]
+tests/test_strands_adapter.py::test_one_owned_client_serves_both_stages_and_is_closed PASSED [  6%]
+tests/test_strands_adapter.py::test_inventory_tool_takes_no_workspace_argument PASSED [  7%]
+tests/test_strands_adapter.py::test_no_tool_execution_is_a_failure_not_a_fabricated_success PASSED [  8%]
+tests/test_strands_adapter.py::test_missing_tool_metrics_entirely_is_also_a_failure PASSED [  9%]
+tests/test_strands_adapter.py::test_too_many_tool_executions_is_a_failure PASSED [ 11%]
+tests/test_strands_adapter.py::test_the_tool_itself_refuses_a_third_call PASSED [ 12%]
+tests/test_strands_adapter.py::test_hitting_a_model_bound_is_an_invalid_output[limit_turns] PASSED [ 13%]
+tests/test_strands_adapter.py::test_hitting_a_model_bound_is_an_invalid_output[limit_output_tokens] PASSED [ 14%]
+tests/test_strands_adapter.py::test_hitting_a_model_bound_is_an_invalid_output[limit_total_tokens] PASSED [ 16%]
+tests/test_strands_adapter.py::test_hitting_a_model_bound_is_an_invalid_output[max_tokens] PASSED [ 17%]
+tests/test_strands_adapter.py::test_cancelled_run_is_reported_as_a_timeout PASSED [ 18%]
+tests/test_strands_adapter.py::test_a_set_cancel_signal_is_reported_as_a_timeout PASSED [ 19%]
+tests/test_strands_adapter.py::test_malformed_structured_output_is_refused PASSED [ 20%]
+tests/test_strands_adapter.py::test_absent_structured_output_is_refused PASSED [ 22%]
+tests/test_strands_adapter.py::test_a_structured_output_error_is_an_invalid_output PASSED [ 23%]
+tests/test_strands_adapter.py::test_a_provider_error_during_extraction_maps_to_unavailable PASSED [ 24%]
+tests/test_strands_adapter.py::test_a_run_with_no_send_left_never_reaches_extraction PASSED [ 25%]
+tests/test_strands_adapter.py::test_provider_failures_map_to_unavailable[error0] PASSED [ 27%]
+tests/test_strands_adapter.py::test_provider_failures_map_to_unavailable[error1] PASSED [ 28%]
+tests/test_strands_adapter.py::test_provider_failures_map_to_unavailable[error2] PASSED [ 29%]
+tests/test_strands_adapter.py::test_ungrounded_values_become_null_and_are_reported_missing PASSED [ 30%]
+tests/test_assistant_bounds.py::test_environment_cannot_move_the_assistant_off_its_pinned_provider PASSED [ 32%]
+tests/test_assistant_bounds.py::test_pinned_values_are_used_when_no_override_is_present PASSED [ 33%]
+tests/test_assistant_bounds.py::test_an_override_equal_to_the_pinned_value_is_accepted PASSED [ 34%]
+tests/test_assistant_bounds.py::test_the_adapter_is_built_on_the_pinned_endpoint_and_model PASSED [ 35%]
+tests/test_assistant_bounds.py::test_a_refused_third_tool_attempt_fails_the_whole_invocation PASSED [ 37%]
+tests/test_assistant_bounds.py::test_two_tool_reads_remain_acceptable PASSED [ 38%]
+tests/test_assistant_bounds.py::test_a_finite_transport_timeout_is_configured PASSED [ 39%]
+tests/test_assistant_bounds.py::test_a_stalled_transport_is_bounded_and_cancelled PASSED [ 40%]
+tests/test_assistant_bounds.py::test_the_slot_recovers_after_a_stalled_run PASSED [ 41%]
+tests/test_assistant_bounds.py::test_caller_cancellation_propagates_and_is_not_swallowed PASSED [ 43%]
+tests/test_assistant_bounds.py::test_limits_turns_bounds_loop_cycles_not_transport_retries PASSED [ 44%]
+tests/test_assistant_bounds.py::test_default_retry_strategy_sends_more_requests_than_the_turn_limit PASSED [ 45%]
+tests/test_assistant_bounds.py::test_disabling_the_retry_strategy_keeps_attempts_within_the_turn_limit PASSED [ 46%]
+tests/test_assistant_bounds.py::test_the_adapter_refuses_a_run_that_hit_the_model_bound PASSED [ 48%]
+tests/test_extraction_request.py::test_the_outgoing_system_prompt_carries_the_generated_schema PASSED [ 49%]
+tests/test_extraction_request.py::test_the_schema_block_in_the_prompt_parses_and_names_every_required_key PASSED [ 50%]
+tests/test_extraction_request.py::test_the_semantic_rules_are_still_the_start_of_the_prompt PASSED [ 51%]
+tests/test_extraction_request.py::test_the_user_message_is_still_the_source_wrapper_alone PASSED [ 53%]
+tests/test_extraction_request.py::test_the_request_still_pins_the_native_schema_parameters PASSED [ 54%]
+tests/test_extraction_request.py::test_there_is_one_schema_and_it_is_generated PASSED [ 55%]
+tests/test_extraction_alignment.py::test_extraction_system_prompt_and_schema_alignment PASSED [ 56%]
+tests/test_extraction_alignment.py::test_grounding_with_uppercase_candidate_and_lowercase_evidence PASSED [ 58%]
+tests/test_extraction_alignment.py::test_grounding_with_walking_frame_synonym PASSED [ 59%]
+tests/test_extraction_alignment.py::test_grounding_distinct_kinds_ambiguity_rejects PASSED [ 60%]
+tests/test_extraction_alignment.py::test_grounding_omitted_model_candidate_remains_null PASSED [ 61%]
+tests/test_extraction_alignment.py::test_grounding_offset_due_at_normalizes_to_utc PASSED [ 62%]
+tests/test_extraction_alignment.py::test_smoke_r8_fails_closed_when_authorization_token_not_exact PASSED [ 64%]
+tests/test_extraction_alignment.py::test_smoke_r8_fails_closed_on_prior_failed_r8_attempt PASSED [ 65%]
+tests/test_extraction_alignment.py::test_smoke_r8_fails_closed_on_incomplete_r8_attempt PASSED [ 66%]
+tests/test_extraction_alignment.py::test_smoke_r8_preserves_historic_1_to_11_failures_without_rejection PASSED [ 67%]
+tests/test_extraction_alignment.py::test_smoke_r8_cumulative_ceiling_22_and_budget_checks PASSED [ 69%]
+tests/test_extraction_alignment.py::test_smoke_r8_full_six_cases_offline_fake PASSED [ 70%]
+tests/test_extraction_alignment.py::test_smoke_r8_fail_fast_aborts_on_case_failure PASSED [ 71%]
+tests/test_extraction_alignment.py::test_smoke_rejects_empty_case_selection_before_client_creation PASSED [ 72%]
+tests/test_extraction_alignment.py::test_smoke_rejects_unknown_case_selection_before_client_creation PASSED [ 74%]
+tests/test_extraction_alignment.py::test_smoke_proper_subset_finishes_partial_nonzero PASSED [ 75%]
+tests/test_extraction_alignment.py::test_smoke_real_canonical_r8_ledger_refusal_sentinel_client PASSED [ 76%]
+tests/test_extraction_alignment.py::test_illustrative_grounding_replay_omitted_vs_rejected_candidates PASSED [ 77%]
+tests/test_groq_model.py::test_groq_model_construction_validation PASSED [ 79%]
+tests/test_groq_model.py::test_send_budget_unit_behavior PASSED          [ 80%]
+tests/test_groq_model.py::test_groq_model_target_refusal_non_https PASSED [ 81%]
+tests/test_groq_model.py::test_groq_model_target_refusal_wrong_host_or_path PASSED [ 82%]
+tests/test_groq_model.py::test_groq_model_deadline_expired_before_send PASSED [ 83%]
+tests/test_groq_model.py::test_groq_model_deadline_expired_during_dispatch PASSED [ 85%]
+tests/test_groq_model.py::test_groq_model_deadline_expired_mid_stream_chunk_read PASSED [ 86%]
+tests/test_groq_model.py::test_groq_model_request_timeout_within_deadline PASSED [ 87%]
+tests/test_groq_model.py::test_groq_model_sticky_send_budget_shared_across_stages PASSED [ 88%]
+tests/test_groq_model.py::test_groq_model_strands_agent_tool_loop_and_wire_inspection PASSED [ 90%]
+tests/test_groq_model.py::test_groq_model_provider_error_retry_exhaustion PASSED [ 91%]
+tests/test_groq_model.py::test_groq_model_stage2_structured_output_wire_shape_and_parsing PASSED [ 92%]
+tests/test_groq_model.py::test_groq_model_structured_output_null_fields_handling PASSED [ 93%]
+tests/test_groq_model.py::test_groq_model_structured_output_refusal_handling PASSED [ 95%]
+tests/test_groq_model.py::test_groq_model_structured_output_invalid_json_handling PASSED [ 96%]
+tests/test_groq_model.py::test_groq_model_preserves_429_and_retry_after PASSED [ 97%]
+tests/test_groq_model.py::test_groq_model_cancellation_and_resource_closing PASSED [ 98%]
+tests/test_groq_model.py::test_groq_model_context_manager PASSED         [100%]
+
+============================== warnings summary ===============================
+.venv\Lib\site-packages\fastapi\testclient.py:1
+  D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-027-agy\services\agent\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv\Lib\site-packages\starlette\testclient.py:53
+  D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-027-agy\services\agent\.venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 81 passed, 2 warnings in 2.88s ========================
+
+[5. BS-027 TEST SUITE (19 TESTS AGAINST REAL POSTGRESQL)]
+============================= test session starts =============================
+platform win32 -- Python 3.14.3, pytest-9.1.1, pluggy-1.6.0 -- D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-027-agy\services\agent\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-027-agy\services\agent
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collecting ... collected 19 items
+
+tests/test_strands_groq_interpreter.py::test_strands_groq_interpreter_does_not_import_ollama PASSED [  5%]
+tests/test_strands_groq_interpreter.py::test_constructor_parameter_validation PASSED [ 10%]
+tests/test_strands_groq_interpreter.py::test_groq_model_never_created_on_invalid_workspace PASSED [ 15%]
+tests/test_strands_groq_interpreter.py::test_groq_model_never_created_on_refused_reservation PASSED [ 21%]
+tests/test_strands_groq_interpreter.py::test_groq_model_never_created_on_429_cooldown PASSED [ 26%]
+tests/test_strands_groq_interpreter.py::test_groq_model_never_created_on_refused_dispatch PASSED [ 31%]
+tests/test_strands_groq_interpreter.py::test_successful_interpretation_and_truthful_settlement PASSED [ 36%]
+tests/test_strands_groq_interpreter.py::test_provider_429_settlement PASSED [ 42%]
+tests/test_strands_groq_interpreter.py::test_timeout_settlement PASSED   [ 47%]
+tests/test_strands_groq_interpreter.py::test_invalid_output_no_tool_execution_settlement PASSED [ 52%]
+tests/test_strands_groq_interpreter.py::test_cancellation_settles_uncertain_and_retains_slot PASSED [ 57%]
+tests/test_strands_groq_interpreter.py::test_cleanup_unresolved_refusal PASSED [ 63%]
+tests/test_strands_groq_interpreter.py::test_pg_full_admission_lifecycle PASSED [ 68%]
+tests/test_strands_groq_interpreter.py::test_pg_one_active_concurrency_refusal PASSED [ 73%]
+tests/test_strands_groq_interpreter.py::test_pg_429_cooldown_enforcement PASSED [ 78%]
+tests/test_strands_groq_interpreter.py::test_pg_cancellation_uncertain_retention_and_recovery PASSED [ 84%]
+tests/test_strands_groq_interpreter.py::test_app_health_offline_hosted PASSED [ 89%]
+tests/test_strands_groq_interpreter.py::test_app_factory_seam_and_assistant_disabled PASSED [ 94%]
+tests/test_strands_groq_interpreter.py::test_real_hosted_interpreter_factory_requires_credentials PASSED [100%]
+
+============================== warnings summary ===============================
+.venv\Lib\site-packages\fastapi\testclient.py:1
+  D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-027-agy\services\agent\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv\Lib\site-packages\starlette\testclient.py:53
+  D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-027-agy\services\agent\.venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 19 passed, 2 warnings in 9.93s ========================

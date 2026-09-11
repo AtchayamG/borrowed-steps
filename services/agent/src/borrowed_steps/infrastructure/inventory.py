@@ -27,6 +27,10 @@ class StoreInventoryReader:
         self._store = store
         self._workspace_id = workspace_id
 
+    @property
+    def workspace_id(self) -> str:
+        return self._workspace_id
+
     def kind_state_counts(self) -> list[InventoryCount]:
         with self._store.transaction(self._workspace_id, write=False) as uow:
             items = uow.list_equipment()

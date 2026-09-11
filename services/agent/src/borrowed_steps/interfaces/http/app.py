@@ -20,6 +20,8 @@ from collections.abc import AsyncIterator, Callable
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    import httpx
+
     from borrowed_steps.infrastructure.hosted_scheduler import HostedSchedulerService
 
 from fastapi import Depends, FastAPI, Response
@@ -105,6 +107,7 @@ __all__ = [
     "MILESTONE_LOCAL",
     "SESSION_COOKIE",
     "OriginForbiddenError",
+    "_real_hosted_interpreter",
     "create_app",
 ]
 
@@ -295,6 +298,34 @@ def _real_interpreter(settings: Settings, clock: Clock) -> RequestInterpreter:
     )
 
 
+def _real_hosted_interpreter(
+    settings: Settings,
+    clock: Clock,
+    *,
+    transport: httpx.AsyncBaseTransport | None = None,
+) -> RequestInterpreter:
+    """Build the hosted Strands Groq adapter.
+
+    Imported lazily so Ollama is never imported in hosted mode, and
+    Groq/OpenAI/Postgres dependencies are loaded only when needed.
+    """
+    if not settings.groq_api_key or not settings.groq_api_key.strip():
+        msg = "Hosted interpreter requires an explicit groq_api_key."
+        raise ValueError(msg)
+    if not settings.database_url or not settings.database_url.strip():
+        msg = "Hosted interpreter requires an explicit database_url."
+        raise ValueError(msg)
+
+    from borrowed_steps.infrastructure.strands_groq_interpreter import StrandsGroqInterpreter
+
+    return StrandsGroqInterpreter(
+        api_key=settings.groq_api_key,
+        database_url=settings.database_url,
+        clock=clock,
+        transport=transport,
+    )
+
+
 async def _settle(task: asyncio.Task[Any], grace: float) -> None:
     """Wait, bounded, for a cancelled run to finish winding down.
 
@@ -372,6 +403,9 @@ def create_app(
             clock=services.clock,
             ids=services.ids,
         )
+        assistant = interpreter
+        if assistant is None and resolved.assistant_enabled:
+            assistant = _real_hosted_interpreter(resolved, services.clock)
 
     if resolved.runtime == "local":
         if resolved.tasks_enabled:

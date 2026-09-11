@@ -1,4 +1,46 @@
-## Latest: BS-026 Bounded PostgreSQL Inference Admission Storage
+## Latest: BS-027 Hosted Groq Interpreter and Admission Integration Boundary
+
+TASK_ID: BS-027
+STATUS: READY_FOR_REVIEW
+WORKER: AGY, senior backend developer
+MODEL: Gemini 3.8 Flash High
+EFFORT: HIGH
+BRANCH: worker/agy/BS-027
+BASE_COMMIT: 236f5fd
+PROPOSED_COMMIT_MSG: feat(interpreter): wire hosted groq interpreter to admission boundary (BS-027)
+
+Implemented and verified the hosted Groq interpreter and admission integration boundary:
+connected accepted Groq/Strands transport and accepted PostgreSQL InferenceAdmissionStore,
+while keeping the public assistant strictly disabled (BS_ASSISTANT_ENABLED=0).
+
+Key achievements & verifications:
+- Shared strands infrastructure in services/agent/src/borrowed_steps/infrastructure/strands_common.py:
+  - Consolidates prompts, _Extraction schema, ToolBudget, build_inventory_tool, and grounding.
+  - Completely free of ollama/provider imports; shared cleanly by local and hosted interpreters.
+- StrandsGroqInterpreter in services/agent/src/borrowed_steps/infrastructure/strands_groq_interpreter.py:
+  - Implements RequestInterpreter and CleanupOwner protocols.
+  - Strict admission sequencing: reserve() -> mark_dispatched() before GroqModel instantiation.
+  - GroqModel is NEVER constructed on malformed workspace, refused reservation, or active 429 cooldown.
+  - Two-stage flow with real Strands Agent, verified inventory tool execution, and source-alone extraction.
+  - Truthful settlement in InferenceAdmissionStore: success, 429, deadline timeout, invalid output.
+  - Cancellation (cancel.is_set() or asyncio.CancelledError) and unresolved cleanup settle as UNCERTAIN, retaining active concurrency slot until explicit dead recovery by operator.
+  - CleanupOwner protocol tracks unclosed clients and refuses subsequent runs until resolved.
+- App construction seam in services/agent/src/borrowed_steps/interfaces/http/app.py:
+  - Factory function _real_hosted_interpreter builds StrandsGroqInterpreter.
+  - Wired into create_app in hosted runtime when assistant_enabled is True.
+  - Public assistant remains strictly DISABLED (BS_ASSISTANT_ENABLED=0): /api/health returns agent_mode="disabled", POST /api/intake/interpret returns 503 ASSISTANT_DISABLED.
+- Disposable PostgreSQL verification (port 55437):
+  - tests/test_strands_groq_interpreter.py: 19 passed (unit, admission gating, two-stage execution, truthful settlement, cleanup unresolved detection, real PostgreSQL lifecycle, concurrency refusal, 429 cooldown, uncertainty retention & operator recovery, and app disabled enforcement).
+  - Full regression: 100/100 tests passed (test_strands_groq_interpreter.py, test_groq_model.py, test_strands_adapter.py, test_assistant_bounds.py, test_extraction_request.py, test_extraction_alignment.py).
+  - Static checks: ruff check (0 errors), ruff format --check (clean), mypy strict (0 errors in 36 source files), git diff --check (clean).
+- Zero live provider calls, zero credential discovery, zero cloud mutations, ₹0 / $0 spend.
+
+Evidence: services/agent/test-evidence/bs027/interpreter_admission_evidence.json, services/agent/test-evidence/bs027/test_results.txt
+Documentation: docs/workers/BS-027.md
+NEXT_CODEX_MODE: ASTRA_HIGH
+REASON: Hosted interpreter integration boundary complete, fully tested on real PostgreSQL; ready for Codex review.
+
+## Historical: BS-026 Bounded PostgreSQL Inference Admission Storage
 
 TASK_ID: BS-026
 STATUS: READY_FOR_REVIEW

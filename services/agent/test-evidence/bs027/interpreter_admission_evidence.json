@@ -1,0 +1,90 @@
+{
+  "task_id": "BS-027",
+  "timestamp_utc": "2026-09-11T19:23:02.328016+00:00",
+  "worker": "AGY, senior backend developer",
+  "model": "Gemini 3.8 Flash High",
+  "effort": "HIGH",
+  "base_commit": "236f5fd",
+  "branch": "worker/agy/BS-027",
+  "objective": "Hosted Groq interpreter and admission integration boundary connecting accepted Groq/Strands transport and accepted PostgreSQL InferenceAdmissionStore.",
+  "public_assistant_state": "DISABLED (BS_ASSISTANT_ENABLED=0)",
+  "spend": "INR 0.00 / USD 0.00",
+  "live_network_calls": 0,
+  "credentials_accessed": 0,
+  "cloud_mutations": 0,
+  "interpreter": {
+    "class": "StrandsGroqInterpreter",
+    "module": "borrowed_steps.infrastructure.strands_groq_interpreter",
+    "pinned_model": "openai/gpt-oss-20b",
+    "pinned_base_url": "https://api.groq.com/openai/v1",
+    "protocols_implemented": [
+      "RequestInterpreter",
+      "CleanupOwner"
+    ],
+    "max_model_requests": 6,
+    "max_tool_calls": 2,
+    "deadline_seconds": 110.0,
+    "transport_timeout_seconds": 60.0,
+    "reserved_sends": 6,
+    "two_stage_execution": true,
+    "zero_ollama_import": true,
+    "zero_live_network": true
+  },
+  "admission_integration": {
+    "store_class": "InferenceAdmissionStore",
+    "order_of_operations": [
+      "1. reserve() with workspace_id, owner_id, request_key_hash, payload_hash",
+      "2. mark_dispatched() before GroqModel instantiation",
+      "3. GroqModel constructed only after successful dispatch",
+      "4. _close(model) executed in finally block before store.finish()",
+      "5. store.finish() records exact actual_sends and terminal state",
+      "6. uncertainty retained on cancellation or unresolved cleanup"
+    ],
+    "terminal_state_settlement": {
+      "success": "SUCCEEDED, cleanup_completed=True, failure_code=None",
+      "provider_429": "FAILED_CONFIRMED, cleanup_completed=True, failure_code=provider_429",
+      "deadline_expired": "FAILED_CONFIRMED, cleanup_completed=True, failure_code=deadline_expired",
+      "invalid_output": "FAILED_CONFIRMED, cleanup_completed=True, failure_code=invalid_output",
+      "cancelled": "UNCERTAIN, failure_code=cancelled, concurrency_slot_retained=True",
+      "unresolved_cleanup": "UNCERTAIN, failure_code=execution_unknown, concurrency_slot_retained=True"
+    }
+  },
+  "app_seam": {
+    "factory_function": "_real_hosted_interpreter",
+    "app_module": "borrowed_steps.interfaces.http.app",
+    "public_assistant_disabled_code": 503,
+    "public_assistant_disabled_error": "ASSISTANT_DISABLED",
+    "health_agent_mode": "disabled",
+    "health_milestone": "M3"
+  },
+  "test_results": {
+    "test_strands_groq_interpreter.py": 19,
+    "test_groq_model.py": 18,
+    "test_strands_adapter.py": 25,
+    "test_assistant_bounds.py": 14,
+    "test_extraction_request.py": 6,
+    "test_extraction_alignment.py": 18,
+    "total_tests_passed": 100,
+    "ruff_check": "passed",
+    "ruff_format": "passed",
+    "mypy_strict": "passed"
+  },
+  "invariants_verified": [
+    "zero_ollama_imported_by_hosted_module",
+    "groq_model_never_created_on_invalid_workspace",
+    "groq_model_never_created_on_refused_reservation",
+    "groq_model_never_created_on_429_cooldown",
+    "groq_model_never_created_on_refused_dispatch",
+    "two_stage_execution_with_verified_tool_metrics",
+    "grounded_extraction_with_accurate_provenance",
+    "truthful_settlement_of_success_429_timeout_invalid_output",
+    "cancellation_settles_uncertain_and_retains_concurrency_slot",
+    "cleanup_owner_protocol_tracks_unresolved_clients",
+    "unresolved_cleanup_refuses_subsequent_runs",
+    "real_postgresql_admission_lifecycle_and_released_at",
+    "real_postgresql_one_active_concurrency_refusal",
+    "real_postgresql_429_cooldown_durable_rejection",
+    "real_postgresql_uncertainty_recovery_by_operator",
+    "hosted_runtime_enforces_bs_assistant_enabled_0_returns_503"
+  ]
+}

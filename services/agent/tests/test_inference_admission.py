@@ -444,7 +444,6 @@ def test_finish_success_flow_and_replays(db: str) -> None:
         )
 
 
-
 def test_finish_failed_confirmed_flow_and_replays(db: str) -> None:
     wid = _create_workspace(db)
     store = InferenceAdmissionStore(db)

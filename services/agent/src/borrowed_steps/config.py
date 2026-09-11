@@ -200,6 +200,7 @@ class Settings:
     database_url: str | None = field(default=None, repr=False)
     assistant_provider: str = DEFAULT_ASSISTANT_PROVIDER
     task_tick_token: str | None = field(default=None, repr=False)
+    groq_api_key: str | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         validate_settings(self)
@@ -333,6 +334,9 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     else:
         database_url = source.get("BS_DATABASE_URL")
 
+    raw_groq_key = source.get("BS_GROQ_API_KEY")
+    groq_api_key = raw_groq_key.strip() if raw_groq_key and raw_groq_key.strip() else None
+
     return Settings(
         db_path=Path(source.get("BS_DB_PATH", DEFAULT_DB_PATH)),
         allowed_origins=allowed_origins,
@@ -346,4 +350,5 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         database_url=database_url,
         assistant_provider=provider,
         task_tick_token=source.get("BS_TASK_TICK_TOKEN"),
+        groq_api_key=groq_api_key,
     )
