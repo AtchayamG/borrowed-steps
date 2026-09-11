@@ -31,7 +31,7 @@ __all__ = [
     "read_schema_version",
 ]
 
-EXPECTED_SCHEMA_VERSION = 2
+EXPECTED_SCHEMA_VERSION = 3
 """Schema version this build of the adapter requires."""
 
 # A fixed, arbitrary 64-bit key. Advisory locks share one namespace per
@@ -233,7 +233,55 @@ _SCHEMA_V2: tuple[str, ...] = (
     " No borrower, workspace or session data.'",
 )
 
-_MIGRATIONS: tuple[tuple[str, ...], ...] = (_SCHEMA_V1, _SCHEMA_V2)
+_SCHEMA_V3: tuple[str, ...] = (
+    """
+    CREATE TABLE canary_receipts (
+        receipt_id TEXT PRIMARY KEY,
+        owner_id TEXT NOT NULL,
+        plan_hash TEXT NOT NULL,
+        authorization_id TEXT NOT NULL UNIQUE,
+        authorization_expires_at TIMESTAMPTZ NOT NULL,
+        payload TEXT NOT NULL,
+        reserved_sends INTEGER NOT NULL CHECK (reserved_sends = 6),
+        reserved_output_tokens INTEGER NOT NULL CHECK (reserved_output_tokens = 6144),
+        payload_hash TEXT NOT NULL,
+        state TEXT NOT NULL DEFAULT 'RESERVED' CHECK (
+            state IN ('RESERVED', 'DISPATCHED', 'SUCCEEDED', 'FAILED_CONFIRMED', 'UNCERTAIN')
+        ),
+        concurrency_active BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+        dispatched_at TIMESTAMPTZ,
+        completed_at TIMESTAMPTZ,
+        actual_sends INTEGER CHECK (actual_sends BETWEEN 0 AND 6),
+        actual_total_tokens INTEGER CHECK (actual_total_tokens >= 0),
+        failure_code TEXT CHECK (failure_code IN (
+            'provider_failure', 'invalid_output', 'cancelled', 'execution_unknown'
+        )),
+        recovered_at TIMESTAMPTZ,
+        recovered_by TEXT,
+        CHECK ((recovered_at IS NULL) = (recovered_by IS NULL)),
+        CHECK (concurrency_active = (
+            state IN ('RESERVED', 'DISPATCHED', 'UNCERTAIN') AND recovered_at IS NULL
+        )),
+        CHECK (recovered_at IS NULL OR state = 'UNCERTAIN')
+    )
+    """,
+    # Enforce at most one active receipt across the entire database.
+    # Active means concurrency_active IS TRUE (in RESERVED, DISPATCHED, or unrecovered UNCERTAIN).
+    # When completed (SUCCEEDED, FAILED_CONFIRMED) or explicitly recovered from UNCERTAIN,
+    # concurrency_active is set to FALSE, allowing a subsequent canary to be reserved.
+    """
+    CREATE UNIQUE INDEX ux_canary_receipts_single_active
+        ON canary_receipts (concurrency_active)
+        WHERE concurrency_active IS TRUE
+    """,
+    "COMMENT ON TABLE canary_receipts IS"
+    " 'Durable Canary Receipt boundary. Binds one canary invocation to an immutable"
+    " plan hash and dated authorization with conservative reservation accounting."
+    " Strictly excludes concurrent active receipts and never stores secrets or prompts.'",
+)
+
+_MIGRATIONS: tuple[tuple[str, ...], ...] = (_SCHEMA_V1, _SCHEMA_V2, _SCHEMA_V3)
 
 
 def _connect(database_url: str) -> psycopg.Connection[TupleRow]:

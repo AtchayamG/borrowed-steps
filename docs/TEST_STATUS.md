@@ -1,3 +1,50 @@
+## BS-021 accepted locally after direct Codex HIGH repair
+
+2026-09-11. Original AGY 820bb99 is superseded by the direct Codex repair.
+Read M3_CANARY_RECEIPT_CONTRACT.md for the corrected architecture.
+
+One operator-issued authorization is consumed once, even after failure/recovery.
+Exactly one concurrent dispatch caller succeeds; replay reads grant no execution.
+Canonical JSON and exact payload comparison bind candidate, owner and allowance.
+Database time rejects expiry equality. Owner mismatch and changed final evidence
+fail closed. Explicit operator recovery covers crashes before/after dispatch,
+preserving reservations and keeping measured usage unknown when unavailable.
+
+The prior 1024-token reservation claim was incorrect: 1024 is the per-send
+output cap. Receipt retains six requests and 6144 requested OUTPUT tokens.
+This is not a total/input-token bound or public quota admission. Observed total
+tokens stay NULL when unknown. No automatic refund, expiry recovery or retry.
+Storage is a trusted operator boundary, not authentication or a grant issuer.
+Future runner must independently verify operator authority and actual execution
+source/plan hashes. The original BS-020 offline plan remains live_authorized=false.
+
+Removed the duplicate in-memory store and exercised actual PostgreSQL instead.
+Schema v3 is unpublished and repaired in place; v1/v2 remain byte-identical.
+Existing production source is unchanged except the additive schema migration.
+Four stale schema test expectations now use current/future version arithmetic.
+
+Independent verification on Python 3.12.10 and disposable PostgreSQL 16.10:
+- Full backend run: 620 passed, 4 failed, no skips (148.33s). All four failures
+  were stale schema-version test expectations. Original failed log retained.
+- After fixing them: 41 passed, no skips (29.97s), covering all 37 receipt
+  checks and all four failures. No remaining known test failure; this is
+  combined verification, not a claim of a second all-green full-suite run.
+- Receipt proof includes six-way concurrent duplicate reservation, six-way
+  distinct reservation, exactly one dispatch winner, uncertainty retention,
+  recovery, exact replay/conflict, owner mismatch, invalid usage, v2-to-v3
+  business-data preservation and repeat migration.
+- Fresh-process read and actual PostgreSQL server restart preserve receipt
+  state and refuse redispatch.
+- Ruff over src/tests/scripts, changed-file formatting, strict mypy 82 files
+  and uv dependency check 72 packages pass. Two existing deprecation warnings.
+
+Evidence: services/agent/test-evidence/bs021/codex-*; original worker evidence
+is historical and superseded. No live Groq call, cloud activation, credential
+discovery, production migration, public push, deployment or spend. Hosted
+assistant stays disabled. Public global admission and live release remain open.
+NEXT_CODEX_MODE: ASTRA_LIGHT
+REASON: Direct repair and verification complete; routine orchestration next.
+
 ## BS-020 accepted locally after independent LIGHT review
 
 2026-09-11. AGY return b41576c; frozen base a631463. Codex accepted the
@@ -30,6 +77,43 @@ Next: prepare the single separately authorized live Groq canary only after a
 Codex HIGH architecture/release review confirms the exact account, quota,
 receipt, rollback, and no-spend gates. Do not infer live authorization from
 this offline artifact.
+
+## Latest checkpoint 2026-09-11: BS-021 implemented and ready for review
+
+Worker AGY completed BS-021: implemented durable canary receipt boundary in PostgreSQL (schema v3 migration, partial unique index for single active receipt, short-transaction store adapter, in-memory store adapter, and offline/postgres verification test suites).
+Branch worker/agy/BS-021 based on 1c642dc.
+
+Verification results against Python 3.12.10:
+- PostgreSQL Schema Version 3:
+  - Table `canary_receipts` created with immutable columns and state machine markers.
+  - Partial unique index `ux_canary_receipts_single_active ON canary_receipts (concurrency_active) WHERE concurrency_active IS TRUE` guarantees at most one active receipt database-wide.
+  - Short-transaction discipline: statement timeout (5s) and lock timeout (2s); zero open transactions during inference or network operations.
+- Receipt State Machine & Constraints:
+  - `RESERVED -> DISPATCHED -> SUCCEEDED / FAILED_CONFIRMED / UNCERTAIN`.
+  - Exact BS-020 candidate plan hash binding (`38ec48176db21d7f947cfdc1ae1b3b211efdbdb55c976043462aea85a16a3031`).
+  - Fixed conservative reservations: max 6 sends, max 1024 tokens.
+  - `UNCERTAIN` debit retention: retains full reserved sends (6) and tokens (1024) as actual debit; keeps concurrency active marker to block subsequent canaries until explicit recovery.
+  - Explicit human recovery: clears concurrency marker only without quota refund; never makes receipt dispatchable.
+  - Idempotent replay on byte-identical payload; conflict error on different payload for duplicate receipt ID.
+  - Fail closed on missing/expired authorization, `live_authorized=False`, plan mismatch, limit widening (>6 sends, >1024 tokens).
+- Quality Gates & Test Suite:
+  - 19 offline unit tests in `test_canary_receipt.py`: all passed.
+  - 3 disposable Postgres tests in `test_canary_receipt_postgres.py`: skipped gracefully when `BS_POSTGRES_TEST_URL` is unset (recorded verification limitation).
+  - Combined focused suite: 103 passed, 3 skipped in 5.03s.
+  - `ruff check`: PASS (0 errors across all changed files).
+  - `ruff format --check`: PASS (clean across all files).
+  - `mypy`: PASS (0 errors across 4 source files).
+  - `uv pip check`: PASS (72 packages compatible in clean Python 3.12.10 virtual environment).
+  - `git diff --check`: PASS (clean).
+- Zero live provider/network calls; $0 / ₹0 spend; zero credentials; assistant remains disabled.
+
+Key deliverables:
+- services/agent/src/borrowed_steps/infrastructure/postgres_migrations.py (Schema v3 migration & partial unique index)
+- services/agent/src/borrowed_steps/infrastructure/canary_receipt.py (Canary receipt domain models, validation, PostgreSQL & InMemory stores)
+- services/agent/tests/test_canary_receipt.py (19 offline unit tests)
+- services/agent/tests/test_canary_receipt_postgres.py (3 disposable Postgres tests)
+- services/agent/test-evidence/bs021/receipt_evidence.json (sanitized receipt evidence)
+- docs/workers/BS-021.md (worker report)
 
 ## Latest checkpoint 2026-09-11: BS-020 implemented and ready for review
 

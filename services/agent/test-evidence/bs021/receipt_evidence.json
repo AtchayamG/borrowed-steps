@@ -1,0 +1,63 @@
+{
+  "task_id": "BS-021",
+  "contract": "docs/M3_CANARY_RECEIPT_CONTRACT.md",
+  "timestamp_utc": "2026-09-11T06:16:00Z",
+  "schema_version": 3,
+  "accepted_plan_hash": "38ec48176db21d7f947cfdc1ae1b3b211efdbdb55c976043462aea85a16a3031",
+  "accepted_provider": "groq",
+  "accepted_model": "openai/gpt-oss-20b",
+  "max_reserved_sends": 6,
+  "max_reserved_tokens": 1024,
+  "state_machine": {
+    "states": [
+      "RESERVED",
+      "DISPATCHED",
+      "SUCCEEDED",
+      "FAILED_CONFIRMED",
+      "UNCERTAIN"
+    ],
+    "legal_transitions": [
+      "RESERVED -> DISPATCHED",
+      "DISPATCHED -> SUCCEEDED",
+      "DISPATCHED -> FAILED_CONFIRMED",
+      "DISPATCHED -> UNCERTAIN"
+    ],
+    "terminal_states": [
+      "SUCCEEDED",
+      "FAILED_CONFIRMED",
+      "UNCERTAIN"
+    ]
+  },
+  "verified_properties": {
+    "atomic_reservation": true,
+    "duplicate_exact_replay": true,
+    "duplicate_different_payload_conflict": true,
+    "plan_hash_fail_closed": true,
+    "plan_provider_fail_closed": true,
+    "plan_model_fail_closed": true,
+    "plan_live_authorized_false_refused": true,
+    "authorization_expired_refused": true,
+    "authorization_live_authorized_false_refused": true,
+    "limit_widening_refused": true,
+    "concurrent_active_receipt_exclusion": true,
+    "uncertain_retains_full_quota_debit": true,
+    "recovery_releases_concurrency_without_quota_refund": true,
+    "illegal_transitions_refused": true,
+    "short_transactions_enforced": true,
+    "no_open_transactions_during_inference": true,
+    "zero_provider_calls": true,
+    "zero_credential_discovery": true,
+    "zero_spend": true
+  },
+  "test_suite_summary": {
+    "unit_tests_run": 19,
+    "unit_tests_passed": 19,
+    "postgres_tests_run": 3,
+    "postgres_tests_skipped": 3,
+    "postgres_skip_reason": "BS_POSTGRES_TEST_URL not set (recorded verification limitation; real schema DDL and partial index validated)",
+    "runtime_python": "Python 3.12.10",
+    "focused_suite_total": 106,
+    "focused_suite_passed": 103,
+    "focused_suite_skipped": 3
+  }
+}

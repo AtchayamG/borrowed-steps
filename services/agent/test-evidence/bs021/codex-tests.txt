@@ -1,0 +1,397 @@
+........................................................................ [ 11%]
+........................................................................ [ 23%]
+........................................................................ [ 34%]
+........................................................................ [ 46%]
+........................................................................ [ 57%]
+......................................................F................. [ 69%]
+.........F......F....................................................... [ 80%]
+............F........................................................... [ 92%]
+................................................                         [100%]
+================================== FAILURES ===================================
+____________ test_hosted_initialization_isolation_and_schema_gates ____________
+
+tmp_path = WindowsPath('C:/Users/Atchayam/AppData/Local/Temp/pytest-of-Atchayam/pytest-265/test_hosted_initialization_iso0')
+
+    def test_hosted_initialization_isolation_and_schema_gates(tmp_path: Path) -> None:
+        # 1. Unmigrated DB allows factory startup; health succeeds; business requests fail 503
+        with disposable_database() as raw_url:
+            settings_raw = _hosted_settings(raw_url)
+            app_raw = create_app(settings_raw)
+            with TestClient(app_raw, base_url=ORIGIN) as client_raw:
+                # Health check is DB-free liveness
+                health = client_raw.get("/api/health")
+                assert health.status_code == 200
+
+                # Business routes fail with generic 503 on wrong schema
+                ws_res = client_raw.post("/api/workspaces", json={}, headers={"Origin": ORIGIN})
+                assert ws_res.status_code == 503
+                assert ws_res.json()["error"]["code"] == "SERVICE_UNAVAILABLE"
+
+                snap_res = client_raw.get("/api/snapshot")
+                assert snap_res.status_code == 503
+                assert snap_res.json()["error"]["code"] == "SERVICE_UNAVAILABLE"
+
+            # Verify no tables were created in the database
+            with psycopg.connect(raw_url) as conn:
+                row = conn.execute(
+                    "SELECT count(*) FROM information_schema.tables WHERE table_schema='public'"
+                ).fetchone()
+                assert row is not None
+                assert row[0] == 0
+
+            # 2. Database with newer schema (version 3) allows startup; business requests fail 503
+            with psycopg.connect(raw_url, autocommit=True) as conn:
+                conn.execute(
+                    "CREATE TABLE schema_migrations (version INT PRIMARY KEY, applied_at TIMESTAMPTZ)"
+                )
+                conn.execute("INSERT INTO schema_migrations VALUES (3, now())")
+            app_v3 = create_app(settings_raw)
+            with TestClient(app_v3, base_url=ORIGIN) as client_v3:
+                health = client_v3.get("/api/health")
+                assert health.status_code == 200
+
+>               ws_res = client_v3.post("/api/workspaces", json={}, headers={"Origin": ORIGIN})
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_hosted_runtime.py:100:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\starlette\testclient.py:556: in post
+    return super().post(
+.venv\Lib\site-packages\httpx\_client.py:1144: in post
+    return self.request(
+.venv\Lib\site-packages\starlette\testclient.py:455: in request
+    return super().request(
+.venv\Lib\site-packages\httpx\_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_client.py:914: in send
+    response = self._send_handling_auth(
+.venv\Lib\site-packages\httpx\_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+.venv\Lib\site-packages\httpx\_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\starlette\testclient.py:354: in handle_request
+    raise exc
+.venv\Lib\site-packages\starlette\testclient.py:351: in handle_request
+    portal.call(self.app, scope, receive, send)
+.venv\Lib\site-packages\anyio\from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Atchayam\AppData\Local\Programs\Python\Python312\Lib\concurrent\futures\_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+C:\Users\Atchayam\AppData\Local\Programs\Python\Python312\Lib\concurrent\futures\_base.py:401: in __get_result
+    raise self._exception
+.venv\Lib\site-packages\anyio\from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\fastapi\applications.py:1163: in __call__
+    await super().__call__(scope, receive, send)
+.venv\Lib\site-packages\starlette\applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv\Lib\site-packages\starlette\middleware\errors.py:186: in __call__
+    raise exc
+.venv\Lib\site-packages\starlette\middleware\errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv\Lib\site-packages\starlette\middleware\exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv\Lib\site-packages\fastapi\middleware\asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv\Lib\site-packages\starlette\routing.py:670: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv\Lib\site-packages\fastapi\routing.py:2734: in app
+    await route.handle(scope, receive, send)
+.venv\Lib\site-packages\fastapi\routing.py:1281: in handle
+    await super().handle(scope, receive, send)
+.venv\Lib\site-packages\starlette\routing.py:280: in handle
+    await self.app(scope, receive, send)
+.venv\Lib\site-packages\fastapi\routing.py:158: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv\Lib\site-packages\fastapi\routing.py:144: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\fastapi\routing.py:706: in app
+    raw_response = await run_endpoint_function(
+.venv\Lib\site-packages\fastapi\routing.py:354: in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\starlette\concurrency.py:34: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\anyio\to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+.venv\Lib\site-packages\anyio\_backends\_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+.venv\Lib\site-packages\anyio\_backends\_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+src\borrowed_steps\interfaces\http\app.py:600: in post_workspace
+    session = start_workspace(services)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+src\borrowed_steps\application\use_cases.py:90: in start_workspace
+    svc.store.create_workspace(workspace_id, equipment)
+src\borrowed_steps\infrastructure\postgres_store.py:583: in create_workspace
+    with self._connection() as conn:
+         ^^^^^^^^^^^^^^^^^^
+C:\Users\Atchayam\AppData\Local\Programs\Python\Python312\Lib\contextlib.py:158: in __exit__
+    self.gen.throw(value)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <borrowed_steps.infrastructure.postgres_store.PostgresStore object at 0x000001B70372D940>
+read_only = False, connect_timeout_s = None, statement_timeout_ms = None
+lock_timeout_ms = None
+
+    @contextmanager
+    def _connection(
+        self,
+        *,
+        read_only: bool = False,
+        connect_timeout_s: int | None = None,
+        statement_timeout_ms: int | None = None,
+        lock_timeout_ms: int | None = None,
+    ) -> Iterator[psycopg.Connection[DictRow]]:
+        stmt_timeout = (
+            statement_timeout_ms
+            if statement_timeout_ms is not None
+            else (
+                self._statement_timeout_ms
+                if self._statement_timeout_ms is not None
+                else _STATEMENT_TIMEOUT_MS
+            )
+        )
+        lock_timeout = (
+            lock_timeout_ms
+            if lock_timeout_ms is not None
+            else (self._lock_timeout_ms if self._lock_timeout_ms is not None else _LOCK_TIMEOUT_MS)
+        )
+        try:
+            conn_cm = (
+                self._connect(connect_timeout_s=connect_timeout_s)
+                if connect_timeout_s is not None
+                else self._connect()
+            )
+            with conn_cm as conn:
+                if read_only:
+                    conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+                conn.execute(f"SET LOCAL lock_timeout = '{lock_timeout}ms'")
+                conn.execute(f"SET LOCAL statement_timeout = '{stmt_timeout}ms'")
+                yield conn
+        except psycopg.Error as exc:
+            if _is_contention(exc):
+                raise StorageBusyError("PostgreSQL operation contended or timed out") from None
+>           raise RuntimeError("PostgreSQL storage operation failed") from None
+E           RuntimeError: PostgreSQL storage operation failed
+
+src\borrowed_steps\infrastructure\postgres_store.py:556: RuntimeError
+------------------------------ Captured log call ------------------------------
+ERROR    borrowed_steps.http:app.py:570 Unhandled error serving POST /api/workspaces
+Traceback (most recent call last):
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\starlette\routing.py", line 670, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\fastapi\routing.py", line 2734, in app
+    await route.handle(scope, receive, send)
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\fastapi\routing.py", line 1281, in handle
+    await super().handle(scope, receive, send)
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\starlette\routing.py", line 280, in handle
+    await self.app(scope, receive, send)
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\fastapi\routing.py", line 158, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\fastapi\routing.py", line 144, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\fastapi\routing.py", line 706, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\fastapi\routing.py", line 354, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\starlette\concurrency.py", line 34, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\anyio\to_thread.py", line 65, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\anyio\_backends\_asyncio.py", line 2706, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\anyio\_backends\_asyncio.py", line 1100, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\src\borrowed_steps\interfaces\http\app.py", line 600, in post_workspace
+    session = start_workspace(services)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\src\borrowed_steps\application\use_cases.py", line 90, in start_workspace
+    svc.store.create_workspace(workspace_id, equipment)
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\src\borrowed_steps\infrastructure\postgres_store.py", line 583, in create_workspace
+    with self._connection() as conn:
+         ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Atchayam\AppData\Local\Programs\Python\Python312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\src\borrowed_steps\infrastructure\postgres_store.py", line 556, in _connection
+    raise RuntimeError("PostgreSQL storage operation failed") from None
+RuntimeError: PostgreSQL storage operation failed
+__________________________ test_schema_version_gates __________________________
+
+    def test_schema_version_gates() -> None:
+        """HostedSchedulerService strictly enforces EXPECTED_SCHEMA_VERSION == 2."""
+        get_test_postgres_url()
+
+        with disposable_database() as url:
+            sched = HostedSchedulerService(url)
+
+            # Version 0 refuses
+            with pytest.raises(SchemaVersionError):
+                sched.check_schema()
+            with pytest.raises(SchemaVersionError):
+                sched.tick()
+            with pytest.raises(SchemaVersionError):
+                sched.read_status()
+
+            # Version 1 refuses
+            with psycopg.connect(url) as conn:
+                conn.execute(
+                    "CREATE TABLE schema_migrations (version INT PRIMARY KEY, applied_at TIMESTAMPTZ)"
+                )
+                conn.execute("INSERT INTO schema_migrations VALUES (1, now())")
+
+            with pytest.raises(SchemaVersionError):
+                sched.check_schema()
+
+            # Future version 3 refuses
+            with psycopg.connect(url) as conn:
+                conn.execute("INSERT INTO schema_migrations VALUES (3, now())")
+
+>           with pytest.raises(SchemaVersionError):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE SchemaVersionError
+
+tests\test_hosted_scheduler.py:728: Failed
+_______ test_unmigrated_or_future_schema_gates_on_operational_endpoints _______
+
+    def test_unmigrated_or_future_schema_gates_on_operational_endpoints() -> None:
+        """Schema 0 or future schema refusal returns 503 on operational endpoints."""
+        # 1. Unmigrated database (version 0)
+        with disposable_database() as raw_url:
+            settings_raw = _hosted_settings(raw_url)
+            app_raw = create_app(settings_raw)
+            auth_header = {"Authorization": f"Bearer {VALID_TICK_TOKEN}"}
+
+            with TestClient(app_raw, base_url=ORIGIN) as client:
+                # Tick returns 503
+                tick_res = client.post("/api/internal/tasks/tick", headers=auth_header)
+                assert tick_res.status_code == 503
+                assert tick_res.json()["error"]["code"] == "SERVICE_UNAVAILABLE"
+                assert tick_res.headers.get("cache-control") == "no-store"
+
+                # Status returns 503
+                status_res = client.get("/api/internal/tasks/status", headers=auth_header)
+                assert status_res.status_code == 503
+                assert status_res.json()["error"]["code"] == "SERVICE_UNAVAILABLE"
+                assert status_res.headers.get("cache-control") == "no-store"
+
+            # Verify no tables were created
+            with psycopg.connect(raw_url) as conn:
+                row = conn.execute(
+                    "SELECT count(*) FROM information_schema.tables WHERE table_schema='public'"
+                ).fetchone()
+                assert row is not None
+                assert row[0] == 0
+
+            # 2. Database with future schema (version 3)
+            with psycopg.connect(raw_url, autocommit=True) as conn:
+                conn.execute(
+                    "CREATE TABLE schema_migrations (version INT PRIMARY KEY, applied_at TIMESTAMPTZ)"
+                )
+                conn.execute("INSERT INTO schema_migrations VALUES (3, now())")
+
+            app_v3 = create_app(settings_raw)
+            with TestClient(app_v3, base_url=ORIGIN) as client_v3:
+                tick_v3 = client_v3.post("/api/internal/tasks/tick", headers=auth_header)
+                assert tick_v3.status_code == 503
+>               assert tick_v3.json()["error"]["code"] == "SERVICE_UNAVAILABLE"
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+E               KeyError: 'error'
+
+tests\test_hosted_scheduler_http.py:360: KeyError
+------------------------------ Captured log call ------------------------------
+WARNING  borrowed_steps.scheduler:hosted_scheduler.py:400 Scheduler admission failed
+_______ test_migration_cli_explicit_configuration_and_sanitized_output ________
+
+database_url = 'postgresql://bs021@127.0.0.1:55441/bs011_test_92d67afcaceb4601bbf037fb4a515281'
+
+    def test_migration_cli_explicit_configuration_and_sanitized_output(database_url: str) -> None:
+        env = {**os.environ, "PYTHONPATH": "src"}
+        env.pop("BS_POSTGRES_ADMIN_URL", None)
+
+        def run() -> subprocess.CompletedProcess[str]:
+            return subprocess.run(
+                [sys.executable, "scripts/postgres_migrate.py"],
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=20,
+                check=False,
+            )
+
+        result = run()
+        assert result.returncode == 2
+        env["BS_POSTGRES_ADMIN_URL"] = "postgresql://user:synthetic-secret@remote/db?sslmode=disable"
+        result = run()
+        assert result.returncode == 1
+        assert "synthetic-secret" not in result.stdout + result.stderr
+        env["BS_POSTGRES_ADMIN_URL"] = database_url
+        for _ in range(2):
+            result = run()
+            assert result.returncode == 0
+>           assert result.stdout.strip() == "PostgreSQL schema version: 2"
+E           AssertionError: assert 'PostgreSQL schema version: 3' == 'PostgreSQL schema version: 2'
+E
+E             - PostgreSQL schema version: 2
+E             ?                            ^
+E             + PostgreSQL schema version: 3
+E             ?                            ^
+
+tests\test_postgres_store.py:468: AssertionError
+============================== warnings summary ===============================
+.venv\Lib\site-packages\fastapi\testclient.py:1
+  D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv\Lib\site-packages\starlette\testclient.py:53
+  D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-021-agy\services\agent\.venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_hosted_runtime.py::test_hosted_initialization_isolation_and_schema_gates
+FAILED tests/test_hosted_scheduler.py::test_schema_version_gates - Failed: DI...
+FAILED tests/test_hosted_scheduler_http.py::test_unmigrated_or_future_schema_gates_on_operational_endpoints
+FAILED tests/test_postgres_store.py::test_migration_cli_explicit_configuration_and_sanitized_output
+4 failed, 620 passed, 2 warnings in 148.33s (0:02:28)

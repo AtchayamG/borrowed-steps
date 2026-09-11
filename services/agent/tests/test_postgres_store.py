@@ -76,7 +76,7 @@ def database_url() -> Iterator[str]:
 
 @pytest.fixture
 def store(database_url: str) -> PostgresStore:
-    assert apply_migrations(database_url) == 2
+    assert apply_migrations(database_url) == 3
     result = PostgresStore(database_url)
     result.check_schema()
     return result
@@ -133,13 +133,13 @@ def test_migrations_concurrent_repeat_and_future(database_url: str) -> None:
     assert read_schema_version(database_url) == 0
     with pytest.raises(SchemaVersionError):
         PostgresStore(database_url).check_schema()
-    assert parallel(lambda: apply_migrations(database_url)) == [2, 2]
+    assert parallel(lambda: apply_migrations(database_url)) == [3, 3]
     store = PostgresStore(database_url)
     _, session, _ = workspace(store)
-    assert apply_migrations(database_url) == 2
+    assert apply_migrations(database_url) == 3
     assert store.get_session(session.id) == session
     with psycopg.connect(database_url) as conn:
-        conn.execute("INSERT INTO schema_migrations VALUES (3, now())")
+        conn.execute("INSERT INTO schema_migrations VALUES (4, now())")
     with pytest.raises(SchemaVersionError):
         apply_migrations(database_url)
 
@@ -438,7 +438,7 @@ def test_failed_migration_rolls_back_schema(
     with psycopg.connect(database_url) as conn:
         assert conn.execute("SELECT to_regclass('partial')").fetchone() == (None,)
     monkeypatch.setattr(migrations, "_MIGRATIONS", original)
-    assert apply_migrations(database_url) == 2
+    assert apply_migrations(database_url) == 3
 
 
 def test_migration_cli_explicit_configuration_and_sanitized_output(database_url: str) -> None:
@@ -465,7 +465,10 @@ def test_migration_cli_explicit_configuration_and_sanitized_output(database_url:
     for _ in range(2):
         result = run()
         assert result.returncode == 0
-        assert result.stdout.strip() == "PostgreSQL schema version: 2"
+        assert (
+            result.stdout.strip()
+            == f"PostgreSQL schema version: {migrations.EXPECTED_SCHEMA_VERSION}"
+        )
         assert result.stderr == ""
 
 

@@ -179,11 +179,11 @@ def test_v1_to_v2_migration_preserves_business_records_and_exact_strings() -> No
             events_before = uow.list_events()
             idemp_before = uow.get_idempotency("idemp-key-1")
 
-        # Apply migration to V2
+        # Apply migration to current schema version
         new_version = apply_migrations(url)
-        assert new_version == EXPECTED_SCHEMA_VERSION == 2
+        assert new_version == EXPECTED_SCHEMA_VERSION == 3
 
-        # Verify schema_migrations has version 1 and 2
+        # Verify schema_migrations has version 1, 2 and 3
         with psycopg.connect(url) as conn:
             versions = [
                 r[0]
@@ -191,7 +191,7 @@ def test_v1_to_v2_migration_preserves_business_records_and_exact_strings() -> No
                     "SELECT version FROM schema_migrations ORDER BY version"
                 ).fetchall()
             ]
-            assert versions == [1, 2]
+            assert versions == [1, 2, 3]
 
             # Verify scheduler_control table exists and has row id=1
             ctrl_row = conn.execute(
@@ -697,7 +697,7 @@ def test_controlled_blocked_query_finite_bound_demonstration() -> None:
 
 
 def test_schema_version_gates() -> None:
-    """HostedSchedulerService strictly enforces EXPECTED_SCHEMA_VERSION == 2."""
+    """HostedSchedulerService strictly enforces the expected schema version."""
     get_test_postgres_url()
 
     with disposable_database() as url:
@@ -721,9 +721,11 @@ def test_schema_version_gates() -> None:
         with pytest.raises(SchemaVersionError):
             sched.check_schema()
 
-        # Future version 3 refuses
+        # Future next version refuses
         with psycopg.connect(url) as conn:
-            conn.execute("INSERT INTO schema_migrations VALUES (3, now())")
+            conn.execute(
+                "INSERT INTO schema_migrations VALUES (%s, now())", (EXPECTED_SCHEMA_VERSION + 1,)
+            )
 
         with pytest.raises(SchemaVersionError):
             sched.check_schema()

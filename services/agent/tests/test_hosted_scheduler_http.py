@@ -22,6 +22,7 @@ from fastapi.testclient import TestClient
 
 from borrowed_steps.config import Settings
 from borrowed_steps.infrastructure.hosted_scheduler import HostedSchedulerService
+from borrowed_steps.infrastructure.postgres_migrations import EXPECTED_SCHEMA_VERSION
 from borrowed_steps.infrastructure.postgres_store import PostgresStore, PostgresUnitOfWork
 from borrowed_steps.interfaces.http.app import (
     SESSION_COOKIE,
@@ -346,12 +347,14 @@ def test_unmigrated_or_future_schema_gates_on_operational_endpoints() -> None:
             assert row is not None
             assert row[0] == 0
 
-        # 2. Database with future schema (version 3)
+        # 2. Database with future schema (next version)
         with psycopg.connect(raw_url, autocommit=True) as conn:
             conn.execute(
                 "CREATE TABLE schema_migrations (version INT PRIMARY KEY, applied_at TIMESTAMPTZ)"
             )
-            conn.execute("INSERT INTO schema_migrations VALUES (3, now())")
+            conn.execute(
+                "INSERT INTO schema_migrations VALUES (%s, now())", (EXPECTED_SCHEMA_VERSION + 1,)
+            )
 
         app_v3 = create_app(settings_raw)
         with TestClient(app_v3, base_url=ORIGIN) as client_v3:

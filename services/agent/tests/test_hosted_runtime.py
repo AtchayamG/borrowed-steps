@@ -16,6 +16,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from borrowed_steps.config import Settings
+from borrowed_steps.infrastructure.postgres_migrations import EXPECTED_SCHEMA_VERSION
 from borrowed_steps.infrastructure.postgres_store import PostgresStore
 from borrowed_steps.interfaces.http.app import (
     AGENT_MODE_DISABLED,
@@ -86,12 +87,14 @@ def test_hosted_initialization_isolation_and_schema_gates(tmp_path: Path) -> Non
             assert row is not None
             assert row[0] == 0
 
-        # 2. Database with newer schema (version 3) allows startup; business requests fail 503
+        # 2. Database with newer schema (next version) allows startup; business requests fail 503
         with psycopg.connect(raw_url, autocommit=True) as conn:
             conn.execute(
                 "CREATE TABLE schema_migrations (version INT PRIMARY KEY, applied_at TIMESTAMPTZ)"
             )
-            conn.execute("INSERT INTO schema_migrations VALUES (3, now())")
+            conn.execute(
+                "INSERT INTO schema_migrations VALUES (%s, now())", (EXPECTED_SCHEMA_VERSION + 1,)
+            )
         app_v3 = create_app(settings_raw)
         with TestClient(app_v3, base_url=ORIGIN) as client_v3:
             health = client_v3.get("/api/health")
