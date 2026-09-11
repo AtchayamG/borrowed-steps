@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0.0",
+  "plan_type": "offline_canary_plan",
+  "live_authorized": false,
+  "candidate_fixture": "Priya S wants crutches from the Adyar centre, back by 2026-10-01T08:00:00Z.",
+  "provider": "groq",
+  "model": "openai/gpt-oss-20b",
+  "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+  "ceilings": {
+    "max_sends": 6,
+    "max_request_bytes": 16384,
+    "max_completion_tokens": 1024,
+    "reasoning_effort": "low",
+    "operation_deadline_seconds": 110.0,
+    "request_timeout_seconds": 60.0,
+    "max_tool_attempts": 2
+  },
+  "retry_policy": {
+    "max_retries": 0,
+    "auto_retry": false
+  },
+  "expected_criteria": {
+    "stage_one_tool_call_required": true,
+    "stage_one_required_tool": "read_inventory",
+    "stage_two_structured_extraction": true,
+    "exact_source_quote_matching": true,
+    "fail_closed_on_any_error": true
+  },
+  "token_accounting_unknowns": {
+    "input_tokens_measured": false,
+    "token_count_provenance": "unknown_until_live_accounting",
+    "server_side_enforcement_verified": false,
+    "reasoning_token_accounting_verified": false
+  },
+  "input_hashes": {
+    "groq_model.py": "3282294d43458352c8ea4e571ee73a14ae58f333e9207015b8ae699a8ac2af09",
+    "requirements-groq.lock": "a9480372704fcdd4b9bed890d0fc967bcd967815853477ade5e53507f48e62b6",
+    "requirements.lock": "68105156c292c43bf23f51d39cd3eb7b4389e3875015059a8c20195c1ea435ca",
+    "strands_interpreter.py": "31226f998fab7694b8cc13f2be1c29c8053bc28ec8b2141fe3150d817958f4ff",
+    "candidate_fixture": "044b4d902fd88eb7565f9d952af0a64fab062e6ee66720e67a86b8f327663cdc"
+  },
+  "plan_hash": "38ec48176db21d7f947cfdc1ae1b3b211efdbdb55c976043462aea85a16a3031"
+}

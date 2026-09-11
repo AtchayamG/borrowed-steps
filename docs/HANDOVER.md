@@ -1,3 +1,70 @@
+## BS-020 accepted locally after independent LIGHT review
+
+2026-09-11. AGY return b41576c; frozen base a631463. Codex accepted the
+offline-only Groq canary preparation harness and immutable candidate plan.
+The implementation keeps live_authorized=false, uses an explicit dummy key,
+does not inspect credential environment variables, exposes no live CLI mode,
+and fails closed for disallowed network targets. The two-stage harness shares
+one bounded GroqModel, requires a successful read_inventory tool call before
+structured extraction, checks exact source-field grounding, caps tool attempts
+and physical sends, and closes the model on every path.
+
+Independent verification in the worker's clean Python 3.12.10 environment:
+84 focused tests passed (canary 12, bounds 30, model 18, review 13, admission
+7); ruff check and format check passed; strict mypy passed for the changed
+model/harness/tests; uv pip check passed for 72 packages. The offline CLI ran
+successfully and reproduced plan hash
+38ec48176db21d7f947cfdc1ae1b3b211efdbdb55c976043462aea85a16a3031, evidence
+provenance offline_fixture, 3 sends, maximum wire size 3,753 bytes, 8/8
+field assertions, and model_closed=true. Git diff --check is clean.
+
+These results prove the offline preparation path and mock transport guards.
+They do not establish provider token accounting, server-side quota enforcement,
+live output quality, public deployment, or live network behavior. No provider
+call, cloud activation, public push, deployment, credential discovery, or spend
+occurred. The existing historical full-suite/Postgres results remain historical
+and were not rerun for this task. All 29 historical provider probe allocations
+remain closed. The public assistant remains disabled.
+
+Next: prepare the single separately authorized live Groq canary only after a
+Codex HIGH architecture/release review confirms the exact account, quota,
+receipt, rollback, and no-spend gates. Do not infer live authorization from
+this offline artifact.
+
+## Latest checkpoint 2026-09-11: BS-020 implemented and ready for review
+
+Worker AGY completed BS-020: implemented offline-only Groq canary preparation harness, deterministic candidate plan hashing, and comprehensive verification suite.
+Branch worker/agy/BS-020 based on a631463.
+
+Verification results against Python 3.12.10:
+- Offline Canary Harness & Execution:
+  - Synthetic candidate input: "Priya S wants crutches from the Adyar centre, back by 2026-10-01T08:00:00Z."
+  - Two-stage execution sharing one GroqModel:
+    - Stage 1: real Strands Agent selecting and executing read_inventory (max 2 tool attempts, at most 1 recovery prompt if omitted).
+    - Stage 2: exactly one structured_output call with source-only extraction and grounding field assertions.
+    - Asserted extracted fields match exact verbatim substrings of the candidate fixture.
+  - Fail-closed mock transport: zero network egress, dummy key, no live mode, zero credential discovery.
+  - Guaranteed model and transport cleanup (await model.aclose()) in owned finally block across all paths.
+- Deterministic Plan Hashing:
+  - Computes SHA-256 over canonical inputs: groq_model.py, strands_interpreter.py, requirements-groq.lock, requirements.lock, fixture string.
+  - Resulting plan hash: 38ec48176db21d7f947cfdc1ae1b3b211efdbdb55c976043462aea85a16a3031.
+  - Any code or dependency change invalidates prior candidate plan.
+- Quality Gates & Test Suite:
+  - 84/84 focused tests pass (test_groq_canary.py 12 passed; test_groq_bounds.py 30 passed; test_admission_probe.py 7 passed; test_groq_model.py 18 passed; test_groq_model_review.py 13 passed) in 5.51s.
+  - ruff check scripts/groq_canary.py tests/test_groq_canary.py: PASS (0 errors).
+  - ruff format --check scripts/groq_canary.py tests/test_groq_canary.py: PASS (clean).
+  - mypy strict: PASS (0 errors across groq_model.py, groq_canary.py, test_groq_canary.py).
+  - uv pip check: PASS (72 packages compatible).
+- Zero live provider/network calls; $0 / ₹0 spend; synthetic fixtures only.
+
+Key deliverables:
+1. services/agent/scripts/groq_canary.py: offline canary preparation runner, plan generation, stage orchestration, verbatim grounding verification, fail-closed isolation.
+2. services/agent/tests/test_groq_canary.py: 12 comprehensive tests covering 2-stage execution, recovery prompts, tool limits, grounding assertions, length limits, 429 errors, budget exhaustion, cleanup, isolation, and plan invalidation.
+3. services/agent/test-evidence/bs020/canary_plan.json: deterministic plan artifact with input hashes, ceilings, retry policy, and token unknowns.
+4. services/agent/test-evidence/bs020/canary_evidence.json: sanitized counts-only run evidence with provenance: "offline_fixture".
+5. docs/GROQ_CANARY_SETUP.md: technical documentation of harness, deterministic plan hashing, grounding assertions, and CLI usage.
+6. docs/workers/BS-020.md: comprehensive worker implementation and verification report.
+
 ## BS-019 accepted locally after independent MEDIUM review
 
 2026-09-11. AGY return 29c6317; frozen base 4efa2b2. Codex accepted the

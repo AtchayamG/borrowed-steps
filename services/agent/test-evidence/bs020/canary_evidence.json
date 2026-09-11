@@ -1,0 +1,55 @@
+{
+  "provenance": "offline_fixture",
+  "timestamp_utc": "2026-09-11T04:56:14Z",
+  "plan_hash": "38ec48176db21d7f947cfdc1ae1b3b211efdbdb55c976043462aea85a16a3031",
+  "candidate_fixture": "Priya S wants crutches from the Adyar centre, back by 2026-10-01T08:00:00Z.",
+  "outcome": "success",
+  "error_category": null,
+  "error_reason": null,
+  "stage_reached": "complete",
+  "sends_total": 3,
+  "stage_one_sends": 2,
+  "stage_two_sends": 1,
+  "tool_attempts": 1,
+  "tool_successes": 1,
+  "recovery_prompt_used": false,
+  "request_wire_bytes": [
+    1057,
+    1456,
+    3753
+  ],
+  "max_request_wire_bytes": 3753,
+  "observed_fixed_fields": {
+    "model": "openai/gpt-oss-20b",
+    "max_completion_tokens": 1024,
+    "reasoning_effort": "low",
+    "forbidden_max_tokens_absent": true,
+    "allowed_n_values": [
+      1,
+      null
+    ]
+  },
+  "field_assertions": {
+    "borrower_label_quoted": true,
+    "equipment_kind_quoted": true,
+    "pickup_location_quoted": true,
+    "due_at_quoted": true,
+    "borrower_label_exact": true,
+    "equipment_kind_exact": true,
+    "pickup_location_exact": true,
+    "due_at_exact": true
+  },
+  "extracted_fields": {
+    "borrower_label": "Priya S",
+    "equipment_kind": "crutches",
+    "pickup_location": "the Adyar centre",
+    "due_at": "2026-10-01T08:00:00Z"
+  },
+  "model_closed": true,
+  "usage": "fixture data",
+  "token_accounting": {
+    "input_tokens": "unknown",
+    "output_tokens": "unknown",
+    "reasoning_tokens": "unknown"
+  }
+}
