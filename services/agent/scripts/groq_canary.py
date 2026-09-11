@@ -273,9 +273,10 @@ async def run_canary_stages(
     model: GroqModel,
     fixture_text: str = CANARY_FIXTURE_INPUT,
     inv_reader: InventoryReader | None = None,
-    transport: OfflineProbeTransport | None = None,
+    transport: httpx.AsyncBaseTransport | OfflineProbeTransport | None = None,
     plan_hash: str = "",
     propagate_errors: bool = True,
+    provenance: str = "offline_fixture",
 ) -> CanaryExecutionResult:
     """Execute two-stage canary workflow with an injected GroqModel.
 
@@ -326,6 +327,7 @@ async def run_canary_stages(
             system_prompt=_AGENT_SYSTEM_PROMPT,
             callback_handler=None,
             load_tools_from_directory=False,
+            retry_strategy=None,
         )
 
         stage1_prompt = _AGENT_USER_PROMPT.format(text=fixture_text)
@@ -450,9 +452,9 @@ async def run_canary_stages(
         }
 
         # Inspect transport wire records if available
-        if transport is not None:
+        if transport is not None and hasattr(transport, "records"):
             for r in transport.records:
-                if r.wire_byte_length > MAX_REQUEST_BYTES:
+                if getattr(r, "wire_byte_length", 0) > MAX_REQUEST_BYTES:
                     msg = (
                         f"Request wire byte size {r.wire_byte_length} exceeds "
                         f"ceiling {MAX_REQUEST_BYTES}"
@@ -484,6 +486,8 @@ async def run_canary_stages(
         error_category = type(e).__name__
         error_reason = str(e)
         in_flight_exc = e
+    except asyncio.CancelledError:
+        raise
     except BaseException as e:
         error_category = type(e).__name__
         error_reason = str(e)
@@ -495,11 +499,11 @@ async def run_canary_stages(
 
     # Collect captured wire byte lengths
     wire_bytes: list[int] = []
-    if transport is not None:
-        wire_bytes = [r.wire_byte_length for r in transport.records]
+    if transport is not None and hasattr(transport, "records"):
+        wire_bytes = [getattr(r, "wire_byte_length", 0) for r in transport.records]
 
     result = CanaryExecutionResult(
-        provenance="offline_fixture",
+        provenance=provenance,
         timestamp_utc=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         plan_hash=plan_hash,
         candidate_fixture=fixture_text,

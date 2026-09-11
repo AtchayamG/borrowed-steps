@@ -1,3 +1,31 @@
+## BS-022 bounded operator canary runner implemented and verified
+
+2026-09-11. Implemented scripts/operator_canary.py and comprehensive verification suite
+tests/test_operator_canary.py conforming strictly to docs/M3_OPERATOR_CANARY_CONTRACT.md.
+Zero live provider calls, zero credential access/discovery, and zero spend ($0 / ₹0).
+
+Key properties verified:
+- Deterministic 9-file execution manifest (bbf3ed507b3c2b9e5c47e38acd4d16b53c34963f7a4ece62a9e1061007e5b553)
+  distinct from the frozen BS-020 candidate plan (ACCEPTED_PLAN_HASH = 38ec48176db21d7f947cfdc1ae1b3b211efdbdb55c976043462aea85a16a3031).
+- OperatorGrant fail-closed validation before any database mutation or network attempt.
+- Two-phase database boundary: store.reserve followed by store.mark_dispatched before model/transport
+  construction or invocation.
+- Replay, duplicate dispatch, or invalid grant never redispatches.
+- Single concurrent runner winner guaranteed across concurrent processes via PostgreSQL unique partial index.
+- Retry disabled (retry_strategy=None) on Strands Agent execution; 429 and invalid output settle without retry.
+- TransportObserver capturing only send counts, wire byte lengths, and status codes (zero secret/prompt/output leakage).
+- Token accounting remains truthful: measured tokens stay NULL/None, reserved output tokens capped at 6144.
+- Conservative settlement: UNCERTAIN on cancellation (CANCELLED) or cleanup failure (EXECUTION_UNKNOWN)
+  retaining concurrency_active=True to block subsequent canaries until explicit operator recovery.
+- Verification: 15/15 operator canary tests passed, 18/18 PostgreSQL receipt tests passed, 90/90 unit/bounds
+  tests passed (123/123 passed total). Ruff check, ruff format, strict mypy (0 errors), and uv pip check (72 packages) clean.
+
+Evidence: services/agent/test-evidence/bs022/operator_manifest.json, services/agent/test-evidence/bs022/operator_evidence.json.
+Docs: docs/OPERATOR_CANARY.md, docs/workers/BS-022.md.
+Actual provider execution remains reserved for Codex.
+NEXT_CODEX_MODE: ASTRA_LIGHT
+REASON: Operator canary implementation and local verification complete; ready for Codex review.
+
 ## BS-021 accepted locally after direct Codex HIGH repair
 
 2026-09-11. Original AGY 820bb99 is superseded by the direct Codex repair.

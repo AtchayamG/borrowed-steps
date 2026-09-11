@@ -1,0 +1,63 @@
+{
+  "task_id": "BS-022",
+  "timestamp_utc": "2026-09-11T13:22:12.375818+00:00",
+  "candidate_plan_hash": "38ec48176db21d7f947cfdc1ae1b3b211efdbdb55c976043462aea85a16a3031",
+  "execution_manifest_hash": "bbf3ed507b3c2b9e5c47e38acd4d16b53c34963f7a4ece62a9e1061007e5b553",
+  "manifest_summary": {
+    "manifest_version": 1,
+    "file_count": 9,
+    "files": [
+      "admission_probe.py",
+      "canary_receipt.py",
+      "groq_canary.py",
+      "groq_model.py",
+      "operator_canary.py",
+      "requirements-groq.lock",
+      "requirements-postgres.lock",
+      "requirements.lock",
+      "strands_interpreter.py"
+    ],
+    "pinned_ceilings": {
+      "max_completion_tokens": 1024,
+      "max_output_tokens_reservation": 6144,
+      "max_request_bytes": 16384,
+      "max_sends": 6,
+      "max_tool_attempts": 2,
+      "operation_deadline_seconds": 110.0,
+      "reasoning_effort": "low",
+      "request_timeout_seconds": 60.0
+    },
+    "retry_policy": {
+      "auto_retry": false,
+      "max_retries": 0,
+      "retry_strategy": null
+    },
+    "provider_spec": {
+      "model": "openai/gpt-oss-20b",
+      "provider": "groq"
+    }
+  },
+  "verification_results": {
+    "test_operator_canary_suite": "15/15 passed",
+    "test_canary_receipt_postgres_suite": "18/18 passed",
+    "unit_and_bounds_suites": "90/90 passed",
+    "total_tests_passed": 123,
+    "ruff_check": "clean (0 errors)",
+    "ruff_format": "clean (3 files formatted)",
+    "mypy_typecheck": "clean (0 errors)",
+    "uv_pip_check": "clean (72 packages compatible)",
+    "git_diff_check": "clean"
+  },
+  "safety_and_contract_guarantees": {
+    "zero_live_provider_calls": true,
+    "zero_credential_discovery": true,
+    "zero_cloud_actions_or_spend": true,
+    "two_phase_database_order": "store.reserve -> store.mark_dispatched -> construct model -> execute",
+    "concurrency_exclusion": "PostgreSQL canary_receipts_active_single_row unique partial index enforces single concurrent runner",
+    "retry_disabled": "Strands Agent retry_strategy is explicitly None, preventing automatic retry on 429 or invalid output",
+    "cancellation_safety": "asyncio.CancelledError transitions receipt to UNCERTAIN with CANCELLED failure code, retaining concurrency_active=True",
+    "cleanup_guarantee": "GroqModel.aclose() and TransportObserver.aclose() invoked in all finally branches",
+    "secret_protection": "TransportObserver only records send_index, wire_byte_length, and status_code; headers, payloads, and tokens are never stored",
+    "token_accounting": "actual_total_tokens remains None/NULL; reserved_output_tokens is capped at 6144 (6 sends * 1024 tokens)"
+  }
+}
