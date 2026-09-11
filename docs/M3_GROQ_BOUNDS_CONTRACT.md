@@ -1,5 +1,8 @@
 # BS-019: enforce the request envelope before admission design
 
+2026-09-11 amendment: M3_ADMISSION_DECISION.md supersedes step4's local total-token
+reservation requirement. Existing transport byte/output/send ceilings remain.
+
 Codex decision, user-authorized ASTRA_HIGH, 2026-09-10; base75d3941.
 Retain the Vercel + PostgreSQL + Groq candidate. BS-018 is accepted locally.
 No provider calls, account activation, deployment or new inference allowance.

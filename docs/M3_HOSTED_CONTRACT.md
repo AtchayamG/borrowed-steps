@@ -4,6 +4,10 @@ Codex architecture decision at ASTRA_HIGH. This amends the local-only M2A/M2B re
 
 ## Selected deployment direction
 
+2026-09-11 amendment: M3_ADMISSION_DECISION.md supersedes the local total-token
+reservation requirement below. Provider token enforcement and shared application
+request control have distinct responsibilities; public activation remains gated.
+
 One Vercel Hobby project serves the built React SPA through its CDN and a Python 3.12 FastAPI function through the same origin. PostgreSQL on Neon Free supplies durable storage. GitHub Actions on standard public-repository runners invokes an authenticated due-processing endpoint. Groq's free tier with `openai/gpt-oss-20b`, through the real Strands OpenAIModel, is the selected hosted inference candidate. Compatibility is provisional until a separately allocated live proof passes. No local-machine origin, tunnel or local Ollama public dependency.
 
 Do not assume that native FastAPI deployment creates separate functions for individual routes. Start with the standard supported FastAPI packaging and lazy provider imports; measure build size, cold-start CPU and tick cost before splitting functions. Keep API routes ahead of any SPA fallback. Invalid API routes must never return index.html. Production startup cannot create a SQLite file or start TaskRunner.
