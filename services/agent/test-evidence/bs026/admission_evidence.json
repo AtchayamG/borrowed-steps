@@ -1,0 +1,64 @@
+{
+  "task_id": "BS-026",
+  "timestamp_utc": "2026-09-11T18:25:31.256059+00:00",
+  "worker": "AGY, senior backend developer",
+  "model": "Gemini 3.8 Flash High",
+  "effort": "HIGH",
+  "base_commit": "789522a",
+  "branch": "worker/agy/BS-026",
+  "objective": "Implement and verify the bounded storage boundary in docs/M3_ADMISSION_DECISION.md: application request control in PostgreSQL, Migration V4, InferenceAdmissionStore.",
+  "public_assistant_state": "DISABLED (BS_ASSISTANT_ENABLED=0)",
+  "spend": "\u20b90.00 / $0.00",
+  "live_network_calls": 0,
+  "credentials_accessed": 0,
+  "cloud_mutations": 0,
+  "migration": {
+    "version": 4,
+    "table_created": "inference_admissions",
+    "schema_preservation": "V1, V2, V3 byte-for-byte unchanged",
+    "indexes_created": [
+      "ux_inference_admissions_single_active",
+      "ux_inference_admissions_workspace_request_key",
+      "ix_inference_admissions_released_at",
+      "ix_inference_admissions_workspace_released_at",
+      "ix_inference_admissions_created_at"
+    ]
+  },
+  "store_constants": {
+    "RESERVED_SENDS": 6,
+    "GLOBAL_LIMIT_60S": 6,
+    "GLOBAL_LIMIT_24H": 120,
+    "WORKSPACE_LIMIT_24H": 24,
+    "STORED_DEADLINE_SECONDS": 120,
+    "PROVIDER_429_COOLDOWN_SECONDS": 900,
+    "STATEMENT_TIMEOUT_MS": 5000,
+    "LOCK_TIMEOUT_MS": 2000
+  },
+  "test_results": {
+    "test_inference_admission.py": 16,
+    "test_postgres_store.py": 18,
+    "test_canary_receipt_postgres.py": 19,
+    "total_pg_tests_passed": 53,
+    "scripts_test_hosted_package.py": 17,
+    "ruff_check": "passed",
+    "ruff_format": "passed",
+    "mypy_strict": "passed"
+  },
+  "invariants_verified": [
+    "single_active_operation_across_workspaces",
+    "concurrent_reservation_race_single_winner",
+    "reserved_to_dispatched_single_transition",
+    "expired_stored_deadline_refuses_dispatch_never_auto_releases",
+    "confirmed_terminal_states_require_explicit_cleanup_completed",
+    "exact_replay_vs_conflicting_replay_on_reserve_finish_recovery",
+    "uncertain_retains_active_state_blocks_new_reservations",
+    "recover_dead_clears_active_and_sets_fresh_db_released_at",
+    "refusal_of_dead_recovery_on_confirmed_terminal_states",
+    "rolling_60s_global_cap_6_sends_with_full_debit",
+    "rolling_24h_global_cap_120_sends_with_full_debit",
+    "rolling_24h_workspace_cap_24_sends_with_full_debit",
+    "provider_429_15_minute_global_cooldown",
+    "additive_v4_migration_preserves_existing_business_and_receipt_data",
+    "database_engine_level_check_and_partial_unique_constraints"
+  ]
+}

@@ -1,0 +1,101 @@
+======================================================================
+BS-026 VERIFICATION AND TEST EXECUTION LOG
+Timestamp: 2026-09-11T18:24:03.780616+00:00
+Worker: AGY, senior backend developer
+======================================================================
+
+--- Pytest Real PostgreSQL Suite ---
+============================= test session starts =============================
+platform win32 -- Python 3.14.3, pytest-9.1.1, pluggy-1.6.0 -- D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-026-agy\services\agent\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-026-agy\services\agent
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collecting ... collected 53 items
+
+tests/test_inference_admission.py::test_v4_migration_additive_and_preserves_business_data PASSED [  1%]
+tests/test_inference_admission.py::test_reserve_valid_and_exact_replay PASSED [  3%]
+tests/test_inference_admission.py::test_reserve_identity_replay_conflicts PASSED [  5%]
+tests/test_inference_admission.py::test_invalid_inputs_rejected_fail_closed PASSED [  7%]
+tests/test_inference_admission.py::test_single_active_operation_across_workspaces PASSED [  9%]
+tests/test_inference_admission.py::test_concurrent_reservations_race_single_winner PASSED [ 11%]
+tests/test_inference_admission.py::test_dispatch_lifecycle_and_expired_deadline_never_releases PASSED [ 13%]
+tests/test_inference_admission.py::test_finish_success_flow_and_replays PASSED [ 15%]
+tests/test_inference_admission.py::test_finish_failed_confirmed_flow_and_replays PASSED [ 16%]
+tests/test_inference_admission.py::test_finish_uncertain_stays_active_and_blocks_reservations PASSED [ 18%]
+tests/test_inference_admission.py::test_recover_dead_execution_lifecycle_and_replays PASSED [ 20%]
+tests/test_inference_admission.py::test_recovery_of_old_uncertainty_retains_fresh_full_window_debit PASSED [ 22%]
+tests/test_inference_admission.py::test_rolling_60s_limit_and_full_debit_despite_actual_sends_1 PASSED [ 24%]
+tests/test_inference_admission.py::test_rolling_24h_global_limit PASSED  [ 26%]
+tests/test_inference_admission.py::test_rolling_24h_per_workspace_limit PASSED [ 28%]
+tests/test_inference_admission.py::test_provider_429_cooldown_durable PASSED [ 30%]
+tests/test_inference_admission.py::test_database_engine_level_constraints PASSED [ 32%]
+tests/test_postgres_store.py::test_migrations_concurrent_repeat_and_future PASSED [ 33%]
+tests/test_postgres_store.py::test_lifecycle_sessions_and_persistence PASSED [ 35%]
+tests/test_postgres_store.py::test_two_allocators_and_workspace_isolation PASSED [ 37%]
+tests/test_postgres_store.py::test_idempotency_serializes_exact_bytes_and_conflicts PASSED [ 39%]
+tests/test_postgres_store.py::test_event_failure_rolls_back_mutation_and_idempotency PASSED [ 41%]
+tests/test_postgres_store.py::test_due_processors_claim_once_and_event_failure_atomic PASSED [ 43%]
+tests/test_postgres_store.py::test_human_action_after_discovery_prevents_stale_notice[False] PASSED [ 45%]
+tests/test_postgres_store.py::test_human_action_after_discovery_prevents_stale_notice[True] PASSED [ 47%]
+tests/test_postgres_store.py::test_consistent_snapshot_and_lock_timeout PASSED [ 49%]
+tests/test_postgres_store.py::test_database_constraints_backstop_bypassed_workflow PASSED [ 50%]
+tests/test_postgres_store.py::test_due_candidates_order_and_bound PASSED [ 52%]
+tests/test_postgres_store.py::test_failed_migration_rolls_back_schema PASSED [ 54%]
+tests/test_postgres_store.py::test_migration_cli_explicit_configuration_and_sanitized_output PASSED [ 56%]
+tests/test_postgres_store.py::test_insecure_or_ambient_routing_refused[host=remote dbname=x] PASSED [ 58%]
+tests/test_postgres_store.py::test_insecure_or_ambient_routing_refused[postgresql:///db] PASSED [ 60%]
+tests/test_postgres_store.py::test_insecure_or_ambient_routing_refused[postgresql://remote/db?sslmode=require] PASSED [ 62%]
+tests/test_postgres_store.py::test_insecure_or_ambient_routing_refused[postgresql://localhost/db?host=remote] PASSED [ 64%]
+tests/test_postgres_store.py::test_insecure_or_ambient_routing_refused[postgresql://localhost/db?hostaddr=8.8.8.8] PASSED [ 66%]
+tests/test_canary_receipt_postgres.py::test_replay_dispatch_terminal_and_reused_authorization PASSED [ 67%]
+tests/test_canary_receipt_postgres.py::test_real_concurrent_duplicate_and_dispatch PASSED [ 69%]
+tests/test_canary_receipt_postgres.py::test_real_concurrent_distinct_receipts PASSED [ 71%]
+tests/test_canary_receipt_postgres.py::test_dead_execution_recovery_keeps_unknowns_and_reservations[RESERVED] PASSED [ 73%]
+tests/test_canary_receipt_postgres.py::test_dead_execution_recovery_keeps_unknowns_and_reservations[DISPATCHED] PASSED [ 75%]
+tests/test_canary_receipt_postgres.py::test_dead_execution_recovery_keeps_unknowns_and_reservations[UNCERTAIN] PASSED [ 77%]
+tests/test_canary_receipt_postgres.py::test_expiry_and_read_only_replay PASSED [ 79%]
+tests/test_canary_receipt_postgres.py::test_invalid_usage_does_not_settle[kwargs0] PASSED [ 81%]
+tests/test_canary_receipt_postgres.py::test_invalid_usage_does_not_settle[kwargs1] PASSED [ 83%]
+tests/test_canary_receipt_postgres.py::test_invalid_usage_does_not_settle[kwargs2] PASSED [ 84%]
+tests/test_canary_receipt_postgres.py::test_invalid_usage_does_not_settle[kwargs3] PASSED [ 86%]
+tests/test_canary_receipt_postgres.py::test_invalid_usage_does_not_settle[kwargs4] PASSED [ 88%]
+tests/test_canary_receipt_postgres.py::test_invalid_usage_does_not_settle[kwargs5] PASSED [ 90%]
+tests/test_canary_receipt_postgres.py::test_invalid_usage_does_not_settle[kwargs6] PASSED [ 92%]
+tests/test_canary_receipt_postgres.py::test_failed_confirmed_unknown_is_not_zero PASSED [ 94%]
+tests/test_canary_receipt_postgres.py::test_persisted_receipt_read_by_fresh_process PASSED [ 96%]
+tests/test_canary_receipt_postgres.py::test_v2_upgrade_preserves_business_rows_and_is_repeatable PASSED [ 98%]
+tests/test_canary_receipt_postgres.py::test_database_constraints_and_connection_closure PASSED [100%]
+
+============================== warnings summary ===============================
+.venv\Lib\site-packages\fastapi\testclient.py:1
+  D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-026-agy\services\agent\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv\Lib\site-packages\starlette\testclient.py:53
+  D:\Work\Codex\Hackathon Projects\Agents For Humans\00_PROGRAM_CONTROL\worktrees\BS-026-agy\services\agent\.venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================== 53 passed, 2 warnings in 76.28s (0:01:16) ==================
+
+
+--- Packaging Unittest (scripts/tests/test_hosted_package.py) ---
+
+.................
+----------------------------------------------------------------------
+Ran 17 tests in 0.259s
+
+OK
+
+
+--- Ruff Check ---
+All checks passed!
+
+
+--- Ruff Format Check ---
+5 files already formatted
+
+
+--- Mypy Type Check ---
+Success: no issues found in 5 source files

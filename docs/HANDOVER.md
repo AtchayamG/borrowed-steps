@@ -1,4 +1,48 @@
-## Latest: BS-025 accepted by Codex after direct repair
+## Latest: BS-026 Bounded PostgreSQL Inference Admission Storage
+
+TASK_ID: BS-026
+STATUS: READY_FOR_REVIEW
+WORKER: AGY, senior backend developer
+MODEL: Gemini 3.8 Flash High
+EFFORT: HIGH
+BRANCH: worker/agy/BS-026
+BASE_COMMIT: 789522a
+PROPOSED_COMMIT_MSG: feat(storage): implement bounded postgres inference admission ledger (BS-026)
+
+Implemented and verified the bounded storage boundary in docs/M3_ADMISSION_DECISION.md:
+application request control across instances in PostgreSQL, Migration V4, and InferenceAdmissionStore.
+
+Key achievements & verifications:
+- Migration V4 appended to services/agent/src/borrowed_steps/infrastructure/postgres_migrations.py (EXPECTED_SCHEMA_VERSION = 4).
+  - V1, V2, V3 migrations remain byte-for-byte identical.
+  - inference_admissions table with engine-level CHECK constraints for valid states, sends, and tokens.
+  - Partial unique index ux_inference_admissions_single_active on (is_active) WHERE is_active IS TRUE enforces exactly one active operation globally across all workspaces.
+  - Unique index ux_inference_admissions_workspace_request_key on (workspace_id, request_key_hash).
+- InferenceAdmissionStore in services/agent/src/borrowed_steps/infrastructure/inference_admission.py:
+  - Methods: reserve, mark_dispatched, finish, recover_dead, get, get_active, get_by_request_key.
+  - Policy constants: RESERVED_SENDS=6, GLOBAL_LIMIT_60S=6, GLOBAL_LIMIT_24H=120, WORKSPACE_LIMIT_24H=24, STORED_DEADLINE_SECONDS=120, PROVIDER_429_COOLDOWN_SECONDS=900.
+  - Fail-closed concurrency: expired stored deadlines never auto-release; UNCERTAIN retains active slot until explicit dead recovery.
+  - Confirmed terminal states (SUCCEEDED, FAILED_CONFIRMED) require cleanup_completed=True.
+  - Provider 429 enforces a durable 15-minute global cooldown.
+  - Short transactions, statement timeout 5000ms, lock timeout 2000ms, transaction advisory lock.
+- Real disposable PostgreSQL verification (port 55436):
+  - tests/test_inference_admission.py: 16 passed (additive migration, concurrency race, replay, lifecycle, rolling caps, 429 cooldown, recovery, check constraints).
+  - tests/test_postgres_store.py: 18 passed (schema expectation bumped to 4).
+  - tests/test_canary_receipt_postgres.py: 19 passed (schema expectation bumped to 4).
+  - Total real PostgreSQL tests: 53 passed, 0 failed, 0 skipped.
+- Packaging & Static Checks:
+  - scripts/tests/test_hosted_package.py: 17 passed.
+  - scripts/verify_hosted_package.py: smoke expectation bumped to schema 4 at line 313.
+  - ruff check (0 issues), ruff format --check (clean), mypy strict mode (0 errors in 5 source files).
+- Zero live provider calls, zero credential discovery, zero cloud mutations, ₹0 / $0 spend.
+- Hosted public assistant remains strictly DISABLED (BS_ASSISTANT_ENABLED=0).
+
+Evidence: services/agent/test-evidence/bs026/admission_evidence.json, services/agent/test-evidence/bs026/test_results.txt
+Documentation: docs/INFERENCE_ADMISSION.md, docs/workers/BS-026.md
+NEXT_CODEX_MODE: ASTRA_HIGH
+REASON: Storage boundary complete, fully tested on real PostgreSQL; ready for Codex review.
+
+## Historical: BS-025 accepted by Codex after direct repair
 STATUS: COMPLETED
 Read docs/BS-025_ACCEPTANCE.md. Fresh runtime/assembly, isolated adapter and
 disabled app checks, real disposable PostgreSQL smoke,24 packaging tests pass.

@@ -244,8 +244,8 @@ def test_v2_upgrade_preserves_business_rows_and_is_repeatable() -> None:
                 conn.execute(statement)
             conn.execute("INSERT INTO schema_migrations VALUES(1,now()),(2,now())")
             conn.execute("INSERT INTO workspaces(id,created_at) VALUES('preserved',now())")
-        assert apply_migrations(url) == 3
-        assert apply_migrations(url) == 3
+        assert apply_migrations(url) == 4
+        assert apply_migrations(url) == 4
         with psycopg.connect(url) as conn:
             assert conn.execute("SELECT id FROM workspaces").fetchall() == [("preserved",)]
             assert conn.execute("SELECT count(*) FROM canary_receipts").fetchone() == (0,)

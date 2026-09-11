@@ -31,7 +31,7 @@ __all__ = [
     "read_schema_version",
 ]
 
-EXPECTED_SCHEMA_VERSION = 3
+EXPECTED_SCHEMA_VERSION = 4
 """Schema version this build of the adapter requires."""
 
 # A fixed, arbitrary 64-bit key. Advisory locks share one namespace per
@@ -281,7 +281,75 @@ _SCHEMA_V3: tuple[str, ...] = (
     " Strictly excludes concurrent active receipts and never stores secrets or prompts.'",
 )
 
-_MIGRATIONS: tuple[tuple[str, ...], ...] = (_SCHEMA_V1, _SCHEMA_V2, _SCHEMA_V3)
+_SCHEMA_V4: tuple[str, ...] = (
+    """
+    CREATE TABLE inference_admissions (
+        reservation_id TEXT PRIMARY KEY,
+        workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+        owner_id TEXT NOT NULL,
+        request_key_hash TEXT NOT NULL,
+        payload_hash TEXT NOT NULL,
+        reserved_sends INTEGER NOT NULL CHECK (reserved_sends = 6),
+        deadline_at TIMESTAMPTZ NOT NULL,
+        state TEXT NOT NULL DEFAULT 'RESERVED' CHECK (
+            state IN (
+                'RESERVED', 'DISPATCHED', 'SUCCEEDED',
+                'FAILED_CONFIRMED', 'UNCERTAIN', 'RECOVERED'
+            )
+        ),
+        is_active BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+        dispatched_at TIMESTAMPTZ,
+        completed_at TIMESTAMPTZ,
+        released_at TIMESTAMPTZ,
+        actual_sends INTEGER CHECK (actual_sends IS NULL OR (actual_sends BETWEEN 0 AND 6)),
+        actual_total_tokens BIGINT CHECK (actual_total_tokens IS NULL OR actual_total_tokens >= 0),
+        failure_code TEXT CHECK (
+            failure_code IS NULL OR failure_code IN (
+                'provider_429', 'provider_failure', 'invalid_output',
+                'cancelled', 'deadline_expired', 'execution_unknown'
+            )
+        ),
+        recovery_operator_id TEXT,
+        recovery_reason TEXT CHECK (
+            recovery_reason IS NULL OR recovery_reason IN (
+                'process_dead', 'pod_evicted', 'operator_reset',
+                'manual_intervention', 'timeout_terminated'
+            )
+        ),
+        recovered_at TIMESTAMPTZ,
+        CHECK (is_active = (state IN ('RESERVED', 'DISPATCHED', 'UNCERTAIN'))),
+        CHECK ((released_at IS NOT NULL) = (is_active IS FALSE)),
+        CHECK (
+            state != 'SUCCEEDED'
+            OR (actual_sends IS NOT NULL AND actual_sends BETWEEN 1 AND 6)
+        ),
+        CHECK (state != 'SUCCEEDED' OR failure_code IS NULL),
+        CHECK (state NOT IN ('FAILED_CONFIRMED', 'UNCERTAIN') OR failure_code IS NOT NULL),
+        CHECK ((recovered_at IS NULL) = (recovery_operator_id IS NULL)),
+        CHECK ((recovered_at IS NULL) = (recovery_reason IS NULL)),
+        CHECK ((recovered_at IS NOT NULL) = (state = 'RECOVERED'))
+    )
+    """,
+    """
+    CREATE UNIQUE INDEX ux_inference_admissions_single_active
+        ON inference_admissions (is_active)
+        WHERE is_active IS TRUE
+    """,
+    """
+    CREATE UNIQUE INDEX ux_inference_admissions_workspace_request_key
+        ON inference_admissions (workspace_id, request_key_hash)
+    """,
+    "CREATE INDEX ix_inference_admissions_released_at ON inference_admissions (released_at)",
+    "CREATE INDEX ix_inference_admissions_workspace_released"
+    " ON inference_admissions (workspace_id, released_at)",
+    "COMMENT ON TABLE inference_admissions IS"
+    " 'Durable inference admission boundary. Controls application requests across"
+    " instances in PostgreSQL, guarantees single active operation, fixed send reservations,"
+    " rolling rate caps and provider 429 cooldown. Never stores raw prompts or credentials.'",
+)
+
+_MIGRATIONS: tuple[tuple[str, ...], ...] = (_SCHEMA_V1, _SCHEMA_V2, _SCHEMA_V3, _SCHEMA_V4)
 
 
 def _connect(database_url: str) -> psycopg.Connection[TupleRow]:
