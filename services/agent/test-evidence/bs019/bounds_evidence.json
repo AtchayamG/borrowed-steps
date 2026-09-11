@@ -1,0 +1,69 @@
+{
+  "contract": "docs/M3_GROQ_BOUNDS_CONTRACT.md",
+  "task_id": "BS-019",
+  "timestamp_utc": "2026-09-10T16:36:00Z",
+  "environment": "STRICT_OFFLINE",
+  "live_network_calls": 0,
+  "cloud_spend_usd": 0.0,
+  "response_data_nature": "SYNTHETIC_FIXTURES_ONLY",
+  "mechanical_bounds_enforced": {
+    "max_request_bytes": 16384,
+    "fixed_max_completion_tokens": 1024,
+    "fixed_reasoning_effort": "low",
+    "forbidden_fields": ["max_tokens"],
+    "allowed_n_values": [1, null],
+    "max_sends_budget": 6,
+    "max_operation_deadline_seconds": 110.0,
+    "max_request_timeout_seconds": 60.0,
+    "pinned_model": "openai/gpt-oss-20b",
+    "pinned_endpoint": "https://api.groq.com/openai/v1/chat/completions"
+  },
+  "wire_byte_boundaries_tested": {
+    "boundary_allowed_bytes": 16384,
+    "boundary_allowed_status": "ACCEPTED_AND_CHARGED",
+    "boundary_plus_one_bytes": 16385,
+    "boundary_plus_one_status": "REFUSED_WITHOUT_DEBIT",
+    "refusal_exception": "GroqEnvelopeRefusedError",
+    "refusal_message": "Request body size exceeds 16384 bytes",
+    "inner_transport_dispatched_on_refusal": false,
+    "budget_charged_on_refusal": false
+  },
+  "measured_wire_payload_samples": {
+    "sample_source": "synthetic_intake_via_offline_probe_transport",
+    "happy_path_ascii_send_1_bytes": 2982,
+    "happy_path_ascii_send_2_bytes": 3381,
+    "happy_path_ascii_send_3_bytes": 5678,
+    "happy_path_unicode_send_1_bytes": 3744,
+    "happy_path_unicode_send_2_bytes": 4143,
+    "happy_path_unicode_send_3_bytes": 6440,
+    "max_measured_single_send_bytes": 6440,
+    "margin_below_16384_ceiling_bytes": 9944
+  },
+  "test_suite_summary": {
+    "total_tests_run": 68,
+    "passed": 68,
+    "failed": 0,
+    "skipped": 0,
+    "groq_model_tests": 18,
+    "groq_model_review_tests": 13,
+    "admission_probe_tests": 7,
+    "groq_bounds_focused_tests": 30
+  },
+  "assertions_proven": {
+    "max_completion_tokens_exact_1024_in_wire_json": true,
+    "reasoning_effort_low_in_wire_json": true,
+    "max_tokens_absent_from_wire_json": true,
+    "n_absent_or_integer_1_in_wire_json": true,
+    "exact_16384_bytes_accepted": true,
+    "exact_16385_bytes_refused_no_debit": true,
+    "parent_config_mutation_rejected_no_debit": true,
+    "kwargs_mutation_rejected_no_debit": true,
+    "malformed_json_rejected_no_debit": true,
+    "empty_body_rejected_no_debit": true,
+    "wrong_model_rejected_no_debit": true,
+    "boolean_or_non_integer_cap_rejected_no_debit": true,
+    "sixth_send_dispatched_seventh_refused": true,
+    "structured_output_length_finish_reason_fails_explicitly": true,
+    "error_messages_contain_no_secrets_or_prompts": true
+  }
+}

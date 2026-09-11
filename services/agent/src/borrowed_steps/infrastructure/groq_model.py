@@ -29,14 +29,14 @@ import time
 from collections.abc import AsyncGenerator, AsyncIterator
 from contextlib import asynccontextmanager
 from types import TracebackType
-from typing import Any, TypeVar
+from typing import Any, NoReturn, TypeVar
 
 import httpx
 import openai
 from openai.types.chat.parsed_chat_completion import ParsedChatCompletion
 from pydantic import BaseModel
 from strands.models.openai import OpenAIModel
-from strands.types.content import Messages
+from strands.types.content import Messages, SystemContentBlock
 from strands.types.exceptions import (
     ContextWindowOverflowException,
     ModelThrottledException,
@@ -56,7 +56,24 @@ DEFAULT_MAX_SENDS: int = 6
 DEFAULT_OPERATION_DEADLINE_SECONDS: float = 110.0
 DEFAULT_REQUEST_TIMEOUT_SECONDS: float = 60.0
 
+MAX_REQUEST_BYTES: int = 16_384
+FIXED_MAX_COMPLETION_TOKENS: int = 1024
+FIXED_REASONING_EFFORT: str = "low"
+
 T = TypeVar("T", bound=BaseModel)
+
+
+def _unique_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("Duplicate JSON key")
+        result[key] = value
+    return result
+
+
+def _reject_json_constant(value: str) -> NoReturn:
+    raise ValueError("Invalid JSON constant")
 
 
 class GroqModelError(Exception):
@@ -77,6 +94,10 @@ class GroqRequestTimeoutError(GroqModelError):
 
 class GroqTargetRefusedError(GroqModelError):
     """Raised when a request target does not match the pinned HTTPS Groq endpoint."""
+
+
+class GroqEnvelopeRefusedError(GroqTargetRefusedError):
+    """Raised when a request envelope violates byte limits, model pins, or token caps."""
 
 
 class GroqRateLimitError(GroqModelError):
@@ -249,12 +270,6 @@ class _BoundedGroqTransport(httpx.AsyncBaseTransport):
             msg = "Transport is closed"
             raise GroqModelError(msg)
 
-        # Parent configuration is mutable; enforce the model pin at the wire too.
-        if request.content:
-            payload = json.loads(request.content)
-            if not isinstance(payload, dict) or payload.get("model") != GROQ_MODEL_ID:
-                raise GroqTargetRefusedError("Request model refused")
-
         # 1. Target URL validation (fail closed on unexpected targets)
         scheme = request.url.scheme.lower()
         host = request.url.host.lower()
@@ -269,11 +284,59 @@ class _BoundedGroqTransport(httpx.AsyncBaseTransport):
             or request.url.userinfo
             or request.method != "POST"
         ):
-            msg = (
-                f"Request target refused: {scheme}://{host}{path} "
-                f"(expected https://{ALLOWED_HOST}{ALLOWED_PATH})"
-            )
+            msg = "Request target refused"
             raise GroqTargetRefusedError(msg)
+
+        # 2. Envelope validation before budget debit or inner dispatch
+        content = request.content
+        if not content:
+            raise GroqEnvelopeRefusedError("Request body must not be empty")
+
+        if len(content) > MAX_REQUEST_BYTES:
+            raise GroqEnvelopeRefusedError(f"Request body size exceeds {MAX_REQUEST_BYTES} bytes")
+
+        try:
+            raw_text = content.decode("utf-8")
+        except UnicodeDecodeError:
+            raise GroqEnvelopeRefusedError("Malformed request encoding") from None
+
+        try:
+            payload = json.loads(
+                raw_text,
+                object_pairs_hook=_unique_json_object,
+                parse_constant=_reject_json_constant,
+            )
+        except (ValueError, RecursionError):
+            raise GroqEnvelopeRefusedError("Malformed JSON payload") from None
+
+        if not isinstance(payload, dict):
+            raise GroqEnvelopeRefusedError("Request payload must be a JSON object")
+
+        if payload.get("model") != GROQ_MODEL_ID:
+            raise GroqEnvelopeRefusedError("Request model refused")
+
+        # Fixed max_completion_tokens == 1024 (must be int, not bool, and exact value)
+        max_tokens_cap = payload.get("max_completion_tokens")
+        if type(max_tokens_cap) is not int or max_tokens_cap != FIXED_MAX_COMPLETION_TOKENS:
+            raise GroqEnvelopeRefusedError(
+                f"Request max_completion_tokens must be exactly {FIXED_MAX_COMPLETION_TOKENS}"
+            )
+
+        # Forbid deprecated max_tokens field
+        if "max_tokens" in payload:
+            raise GroqEnvelopeRefusedError("Deprecated max_tokens field is forbidden")
+
+        # Fixed reasoning_effort == "low"
+        if payload.get("reasoning_effort") != FIXED_REASONING_EFFORT:
+            raise GroqEnvelopeRefusedError(
+                f"Request reasoning_effort must be '{FIXED_REASONING_EFFORT}'"
+            )
+
+        # Field n: absent or exact integer 1
+        if "n" in payload:
+            n_val = payload["n"]
+            if type(n_val) is not int or n_val != 1:
+                raise GroqEnvelopeRefusedError("Field n must be absent or 1")
 
         # 2. Check monotonic deadline before sending
         now = time.monotonic()
@@ -422,7 +485,7 @@ class GroqModel(OpenAIModel):
         self._active_clients: set[openai.AsyncOpenAI] = set()
 
         # Initialize parent with pinned configuration.
-        # Explicitly disable SDK-level retries.
+        # Explicitly disable SDK-level retries and pin token/reasoning bounds.
         super().__init__(
             model_id=GROQ_MODEL_ID,
             client_args={
@@ -430,7 +493,67 @@ class GroqModel(OpenAIModel):
                 "base_url": GROQ_BASE_URL,
                 "max_retries": 0,
             },
+            params={
+                "max_completion_tokens": FIXED_MAX_COMPLETION_TOKENS,
+                "reasoning_effort": FIXED_REASONING_EFFORT,
+            },
         )
+
+    @override
+    def format_request(
+        self,
+        messages: Messages,
+        tool_specs: list[ToolSpec] | None = None,
+        system_prompt: str | None = None,
+        tool_choice: ToolChoice | None = None,
+        *,
+        system_prompt_content: list[SystemContentBlock] | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Format an OpenAI compatible chat request enforcing fixed token bounds."""
+        # Check kwargs for forbidden fields or mutation attempts
+        if "max_tokens" in kwargs:
+            raise GroqEnvelopeRefusedError("Deprecated max_tokens parameter is forbidden")
+        if "max_completion_tokens" in kwargs:
+            cap = kwargs["max_completion_tokens"]
+            if type(cap) is not int or cap != FIXED_MAX_COMPLETION_TOKENS:
+                raise GroqEnvelopeRefusedError("max_completion_tokens cannot be modified")
+        if "reasoning_effort" in kwargs and kwargs["reasoning_effort"] != FIXED_REASONING_EFFORT:
+            raise GroqEnvelopeRefusedError("reasoning_effort cannot be modified")
+        if "n" in kwargs:
+            n_val = kwargs["n"]
+            if type(n_val) is not int or n_val != 1:
+                raise GroqEnvelopeRefusedError("Field n must be absent or 1")
+
+        # Check self.config for mutation attempts
+        if self.config.get("model_id") != GROQ_MODEL_ID:
+            raise GroqEnvelopeRefusedError("Request model refused")
+        raw_params = self.config.get("params")
+        params: dict[str, Any] = raw_params if isinstance(raw_params, dict) else {}
+        if "max_tokens" in params:
+            raise GroqEnvelopeRefusedError("Deprecated max_tokens parameter is forbidden")
+        cap = params.get("max_completion_tokens")
+        if type(cap) is not int or cap != FIXED_MAX_COMPLETION_TOKENS:
+            raise GroqEnvelopeRefusedError("max_completion_tokens cannot be modified")
+        if params.get("reasoning_effort") != FIXED_REASONING_EFFORT:
+            raise GroqEnvelopeRefusedError("reasoning_effort cannot be modified")
+        if "n" in params:
+            n_val = params["n"]
+            if type(n_val) is not int or n_val != 1:
+                raise GroqEnvelopeRefusedError("Field n must be absent or 1")
+
+        request = super().format_request(
+            messages,
+            tool_specs=tool_specs,
+            system_prompt=system_prompt,
+            tool_choice=tool_choice,
+            system_prompt_content=system_prompt_content,
+            **kwargs,
+        )
+        request["max_completion_tokens"] = FIXED_MAX_COMPLETION_TOKENS
+        request["reasoning_effort"] = FIXED_REASONING_EFFORT
+        request.pop("max_tokens", None)
+        return request
 
     @property
     def budget(self) -> SendBudget:
@@ -516,6 +639,20 @@ class GroqModel(OpenAIModel):
         **kwargs: Any,
     ) -> AsyncGenerator[StreamEvent, None]:
         """Stream conversation with Groq, enforcing budget and un-wrapping custom errors."""
+        # Check kwargs for forbidden fields or mutation attempts
+        if "max_tokens" in kwargs:
+            raise GroqEnvelopeRefusedError("Deprecated max_tokens parameter is forbidden")
+        if "max_completion_tokens" in kwargs:
+            cap = kwargs["max_completion_tokens"]
+            if type(cap) is not int or cap != FIXED_MAX_COMPLETION_TOKENS:
+                raise GroqEnvelopeRefusedError("max_completion_tokens cannot be modified")
+        if "reasoning_effort" in kwargs and kwargs["reasoning_effort"] != FIXED_REASONING_EFFORT:
+            raise GroqEnvelopeRefusedError("reasoning_effort cannot be modified")
+        if "n" in kwargs:
+            n_val = kwargs["n"]
+            if type(n_val) is not int or n_val != 1:
+                raise GroqEnvelopeRefusedError("Field n must be absent or 1")
+
         # Pre-check deadline and budget upfront
         if time.monotonic() >= self._deadline_monotonic:
             msg = "Operation deadline expired before streaming started"
@@ -561,6 +698,20 @@ class GroqModel(OpenAIModel):
         **kwargs: Any,
     ) -> AsyncGenerator[dict[str, T | Any], None]:
         """Request structured output from Groq, enforcing strict schema without tool fields."""
+        # Check kwargs for forbidden fields or mutation attempts
+        if "max_tokens" in kwargs:
+            raise GroqEnvelopeRefusedError("Deprecated max_tokens parameter is forbidden")
+        if "max_completion_tokens" in kwargs:
+            cap = kwargs["max_completion_tokens"]
+            if type(cap) is not int or cap != FIXED_MAX_COMPLETION_TOKENS:
+                raise GroqEnvelopeRefusedError("max_completion_tokens cannot be modified")
+        if "reasoning_effort" in kwargs and kwargs["reasoning_effort"] != FIXED_REASONING_EFFORT:
+            raise GroqEnvelopeRefusedError("reasoning_effort cannot be modified")
+        if "n" in kwargs:
+            n_val = kwargs["n"]
+            if type(n_val) is not int or n_val != 1:
+                raise GroqEnvelopeRefusedError("Field n must be absent or 1")
+
         # Pre-check deadline and budget upfront
         if time.monotonic() >= self._deadline_monotonic:
             msg = "Operation deadline expired before structured output started"
@@ -594,6 +745,8 @@ class GroqModel(OpenAIModel):
             except openai.RateLimitError:
                 _LOGGER.warning("Groq rate limit encountered during structured output")
                 raise ModelThrottledException("Groq rate limit reached") from None
+            except openai.LengthFinishReasonError:
+                raise ValueError("Groq structured output truncated due to length limit") from None
             except openai.APIError as exc:
                 if getattr(exc, "code", None) == "context_length_exceeded":
                     raise ContextWindowOverflowException("Groq context limit exceeded") from None
@@ -607,6 +760,9 @@ class GroqModel(OpenAIModel):
             raise ValueError(msg)
 
         for choice in response.choices:
+            if choice.finish_reason == "length":
+                msg = "Groq structured output truncated due to length limit"
+                raise ValueError(msg)
             if choice.message.refusal:
                 msg = "Model refused structured output"
                 raise ValueError(msg)

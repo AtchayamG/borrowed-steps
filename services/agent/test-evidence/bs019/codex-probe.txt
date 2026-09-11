@@ -1,0 +1,59 @@
+exit_code=0
+================================================================================
+  BORROWED STEPS (M3): GROQ ADMISSION OFFLINE WIRE PROBE (BS-015)
+================================================================================
+  - Mode: STRICT OFFLINE (fail-closed transport, 0 network calls, 0 spend)
+  - Target Model: openai/gpt-oss-20b at https://api.groq.com/openai/v1
+  - Max Intake Characters: 2000
+  - Max Sends Enforced: 6
+--------------------------------------------------------------------------------
+
+
+Tool #1: read_inventory
+Checked inventory counts.
+Tool #1: read_inventory
+Checked inventory counts.Hello, how can I assist you?
+Tool #1: read_inventory
+
+Tool #2: read_inventory
+Inventory verified.
+PROBE SUMMARY TABLE:
+--------------------------------------------------------------------------------
+Scenario               | Send | Stage Label                  | Wire Bytes | Ratio B/C
+--------------------------------------------------------------------------------
+happy_path_ascii       | 1    | stage_one_tool_proposal      | 2982       | 1.000
+happy_path_ascii       | 2    | stage_one_tool_proposal      | 3381       | 1.000
+happy_path_ascii       | 3    | stage_two_structured_extraction | 5678       | 1.000
+happy_path_unicode     | 4    | stage_one_tool_proposal      | 3744       | 1.256
+happy_path_unicode     | 5    | stage_one_tool_proposal      | 4143       | 1.225
+happy_path_unicode     | 6    | stage_two_structured_extraction | 6440       | 1.134
+six_send_sample        | 7    | stage_one_no_tool_reply      | 2982       | 1.000
+six_send_sample        | 8    | stage_one_recovery_and_tool_loop | 3221       | 1.000
+six_send_sample        | 9    | stage_one_recovery_and_tool_loop | 3604       | 1.000
+six_send_sample        | 10   | stage_one_recovery_and_tool_loop | 3987       | 1.000
+six_send_sample        | 11   | stage_two_rate_limited_send  | 5678       | 1.000
+six_send_sample        | 12   | stage_two_retry_successful   | 5678       | 1.000
+--------------------------------------------------------------------------------
+Max Single-Send Wire Bytes: 6440 B
+Min Single-Send Wire Bytes: 2982 B
+Stage 2 Strict Schema Size: 1029 B
+Sanitized evidence saved to: test-evidence\bs019\codex-probe.json
+================================================================================
+2026-09-11 09:53:25,821 [INFO] admission_probe: Running Probe Scenario 1: Happy Path (2000-char ASCII)...
+2026-09-11 09:53:25,824 [INFO] strands.telemetry.metrics: Creating Strands MetricsClient
+2026-09-11 09:53:26,158 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-11 09:53:26,166 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-11 09:53:26,170 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-11 09:53:26,178 [INFO] admission_probe: Running Probe Scenario 2: Happy Path (2000-char Multilingual Unicode)...
+2026-09-11 09:53:26,181 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-11 09:53:26,184 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-11 09:53:26,186 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-11 09:53:26,187 [INFO] admission_probe: Running Probe Scenario 3: Six-Send Sample (Recovery, Tool Loop, 429, 7th Refusal)...
+2026-09-11 09:53:26,190 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-11 09:53:26,192 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-11 09:53:26,195 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-11 09:53:26,199 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-11 09:53:26,202 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-09-11 09:53:26,202 [WARNING] borrowed_steps.infrastructure.groq_model: Groq rate limit encountered during structured output
+2026-09-11 09:53:26,204 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-09-11 09:53:26,206 [INFO] admission_probe: Wrote sanitized probe measurements to: test-evidence\bs019\codex-probe.json

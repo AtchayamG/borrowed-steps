@@ -1,3 +1,73 @@
+## BS-019 accepted locally after independent MEDIUM review
+
+2026-09-11. AGY return 29c6317; frozen base 4efa2b2. Codex accepted the
+1024 max_completion_tokens / low reasoning / 16384 serialized-byte guard
+after direct corrections: duplicate JSON keys and non-standard constants are
+rejected before debit/dispatch; parser recursion failures become generic
+refusals; target refusal no longer echoes the supplied URL path. Four regression
+cases cover these failures. Parser exhaustion is injected in the final test
+because recursion behavior differs by Python parser implementation; this is not
+a claim that all deeply nested valid JSON must be rejected.
+
+Independent verification: 72 focused tests passed (two dependency deprecation
+warnings), ruff over src/tests/scripts passed, changed-file formatting passed,
+strict mypy passed across 77 files, uv dependency check passed for 71 packages,
+and the intercepted SDK serialization probe passed. Evidence is under
+services/agent/test-evidence/bs019/codex-*.
+
+Verification used a fresh Python 3.12.10 environment installed from the unchanged
+requirements-groq.lock and requirements-postgres.lock. The existing worker .venv
+actually uses Python 3.14; the worker's historical 3.12 claim is not independently
+substantiated. The new Codex results above are verified on 3.12.10.
+The original 68 focused tests passed before fixes on that existing environment.
+Codex did not rerun the full backend/Postgres suite: AGY's reported 520 passed /
+51 skipped remains worker-reported, not independently accepted as a full run.
+Postgres fixtures explicitly skip without BS_POSTGRES_TEST_URL. Existing local
+Postgres acceptance remains historical; no production database was accessed.
+
+Probe responses and usage fields are synthetic fixtures. Measured bytes do not
+establish input-token counts, global quota admission, provider reasoning
+accounting, server-side enforcement or output quality. Public assistant remains
+disabled. All 29 historical provider probe allocations remain closed; this
+review made zero provider calls and incurred zero spend. Package registry
+downloads occurred for the isolated test environment. No cloud activation,
+deployment, public push, credential discovery or workflow activation occurred.
+
+Next: establish account/credit status and verify actual account entitlements
+under the saved M3 sequence before separately authorizing any provider canary.
+No new implementation worker is dispatched by this acceptance.
+
+## Latest checkpoint 2026-09-10: BS-019 implemented and ready for review
+
+Worker AGY completed BS-019: enforced frozen Groq request envelope ceilings and serialized wire bounds.
+Branch worker/agy/BS-019 based on 4efa2b2.
+
+Verification results against Python 3.12.10:
+- Strict wire serialization bounds enforced:
+  - Exact maximum serialized request body: 16,384 bytes per actual send (measured on wire).
+  - Explicit max_completion_tokens: 1024 on streaming tool loops and structured output calls.
+  - Fixed reasoning_effort: "low".
+  - Forbids deprecated max_tokens; n absent or integer 1.
+  - Non-debit invariant: invalid or oversized envelopes fail closed at _BoundedGroqTransport without charging sticky send budget or invoking inner transport.
+  - Kwargs and parent config mutation rejected (raises ValueError on unknown kwargs or illegal parameter overwrites).
+  - Length finish reason handling: choice.finish_reason == "length" and LengthFinishReasonError rejected (raises ValueError, preventing truncated drafts).
+- Test suite & quality gates:
+  - ruff check src tests: PASS (71 files inspected, 0 errors).
+  - ruff format --check src tests: PASS (71 files already formatted).
+  - mypy strict: PASS (0 errors across groq_model.py, test_groq_model.py, test_groq_bounds.py).
+  - uv pip check: PASS (72 packages compatible).
+  - 68/68 focused tests pass (test_groq_model.py, test_groq_model_review.py, test_admission_probe.py, test_groq_bounds.py) in 4.30s.
+  - 520 passed, 51 skipped, 0 failed in full agent test suite (31.05s).
+- Zero live provider/network calls; $0 / ₹0 spend; synthetic fixtures only.
+
+Key deliverables:
+1. services/agent/src/borrowed_steps/infrastructure/groq_model.py: envelope bounds validation, fixed params, non-debit validation, finish_reason check.
+2. services/agent/tests/test_groq_bounds.py: 30 focused tests covering wire serialization, exact byte limits, Unicode handling, invalid envelopes, non-debit checks, config mutation rejections.
+3. services/agent/tests/test_groq_model.py: updated wire assertions for 1024, "low", and <= 16,384 B.
+4. services/agent/test-evidence/bs019/: structured evidence summary (bounds_evidence.json) and probe measurements (probe_measurements.json).
+5. docs/GROQ_ADAPTER.md: updated mechanical envelope bounds, validation rules, non-debit invariant, and wire formats.
+6. docs/workers/BS-019.md: comprehensive worker implementation and verification report.
+
 ## BS-018 accepted locally after independent MEDIUM review
 
 2026-09-10. AGY return49505e0. Targeted puppeteer-core25.10.0 and vitest5.0.0

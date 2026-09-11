@@ -1,3 +1,42 @@
+## BS-019 accepted locally after independent MEDIUM review
+
+2026-09-11. AGY return 29c6317; frozen base 4efa2b2. Codex accepted the
+1024 max_completion_tokens / low reasoning / 16384 serialized-byte guard
+after direct corrections: duplicate JSON keys and non-standard constants are
+rejected before debit/dispatch; parser recursion failures become generic
+refusals; target refusal no longer echoes the supplied URL path. Four regression
+cases cover these failures. Parser exhaustion is injected in the final test
+because recursion behavior differs by Python parser implementation; this is not
+a claim that all deeply nested valid JSON must be rejected.
+
+Independent verification: 72 focused tests passed (two dependency deprecation
+warnings), ruff over src/tests/scripts passed, changed-file formatting passed,
+strict mypy passed across 77 files, uv dependency check passed for 71 packages,
+and the intercepted SDK serialization probe passed. Evidence is under
+services/agent/test-evidence/bs019/codex-*.
+
+Verification used a fresh Python 3.12.10 environment installed from the unchanged
+requirements-groq.lock and requirements-postgres.lock. The existing worker .venv
+actually uses Python 3.14; the worker's historical 3.12 claim is not independently
+substantiated. The new Codex results above are verified on 3.12.10.
+The original 68 focused tests passed before fixes on that existing environment.
+Codex did not rerun the full backend/Postgres suite: AGY's reported 520 passed /
+51 skipped remains worker-reported, not independently accepted as a full run.
+Postgres fixtures explicitly skip without BS_POSTGRES_TEST_URL. Existing local
+Postgres acceptance remains historical; no production database was accessed.
+
+Probe responses and usage fields are synthetic fixtures. Measured bytes do not
+establish input-token counts, global quota admission, provider reasoning
+accounting, server-side enforcement or output quality. Public assistant remains
+disabled. All 29 historical provider probe allocations remain closed; this
+review made zero provider calls and incurred zero spend. Package registry
+downloads occurred for the isolated test environment. No cloud activation,
+deployment, public push, credential discovery or workflow activation occurred.
+
+Next: establish account/credit status and verify actual account entitlements
+under the saved M3 sequence before separately authorizing any provider canary.
+No new implementation worker is dispatched by this acceptance.
+
 # Groq transport adapter (`GroqModel`) — offline verification & contract specification
 
 **Worker Task**: BS-012 (AGY)
@@ -68,8 +107,17 @@ class GroqModel(OpenAIModel):
 - **In-Flight Bound**: Effective HTTP timeout is computed as `min(request_timeout_seconds, deadline_monotonic - now)`.
 - **Chunk Stream Bound**: Response byte streams are wrapped in `_DeadlineByteStream`. If reading chunks stalls past the monotonic deadline, the stream closes and raises `GroqDeadlineExpiredError`.
 
-### Strict Target Verification:
+### Strict Target & Request Envelope Verification:
 - Fails closed with `GroqTargetRefusedError` if the request URL is non-HTTPS, host is not `api.groq.com`, or path is not `/openai/v1/chat/completions`.
+- Fails closed with `GroqEnvelopeRefusedError` (subclass of `GroqTargetRefusedError`) before budget debit or inner dispatch if:
+  - Wire payload exceeds `MAX_REQUEST_BYTES = 16_384` bytes.
+  - Body is empty, malformed UTF-8, malformed JSON, or non-object.
+  - Model does not match `GROQ_MODEL_ID = "openai/gpt-oss-20b"`.
+  - `max_completion_tokens` is missing, non-integer (including boolean), or not exactly `FIXED_MAX_COMPLETION_TOKENS = 1024`.
+  - Deprecated `max_tokens` is present.
+  - `reasoning_effort` is missing, None, or not `'low'`.
+  - Field `n` is present and not integer `1`.
+- **Non-Debit Invariant**: Envelope rejections do NOT call the inner transport and do NOT charge `SendBudget`.
 
 ### 429 & Retry-After Preservation:
 - When the provider responds with HTTP 429, the transport records `model.last_status_code = 429` and parses the `Retry-After` header into `model.last_retry_after: float | None`.
@@ -84,12 +132,17 @@ class GroqModel(OpenAIModel):
 
 ## 4. Stage 1 & Stage 2 Wire Shapes
 
+Both stages share the 6-send sticky budget and enforce the frozen request envelope (<= 16,384 bytes wire size, 1024 max completion tokens, low reasoning effort).
+
 ### Stage 1: Real Strands Agent Tool Loop
 - Request wire JSON:
   - `model`: `"openai/gpt-oss-20b"`
+  - `max_completion_tokens`: `1024`
+  - `reasoning_effort`: `"low"`
   - `stream`: `true`
   - `tools`: includes function schemas (e.g. `read_inventory`)
   - `response_format`: NOT present.
+  - `max_tokens`: NOT present.
 - Model returns SSE chunk with `tool_calls`. The SDK executes `read_inventory`. The continuation turn sends `role: "tool"` message and receives final text.
 - Tool provenance is verified: the tool is executed by the agent runtime, not called directly.
 
@@ -97,7 +150,10 @@ class GroqModel(OpenAIModel):
 - Invoked via `model.structured_output(_Extraction, prompt=..., system_prompt=...)`.
 - Request wire JSON:
   - `model`: `"openai/gpt-oss-20b"`
+  - `max_completion_tokens`: `1024`
+  - `reasoning_effort`: `"low"`
   - `stream`: `false`
+  - `max_tokens`: NOT present.
   - `tools`: NOT present (removed unconditionally).
   - `tool_choice`: NOT present (removed unconditionally).
   - `stream_options`: NOT present (streaming-only field popped).

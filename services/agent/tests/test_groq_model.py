@@ -225,9 +225,7 @@ def test_groq_model_target_refusal_non_https() -> None:
 
         # Dispatch request with http scheme
         req = httpx.Request("POST", f"http://{ALLOWED_HOST}{ALLOWED_PATH}")
-        with pytest.raises(
-            GroqTargetRefusedError, match=re.escape("Request target refused: http://")
-        ):
+        with pytest.raises(GroqTargetRefusedError, match=re.escape("Request target refused")):
             await model._groq_transport.handle_async_request(req)
 
     asyncio.run(_test())
@@ -245,15 +243,13 @@ def test_groq_model_target_refusal_wrong_host_or_path() -> None:
 
         # Wrong host
         req1 = httpx.Request("POST", f"https://api.openai.com{ALLOWED_PATH}")
-        expected_host_err = re.escape("Request target refused: https://api.openai.com")
+        expected_host_err = re.escape("Request target refused")
         with pytest.raises(GroqTargetRefusedError, match=expected_host_err):
             await model._groq_transport.handle_async_request(req1)
 
         # Wrong path
         req2 = httpx.Request("POST", f"https://{ALLOWED_HOST}/openai/v1/models")
-        expected_path_err = re.escape(
-            "Request target refused: https://api.groq.com/openai/v1/models"
-        )
+        expected_path_err = re.escape("Request target refused")
         with pytest.raises(GroqTargetRefusedError, match=expected_path_err):
             await model._groq_transport.handle_async_request(req2)
 
@@ -368,7 +364,15 @@ def test_groq_model_request_timeout_within_deadline() -> None:
             transport=transport,
         )
 
-        req = httpx.Request("POST", f"{GROQ_BASE_URL}/chat/completions")
+        valid_payload = json.dumps(
+            {
+                "model": GROQ_MODEL_ID,
+                "messages": [{"role": "user", "content": "hello"}],
+                "max_completion_tokens": 1024,
+                "reasoning_effort": "low",
+            }
+        ).encode("utf-8")
+        req = httpx.Request("POST", f"{GROQ_BASE_URL}/chat/completions", content=valid_payload)
         with pytest.raises(GroqRequestTimeoutError, match="Request dispatch timed out after"):
             await model._groq_transport.handle_async_request(req)
 
@@ -512,6 +516,10 @@ def test_groq_model_strands_agent_tool_loop_and_wire_inspection(tmp_path: Path) 
         wire_turn1 = json.loads(intercepted_requests[0].content.decode("utf-8"))
         assert wire_turn1["model"] == GROQ_MODEL_ID
         assert wire_turn1["stream"] is True
+        assert wire_turn1["max_completion_tokens"] == 1024
+        assert wire_turn1["reasoning_effort"] == "low"
+        assert "max_tokens" not in wire_turn1
+        assert len(intercepted_requests[0].content) <= 16384
         assert "tools" in wire_turn1
         assert len(wire_turn1["tools"]) == 1
         assert wire_turn1["tools"][0]["function"]["name"] == "read_inventory"
@@ -521,6 +529,10 @@ def test_groq_model_strands_agent_tool_loop_and_wire_inspection(tmp_path: Path) 
         wire_turn2 = json.loads(intercepted_requests[1].content.decode("utf-8"))
         assert wire_turn2["model"] == GROQ_MODEL_ID
         assert wire_turn2["stream"] is True
+        assert wire_turn2["max_completion_tokens"] == 1024
+        assert wire_turn2["reasoning_effort"] == "low"
+        assert "max_tokens" not in wire_turn2
+        assert len(intercepted_requests[1].content) <= 16384
         roles = [m["role"] for m in wire_turn2["messages"]]
         assert "tool" in roles
 
@@ -628,6 +640,10 @@ def test_groq_model_stage2_structured_output_wire_shape_and_parsing() -> None:
         # Must NOT have streaming fields
         assert "stream_options" not in wire_json
         assert wire_json["stream"] is False
+        assert wire_json["max_completion_tokens"] == 1024
+        assert wire_json["reasoning_effort"] == "low"
+        assert "max_tokens" not in wire_json
+        assert len(captured_requests[0].content) <= 16384
 
         # Must have strict response_format
         assert "response_format" in wire_json

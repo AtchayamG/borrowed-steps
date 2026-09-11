@@ -1,0 +1,817 @@
+{
+  "timestamp_utc": "2026-09-10T16:36:12Z",
+  "target_endpoint": "https://api.groq.com/openai/v1/chat/completions",
+  "pinned_model": "openai/gpt-oss-20b",
+  "max_sends_budget": 6,
+  "evidence_scope": "Sample wire bytes only; no token or worst-case bound",
+  "response_usage": "Synthetic fixture constants; not measured token usage",
+  "admission_implementation_authorized": false,
+  "max_intake_chars_tested": 2000,
+  "scenarios_evaluated": [
+    "happy_path_ascii",
+    "happy_path_unicode",
+    "six_send_sample"
+  ],
+  "scenarios": {
+    "happy_path_ascii": [
+      {
+        "send_index": 1,
+        "scenario_name": "happy_path_ascii",
+        "stage_label": "stage_one_tool_proposal",
+        "http_method": "POST",
+        "target_url": "https://api.groq.com/openai/v1/chat/completions",
+        "wire_byte_length": 2982,
+        "character_count": 2982,
+        "bytes_per_char_ratio": 1.0,
+        "payload_keys": [
+          "max_completion_tokens",
+          "messages",
+          "model",
+          "reasoning_effort",
+          "stream",
+          "stream_options",
+          "tools"
+        ],
+        "model_id": "openai/gpt-oss-20b",
+        "is_streaming": true,
+        "stream_options": {
+          "include_usage": true
+        },
+        "messages_count": 2,
+        "messages_summary": [
+          {
+            "index": 0,
+            "role": "system",
+            "content_chars": 369,
+            "content_bytes": 369,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 1,
+            "role": "user",
+            "content_chars": 2137,
+            "content_bytes": 2137,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          }
+        ],
+        "tools_count": 1,
+        "tools_summary": [
+          {
+            "name": "read_inventory",
+            "description_chars": 117,
+            "parameters_schema_bytes": 52
+          }
+        ],
+        "response_format_type": null,
+        "response_format_strict": null,
+        "response_format_schema_name": null,
+        "response_format_bytes": null,
+        "simulated_response_type": "sse_stream",
+        "simulated_response_label": "TEST_SIMULATION_ONLY"
+      },
+      {
+        "send_index": 2,
+        "scenario_name": "happy_path_ascii",
+        "stage_label": "stage_one_tool_proposal",
+        "http_method": "POST",
+        "target_url": "https://api.groq.com/openai/v1/chat/completions",
+        "wire_byte_length": 3381,
+        "character_count": 3381,
+        "bytes_per_char_ratio": 1.0,
+        "payload_keys": [
+          "max_completion_tokens",
+          "messages",
+          "model",
+          "reasoning_effort",
+          "stream",
+          "stream_options",
+          "tools"
+        ],
+        "model_id": "openai/gpt-oss-20b",
+        "is_streaming": true,
+        "stream_options": {
+          "include_usage": true
+        },
+        "messages_count": 4,
+        "messages_summary": [
+          {
+            "index": 0,
+            "role": "system",
+            "content_chars": 369,
+            "content_bytes": 369,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 1,
+            "role": "user",
+            "content_chars": 2137,
+            "content_bytes": 2137,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 2,
+            "role": "assistant",
+            "content_chars": 0,
+            "content_bytes": 0,
+            "has_tool_calls": true,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 3,
+            "role": "tool",
+            "content_chars": 182,
+            "content_bytes": 182,
+            "has_tool_calls": false,
+            "has_tool_call_id": true
+          }
+        ],
+        "tools_count": 1,
+        "tools_summary": [
+          {
+            "name": "read_inventory",
+            "description_chars": 117,
+            "parameters_schema_bytes": 52
+          }
+        ],
+        "response_format_type": null,
+        "response_format_strict": null,
+        "response_format_schema_name": null,
+        "response_format_bytes": null,
+        "simulated_response_type": "sse_stream",
+        "simulated_response_label": "TEST_SIMULATION_ONLY"
+      },
+      {
+        "send_index": 3,
+        "scenario_name": "happy_path_ascii",
+        "stage_label": "stage_two_structured_extraction",
+        "http_method": "POST",
+        "target_url": "https://api.groq.com/openai/v1/chat/completions",
+        "wire_byte_length": 5678,
+        "character_count": 5678,
+        "bytes_per_char_ratio": 1.0,
+        "payload_keys": [
+          "max_completion_tokens",
+          "messages",
+          "model",
+          "reasoning_effort",
+          "response_format",
+          "stream"
+        ],
+        "model_id": "openai/gpt-oss-20b",
+        "is_streaming": false,
+        "stream_options": null,
+        "messages_count": 2,
+        "messages_summary": [
+          {
+            "index": 0,
+            "role": "system",
+            "content_chars": 2279,
+            "content_bytes": 2279,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 1,
+            "role": "user",
+            "content_chars": 2055,
+            "content_bytes": 2055,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          }
+        ],
+        "tools_count": 0,
+        "tools_summary": [],
+        "response_format_type": "json_schema",
+        "response_format_strict": true,
+        "response_format_schema_name": "_Extraction",
+        "response_format_bytes": 1029,
+        "simulated_response_type": "parsed_json",
+        "simulated_response_label": "TEST_SIMULATION_ONLY"
+      }
+    ],
+    "happy_path_unicode": [
+      {
+        "send_index": 4,
+        "scenario_name": "happy_path_unicode",
+        "stage_label": "stage_one_tool_proposal",
+        "http_method": "POST",
+        "target_url": "https://api.groq.com/openai/v1/chat/completions",
+        "wire_byte_length": 3744,
+        "character_count": 2982,
+        "bytes_per_char_ratio": 1.2555,
+        "payload_keys": [
+          "max_completion_tokens",
+          "messages",
+          "model",
+          "reasoning_effort",
+          "stream",
+          "stream_options",
+          "tools"
+        ],
+        "model_id": "openai/gpt-oss-20b",
+        "is_streaming": true,
+        "stream_options": {
+          "include_usage": true
+        },
+        "messages_count": 2,
+        "messages_summary": [
+          {
+            "index": 0,
+            "role": "system",
+            "content_chars": 369,
+            "content_bytes": 369,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 1,
+            "role": "user",
+            "content_chars": 4138,
+            "content_bytes": 4138,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          }
+        ],
+        "tools_count": 1,
+        "tools_summary": [
+          {
+            "name": "read_inventory",
+            "description_chars": 117,
+            "parameters_schema_bytes": 52
+          }
+        ],
+        "response_format_type": null,
+        "response_format_strict": null,
+        "response_format_schema_name": null,
+        "response_format_bytes": null,
+        "simulated_response_type": "sse_stream",
+        "simulated_response_label": "TEST_SIMULATION_ONLY"
+      },
+      {
+        "send_index": 5,
+        "scenario_name": "happy_path_unicode",
+        "stage_label": "stage_one_tool_proposal",
+        "http_method": "POST",
+        "target_url": "https://api.groq.com/openai/v1/chat/completions",
+        "wire_byte_length": 4143,
+        "character_count": 3381,
+        "bytes_per_char_ratio": 1.2254,
+        "payload_keys": [
+          "max_completion_tokens",
+          "messages",
+          "model",
+          "reasoning_effort",
+          "stream",
+          "stream_options",
+          "tools"
+        ],
+        "model_id": "openai/gpt-oss-20b",
+        "is_streaming": true,
+        "stream_options": {
+          "include_usage": true
+        },
+        "messages_count": 4,
+        "messages_summary": [
+          {
+            "index": 0,
+            "role": "system",
+            "content_chars": 369,
+            "content_bytes": 369,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 1,
+            "role": "user",
+            "content_chars": 4138,
+            "content_bytes": 4138,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 2,
+            "role": "assistant",
+            "content_chars": 0,
+            "content_bytes": 0,
+            "has_tool_calls": true,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 3,
+            "role": "tool",
+            "content_chars": 182,
+            "content_bytes": 182,
+            "has_tool_calls": false,
+            "has_tool_call_id": true
+          }
+        ],
+        "tools_count": 1,
+        "tools_summary": [
+          {
+            "name": "read_inventory",
+            "description_chars": 117,
+            "parameters_schema_bytes": 52
+          }
+        ],
+        "response_format_type": null,
+        "response_format_strict": null,
+        "response_format_schema_name": null,
+        "response_format_bytes": null,
+        "simulated_response_type": "sse_stream",
+        "simulated_response_label": "TEST_SIMULATION_ONLY"
+      },
+      {
+        "send_index": 6,
+        "scenario_name": "happy_path_unicode",
+        "stage_label": "stage_two_structured_extraction",
+        "http_method": "POST",
+        "target_url": "https://api.groq.com/openai/v1/chat/completions",
+        "wire_byte_length": 6440,
+        "character_count": 5678,
+        "bytes_per_char_ratio": 1.1342,
+        "payload_keys": [
+          "max_completion_tokens",
+          "messages",
+          "model",
+          "reasoning_effort",
+          "response_format",
+          "stream"
+        ],
+        "model_id": "openai/gpt-oss-20b",
+        "is_streaming": false,
+        "stream_options": null,
+        "messages_count": 2,
+        "messages_summary": [
+          {
+            "index": 0,
+            "role": "system",
+            "content_chars": 2279,
+            "content_bytes": 2279,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 1,
+            "role": "user",
+            "content_chars": 4056,
+            "content_bytes": 4056,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          }
+        ],
+        "tools_count": 0,
+        "tools_summary": [],
+        "response_format_type": "json_schema",
+        "response_format_strict": true,
+        "response_format_schema_name": "_Extraction",
+        "response_format_bytes": 1029,
+        "simulated_response_type": "parsed_json",
+        "simulated_response_label": "TEST_SIMULATION_ONLY"
+      }
+    ],
+    "six_send_sample": [
+      {
+        "send_index": 7,
+        "scenario_name": "six_send_sample",
+        "stage_label": "stage_one_no_tool_reply",
+        "http_method": "POST",
+        "target_url": "https://api.groq.com/openai/v1/chat/completions",
+        "wire_byte_length": 2982,
+        "character_count": 2982,
+        "bytes_per_char_ratio": 1.0,
+        "payload_keys": [
+          "max_completion_tokens",
+          "messages",
+          "model",
+          "reasoning_effort",
+          "stream",
+          "stream_options",
+          "tools"
+        ],
+        "model_id": "openai/gpt-oss-20b",
+        "is_streaming": true,
+        "stream_options": {
+          "include_usage": true
+        },
+        "messages_count": 2,
+        "messages_summary": [
+          {
+            "index": 0,
+            "role": "system",
+            "content_chars": 369,
+            "content_bytes": 369,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 1,
+            "role": "user",
+            "content_chars": 2137,
+            "content_bytes": 2137,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          }
+        ],
+        "tools_count": 1,
+        "tools_summary": [
+          {
+            "name": "read_inventory",
+            "description_chars": 117,
+            "parameters_schema_bytes": 52
+          }
+        ],
+        "response_format_type": null,
+        "response_format_strict": null,
+        "response_format_schema_name": null,
+        "response_format_bytes": null,
+        "simulated_response_type": "sse_stream",
+        "simulated_response_label": "TEST_SIMULATION_ONLY"
+      },
+      {
+        "send_index": 8,
+        "scenario_name": "six_send_sample",
+        "stage_label": "stage_one_recovery_and_tool_loop",
+        "http_method": "POST",
+        "target_url": "https://api.groq.com/openai/v1/chat/completions",
+        "wire_byte_length": 3221,
+        "character_count": 3221,
+        "bytes_per_char_ratio": 1.0,
+        "payload_keys": [
+          "max_completion_tokens",
+          "messages",
+          "model",
+          "reasoning_effort",
+          "stream",
+          "stream_options",
+          "tools"
+        ],
+        "model_id": "openai/gpt-oss-20b",
+        "is_streaming": true,
+        "stream_options": {
+          "include_usage": true
+        },
+        "messages_count": 4,
+        "messages_summary": [
+          {
+            "index": 0,
+            "role": "system",
+            "content_chars": 369,
+            "content_bytes": 369,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 1,
+            "role": "user",
+            "content_chars": 2137,
+            "content_bytes": 2137,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 2,
+            "role": "assistant",
+            "content_chars": 58,
+            "content_bytes": 58,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 3,
+            "role": "user",
+            "content_chars": 128,
+            "content_bytes": 128,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          }
+        ],
+        "tools_count": 1,
+        "tools_summary": [
+          {
+            "name": "read_inventory",
+            "description_chars": 117,
+            "parameters_schema_bytes": 52
+          }
+        ],
+        "response_format_type": null,
+        "response_format_strict": null,
+        "response_format_schema_name": null,
+        "response_format_bytes": null,
+        "simulated_response_type": "sse_stream",
+        "simulated_response_label": "TEST_SIMULATION_ONLY"
+      },
+      {
+        "send_index": 9,
+        "scenario_name": "six_send_sample",
+        "stage_label": "stage_one_recovery_and_tool_loop",
+        "http_method": "POST",
+        "target_url": "https://api.groq.com/openai/v1/chat/completions",
+        "wire_byte_length": 3604,
+        "character_count": 3604,
+        "bytes_per_char_ratio": 1.0,
+        "payload_keys": [
+          "max_completion_tokens",
+          "messages",
+          "model",
+          "reasoning_effort",
+          "stream",
+          "stream_options",
+          "tools"
+        ],
+        "model_id": "openai/gpt-oss-20b",
+        "is_streaming": true,
+        "stream_options": {
+          "include_usage": true
+        },
+        "messages_count": 6,
+        "messages_summary": [
+          {
+            "index": 0,
+            "role": "system",
+            "content_chars": 369,
+            "content_bytes": 369,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 1,
+            "role": "user",
+            "content_chars": 2137,
+            "content_bytes": 2137,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 2,
+            "role": "assistant",
+            "content_chars": 58,
+            "content_bytes": 58,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 3,
+            "role": "user",
+            "content_chars": 128,
+            "content_bytes": 128,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 4,
+            "role": "assistant",
+            "content_chars": 0,
+            "content_bytes": 0,
+            "has_tool_calls": true,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 5,
+            "role": "tool",
+            "content_chars": 182,
+            "content_bytes": 182,
+            "has_tool_calls": false,
+            "has_tool_call_id": true
+          }
+        ],
+        "tools_count": 1,
+        "tools_summary": [
+          {
+            "name": "read_inventory",
+            "description_chars": 117,
+            "parameters_schema_bytes": 52
+          }
+        ],
+        "response_format_type": null,
+        "response_format_strict": null,
+        "response_format_schema_name": null,
+        "response_format_bytes": null,
+        "simulated_response_type": "sse_stream",
+        "simulated_response_label": "TEST_SIMULATION_ONLY"
+      },
+      {
+        "send_index": 10,
+        "scenario_name": "six_send_sample",
+        "stage_label": "stage_one_recovery_and_tool_loop",
+        "http_method": "POST",
+        "target_url": "https://api.groq.com/openai/v1/chat/completions",
+        "wire_byte_length": 3987,
+        "character_count": 3987,
+        "bytes_per_char_ratio": 1.0,
+        "payload_keys": [
+          "max_completion_tokens",
+          "messages",
+          "model",
+          "reasoning_effort",
+          "stream",
+          "stream_options",
+          "tools"
+        ],
+        "model_id": "openai/gpt-oss-20b",
+        "is_streaming": true,
+        "stream_options": {
+          "include_usage": true
+        },
+        "messages_count": 8,
+        "messages_summary": [
+          {
+            "index": 0,
+            "role": "system",
+            "content_chars": 369,
+            "content_bytes": 369,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 1,
+            "role": "user",
+            "content_chars": 2137,
+            "content_bytes": 2137,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 2,
+            "role": "assistant",
+            "content_chars": 58,
+            "content_bytes": 58,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 3,
+            "role": "user",
+            "content_chars": 128,
+            "content_bytes": 128,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 4,
+            "role": "assistant",
+            "content_chars": 0,
+            "content_bytes": 0,
+            "has_tool_calls": true,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 5,
+            "role": "tool",
+            "content_chars": 182,
+            "content_bytes": 182,
+            "has_tool_calls": false,
+            "has_tool_call_id": true
+          },
+          {
+            "index": 6,
+            "role": "assistant",
+            "content_chars": 0,
+            "content_bytes": 0,
+            "has_tool_calls": true,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 7,
+            "role": "tool",
+            "content_chars": 182,
+            "content_bytes": 182,
+            "has_tool_calls": false,
+            "has_tool_call_id": true
+          }
+        ],
+        "tools_count": 1,
+        "tools_summary": [
+          {
+            "name": "read_inventory",
+            "description_chars": 117,
+            "parameters_schema_bytes": 52
+          }
+        ],
+        "response_format_type": null,
+        "response_format_strict": null,
+        "response_format_schema_name": null,
+        "response_format_bytes": null,
+        "simulated_response_type": "sse_stream",
+        "simulated_response_label": "TEST_SIMULATION_ONLY"
+      },
+      {
+        "send_index": 11,
+        "scenario_name": "six_send_sample",
+        "stage_label": "stage_two_rate_limited_send",
+        "http_method": "POST",
+        "target_url": "https://api.groq.com/openai/v1/chat/completions",
+        "wire_byte_length": 5678,
+        "character_count": 5678,
+        "bytes_per_char_ratio": 1.0,
+        "payload_keys": [
+          "max_completion_tokens",
+          "messages",
+          "model",
+          "reasoning_effort",
+          "response_format",
+          "stream"
+        ],
+        "model_id": "openai/gpt-oss-20b",
+        "is_streaming": false,
+        "stream_options": null,
+        "messages_count": 2,
+        "messages_summary": [
+          {
+            "index": 0,
+            "role": "system",
+            "content_chars": 2279,
+            "content_bytes": 2279,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 1,
+            "role": "user",
+            "content_chars": 2055,
+            "content_bytes": 2055,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          }
+        ],
+        "tools_count": 0,
+        "tools_summary": [],
+        "response_format_type": "json_schema",
+        "response_format_strict": true,
+        "response_format_schema_name": "_Extraction",
+        "response_format_bytes": 1029,
+        "simulated_response_type": "parsed_json",
+        "simulated_response_label": "TEST_SIMULATION_ONLY"
+      },
+      {
+        "send_index": 12,
+        "scenario_name": "six_send_sample",
+        "stage_label": "stage_two_retry_successful",
+        "http_method": "POST",
+        "target_url": "https://api.groq.com/openai/v1/chat/completions",
+        "wire_byte_length": 5678,
+        "character_count": 5678,
+        "bytes_per_char_ratio": 1.0,
+        "payload_keys": [
+          "max_completion_tokens",
+          "messages",
+          "model",
+          "reasoning_effort",
+          "response_format",
+          "stream"
+        ],
+        "model_id": "openai/gpt-oss-20b",
+        "is_streaming": false,
+        "stream_options": null,
+        "messages_count": 2,
+        "messages_summary": [
+          {
+            "index": 0,
+            "role": "system",
+            "content_chars": 2279,
+            "content_bytes": 2279,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          },
+          {
+            "index": 1,
+            "role": "user",
+            "content_chars": 2055,
+            "content_bytes": 2055,
+            "has_tool_calls": false,
+            "has_tool_call_id": false
+          }
+        ],
+        "tools_count": 0,
+        "tools_summary": [],
+        "response_format_type": "json_schema",
+        "response_format_strict": true,
+        "response_format_schema_name": "_Extraction",
+        "response_format_bytes": 1029,
+        "simulated_response_type": "parsed_json",
+        "simulated_response_label": "TEST_SIMULATION_ONLY"
+      }
+    ]
+  },
+  "sample_wire_analysis": {
+    "max_single_send_bytes": 6440,
+    "min_single_send_bytes": 2982,
+    "max_single_send_chars": 5678,
+    "stage_two_extraction_schema_bytes": 1029,
+    "ascii_vs_unicode_delta": {
+      "ascii_happy_path_stage1_bytes": [
+        2982,
+        3381,
+        5678
+      ],
+      "unicode_happy_path_stage1_bytes": [
+        3744,
+        4143,
+        6440
+      ]
+    }
+  }
+}
