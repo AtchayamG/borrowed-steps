@@ -1,3 +1,9 @@
+## Latest: BS-022 accepted by Codex after direct repair
+143 focused tests pass on disposable PostgreSQL; static checks pass across85 files.
+Read docs/BS-022_ACCEPTANCE.md. No provider call or real grant; all29 old allowances
+remain closed. Current source manifest is codex_manifest.json, not the historical
+worker operator_manifest.json. Next: HIGH live-canary decision, Codex-owned.
+
 ## BS-022 bounded operator canary runner implemented and verified
 
 2026-09-11. Implemented scripts/operator_canary.py and comprehensive verification suite

@@ -18,10 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
-import subprocess
 import sys
-import time
 from collections.abc import Iterator
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
@@ -71,75 +68,6 @@ from operator_canary import (  # noqa: E402
 # ---------------------------------------------------------------------------
 # Session-level disposable PostgreSQL server management
 # ---------------------------------------------------------------------------
-
-
-@pytest.fixture(scope="session", autouse=True)
-def ensure_postgres_cluster() -> Iterator[None]:
-    """Ensure disposable PostgreSQL cluster is ready for tests.
-
-    Stops the cluster on exit if started here.
-    """
-    worktree_root = Path(__file__).resolve().parent.parent.parent.parent
-    bin_dir = (worktree_root.parent / "BS-011-claude/.pgtest/pgsql/bin").resolve()
-    pg_root = (worktree_root / "test-results/.pgtest").resolve()
-    pg_data = pg_root / "data"
-    pg_log = pg_root / "server.log"
-    ctl_log = pg_root / "ctl.log"
-    pw_file = pg_root / "pw.txt"
-    port = 55434
-    user = "bs022"
-    dbname = "bs022_test"
-
-    if not pw_file.exists():
-        pytest.skip("PostgreSQL test cluster pw.txt not found")
-
-    password = pw_file.read_text(encoding="ascii").strip()
-    dsn = f"postgresql://{user}:{password}@127.0.0.1:{port}/{dbname}?sslmode=disable"
-
-    started_here = False
-    isready_res = subprocess.run(
-        [str(bin_dir / "pg_isready.exe"), "-h", "127.0.0.1", "-p", str(port)],
-        capture_output=True,
-        timeout=5,
-    )
-
-    if isready_res.returncode != 0:
-        with ctl_log.open("a", encoding="utf-8") as f:
-            subprocess.run(
-                [str(bin_dir / "pg_ctl.exe"), "-D", str(pg_data), "-l", str(pg_log), "start"],
-                stdout=f,
-                stderr=f,
-                timeout=10,
-                check=True,
-            )
-        started_here = True
-        ready = False
-        for _ in range(20):
-            r = subprocess.run(
-                [str(bin_dir / "pg_isready.exe"), "-h", "127.0.0.1", "-p", str(port)],
-                capture_output=True,
-                timeout=5,
-            )
-            if r.returncode == 0:
-                ready = True
-                break
-            time.sleep(0.5)
-        if not ready:
-            pytest.fail("Failed to start disposable PostgreSQL cluster")
-
-    os.environ["BS_POSTGRES_TEST_URL"] = dsn
-    try:
-        yield
-    finally:
-        if started_here:
-            with ctl_log.open("a", encoding="utf-8") as f:
-                subprocess.run(
-                    [str(bin_dir / "pg_ctl.exe"), "-D", str(pg_data), "-m", "fast", "stop"],
-                    stdout=f,
-                    stderr=f,
-                    timeout=10,
-                    check=True,
-                )
 
 
 @pytest.fixture
@@ -230,7 +158,7 @@ def test_execution_manifest_missing_file_fails() -> None:
     """Missing manifest source file raises CanaryManifestError."""
     with (
         patch("operator_canary.MANIFEST_RELATIVE_PATHS", {"missing.py": "missing.py"}),
-        pytest.raises(CanaryManifestError, match="does not exist"),
+        pytest.raises(CanaryManifestError, match="source is missing"),
     ):
         build_execution_manifest()
 

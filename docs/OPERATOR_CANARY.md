@@ -1,3 +1,10 @@
+## Reviewed runner boundaries
+See BS-022_ACCEPTANCE.md and codex_manifest.json for the accepted source identity.
+Original worker manifest/evidence below are historical. Execution refuses base_dir,
+custom fixture text and custom inventory; only its own checkout and fixed input
+are approved. --check-manifest computes a hash; it does not validate an approval.
+Cleanup is bounded; ambiguous outcomes remain blocked pending explicit recovery.
+
 # Bounded Operator Canary Runner (`scripts/operator_canary.py`)
 
 ## 1. Overview & Architecture

@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import contextlib
 import hashlib
 import json
 import logging
@@ -150,6 +149,7 @@ class TransportObserver(httpx.AsyncBaseTransport):
         self._inner = inner
         self._records: list[WireRecord] = []
         self._send_count: int = 0
+        self.closed = False
 
     @property
     def records(self) -> list[WireRecord]:
@@ -177,7 +177,7 @@ class TransportObserver(httpx.AsyncBaseTransport):
                 )
             )
             return response
-        except Exception:
+        except BaseException:
             self._records.append(
                 WireRecord(
                     send_index=idx,
@@ -188,7 +188,10 @@ class TransportObserver(httpx.AsyncBaseTransport):
             raise
 
     async def aclose(self) -> None:
-        await self._inner.aclose()
+        if not self.closed:
+            async with asyncio.timeout(2.0):
+                await self._inner.aclose()
+            self.closed = True
 
 
 @dataclass(frozen=True)
@@ -243,7 +246,7 @@ def compute_manifest_file_hashes(base_dir: Path | None = None) -> dict[str, str]
     for name in sorted(paths):
         path = paths[name]
         if not path.is_file():
-            msg = f"Manifest source file '{name}' does not exist at {path}"
+            msg = "Required execution manifest source is missing"
             raise CanaryManifestError(msg)
         content = path.read_bytes()
         file_hashes[name] = hashlib.sha256(content).hexdigest()
@@ -322,14 +325,11 @@ def validate_operator_grant(
         raise OperatorGrantError(msg)
 
     if grant.plan_hash != ACCEPTED_PLAN_HASH:
-        msg = f"Candidate plan hash mismatch: '{grant.plan_hash}' != '{ACCEPTED_PLAN_HASH}'"
+        msg = "Candidate plan hash mismatch"
         raise OperatorGrantError(msg)
 
     if grant.execution_manifest_hash != expected_manifest_hash:
-        msg = (
-            f"Execution manifest hash mismatch: "
-            f"'{grant.execution_manifest_hash}' != '{expected_manifest_hash}'"
-        )
+        msg = "Execution manifest hash mismatch"
         raise OperatorGrantError(msg)
 
 
@@ -367,6 +367,10 @@ async def run_operator_canary(
         raise ValueError(msg)
 
     require_transport_security(database_url)
+    if fixture_text != CANARY_FIXTURE_INPUT or inv_reader is not None:
+        raise OperatorGrantError("Only the approved fixture and seed inventory are permitted")
+    if base_dir is not None:
+        raise OperatorGrantError("Execution must verify its own checkout")
 
     # 2. Manifest verification
     manifest = build_execution_manifest(base_dir)
@@ -395,20 +399,8 @@ async def run_operator_canary(
 
     # 4. Model and observer construction
     provenance = "offline_fixture" if fixture_transport is not None else "live_provider"
-    inner_transport = (
-        fixture_transport
-        if fixture_transport is not None
-        else httpx.AsyncHTTPTransport(retries=0, trust_env=False)
-    )
-    observer = TransportObserver(inner_transport)
-
-    model = GroqModel(
-        api_key=api_key,
-        transport=observer,
-        max_sends=DEFAULT_MAX_SENDS,
-        operation_deadline_seconds=DEFAULT_OPERATION_DEADLINE_SECONDS,
-        request_timeout_seconds=DEFAULT_REQUEST_TIMEOUT_SECONDS,
-    )
+    observer: TransportObserver | None = None
+    model: GroqModel | None = None
 
     # 5. Execution
     canary_result: CanaryExecutionResult | None = None
@@ -417,31 +409,55 @@ async def run_operator_canary(
     unexpected_exc: BaseException | None = None
 
     try:
-        canary_result = await run_canary_stages(
-            model=model,
-            fixture_text=fixture_text,
-            inv_reader=inv_reader,
-            transport=observer,
-            plan_hash=grant.plan_hash,
-            propagate_errors=False,
-            provenance=provenance,
+        inner_transport = (
+            fixture_transport
+            if fixture_transport is not None
+            else httpx.AsyncHTTPTransport(retries=0, trust_env=False)
         )
+        observer = TransportObserver(inner_transport)
+        model = GroqModel(
+            api_key=api_key,
+            transport=observer,
+            max_sends=DEFAULT_MAX_SENDS,
+            operation_deadline_seconds=DEFAULT_OPERATION_DEADLINE_SECONDS,
+            request_timeout_seconds=DEFAULT_REQUEST_TIMEOUT_SECONDS,
+        )
+        async with asyncio.timeout(DEFAULT_OPERATION_DEADLINE_SECONDS):
+            canary_result = await run_canary_stages(
+                model=model,
+                fixture_text=CANARY_FIXTURE_INPUT,
+                transport=observer,
+                plan_hash=grant.plan_hash,
+                propagate_errors=False,
+                provenance=provenance,
+            )
     except asyncio.CancelledError:
         cancelled = True
     except BaseException as exc:
         unexpected_exc = exc
     finally:
         try:
-            await model.aclose()
-            cleanup_completed = not model.client_open
-        except Exception:
+            async with asyncio.timeout(5.0):
+                try:
+                    if model is not None:
+                        await model.aclose()
+                finally:
+                    if observer is not None:
+                        await observer.aclose()
+            cleanup_completed = (
+                model is not None
+                and not model.client_open
+                and observer is not None
+                and observer.closed
+            )
+        except asyncio.CancelledError:
+            cancelled = True
+            cleanup_completed = False
+        except BaseException:
             cleanup_completed = False
 
-        with contextlib.suppress(Exception):
-            await observer.aclose()
-
     # 6. Usage & outcome settlement
-    actual_sends = min(observer.send_count, RESERVED_SENDS) if observer.send_count > 0 else None
+    actual_sends = observer.send_count if observer is not None else 0
     actual_total_tokens = None  # Unknown measured tokens remain NULL per contract
 
     # Determine state and failure code
@@ -455,13 +471,19 @@ async def run_operator_canary(
         final_state = CanaryState.SUCCEEDED
         failure_code = None
         # Verify positive sends on success
-        if actual_sends is None or actual_sends == 0:
-            actual_sends = max(1, canary_result.sends_total)
+        if (
+            actual_sends == 0
+            or len(canary_result.field_assertions) != 8
+            or not all(canary_result.field_assertions.values())
+            or canary_result.tool_successes < 1
+        ):
+            final_state = CanaryState.UNCERTAIN
+            failure_code = FailureCode.EXECUTION_UNKNOWN
     else:
         # Confirmed failure path
         final_state = CanaryState.FAILED_CONFIRMED
         err_cat = canary_result.error_category if canary_result else ""
-        if err_cat in ("CanaryThrottledError", "GroqModelError", "ModelThrottledException"):
+        if err_cat in ("CanaryThrottledError", "ModelThrottledException"):
             failure_code = FailureCode.PROVIDER_FAILURE
         elif err_cat in (
             "CanaryGroundingAssertionError",
@@ -471,7 +493,8 @@ async def run_operator_canary(
         ):
             failure_code = FailureCode.INVALID_OUTPUT
         else:
-            failure_code = FailureCode.PROVIDER_FAILURE
+            final_state = CanaryState.UNCERTAIN
+            failure_code = FailureCode.EXECUTION_UNKNOWN
 
     # 7. Finalize receipt in PostgreSQL
     finished_row = store.finish(
@@ -483,8 +506,8 @@ async def run_operator_canary(
         failure_code=failure_code,
     )
 
-    wire_bytes = [r.wire_byte_length for r in observer.records]
-    status_codes = [r.status_code for r in observer.records]
+    wire_bytes = [r.wire_byte_length for r in observer.records] if observer else []
+    status_codes = [r.status_code for r in observer.records] if observer else []
     field_assertions = canary_result.field_assertions if canary_result else {}
 
     summary = OperatorCanarySummary(
@@ -534,7 +557,7 @@ def main() -> None:
     parser.add_argument(
         "--check-manifest",
         action="store_true",
-        help="Compute and verify current checkout manifest hash.",
+        help="Compute current checkout manifest hash for comparison with an approved grant.",
     )
     parser.add_argument(
         "--output",
@@ -562,7 +585,7 @@ def main() -> None:
 
     elif args.check_manifest:
         print(f"Checkout Execution Manifest Hash: {manifest_hash}")
-        print("Manifest files verified successfully.")
+        print("Source files hashed; approval requires a matching operator grant.")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,20 @@
+{
+  "task": "BS-022",
+  "review_mode": "ASTRA_MEDIUM",
+  "provenance": "offline_fixture",
+  "execution_manifest_hash": "ea7a228efefb3fd7e3a8cd72aabb217e0c77bd2ac4206aacfc40c0aa1c215089",
+  "tests": {
+    "tests": 143,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "actual_provider_calls": 0,
+  "database": "Disposable PostgreSQL 16.10 on numeric loopback port 55441; stopped",
+  "static_checks": "ruff check, ruff format --check, mypy: 85 files passed",
+  "limitations": [
+    "No actual provider execution or grant",
+    "Total tokens unknown; reservations are output ceilings only",
+    "Original operator_manifest.json and operator_evidence.json describe the pre-review worker commit ab12d9d"
+  ]
+}

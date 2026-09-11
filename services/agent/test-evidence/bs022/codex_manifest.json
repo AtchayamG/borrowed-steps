@@ -1,0 +1,35 @@
+{
+  "bs020_plan_hash": "38ec48176db21d7f947cfdc1ae1b3b211efdbdb55c976043462aea85a16a3031",
+  "candidate_fixture": "Priya S wants crutches from the Adyar centre, back by 2026-10-01T08:00:00Z.",
+  "file_hashes": {
+    "admission_probe.py": "d138a7bc6a5b0db3ee8b0ed1cd0eca51b006f83a5bdd7855db6a4d7420dbb8ca",
+    "canary_receipt.py": "2bc0cdc400a8e125ca7d8ccfacc3289c88681d67295bd0d49e3695b6daf7df0b",
+    "groq_canary.py": "d9a07884cbabb84565deefb041201ffd4b352d80a650c55b5a43fb79ba895e8e",
+    "groq_model.py": "3282294d43458352c8ea4e571ee73a14ae58f333e9207015b8ae699a8ac2af09",
+    "operator_canary.py": "bfad22eb797e697d172f43a1954dab22a4953a4f7d85032bc5226c2c874c8121",
+    "requirements-groq.lock": "a9480372704fcdd4b9bed890d0fc967bcd967815853477ade5e53507f48e62b6",
+    "requirements-postgres.lock": "3e542e5e421be0d7a89c59110fbaf3ca9b3849165a25abfd624300d0ac7a9d68",
+    "requirements.lock": "68105156c292c43bf23f51d39cd3eb7b4389e3875015059a8c20195c1ea435ca",
+    "strands_interpreter.py": "31226f998fab7694b8cc13f2be1c29c8053bc28ec8b2141fe3150d817958f4ff"
+  },
+  "manifest_version": 1,
+  "pinned_ceilings": {
+    "max_completion_tokens": 1024,
+    "max_output_tokens_reservation": 6144,
+    "max_request_bytes": 16384,
+    "max_sends": 6,
+    "max_tool_attempts": 2,
+    "operation_deadline_seconds": 110.0,
+    "reasoning_effort": "low",
+    "request_timeout_seconds": 60.0
+  },
+  "provider_spec": {
+    "model": "openai/gpt-oss-20b",
+    "provider": "groq"
+  },
+  "retry_policy": {
+    "auto_retry": false,
+    "max_retries": 0,
+    "retry_strategy": null
+  }
+}
