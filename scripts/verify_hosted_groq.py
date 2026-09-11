@@ -3,7 +3,7 @@
 BS-025 proof for the staged GroqModel/Strands adapter in M3 hosted mode.
 Ensures zero live provider network calls, pure synthetic HTTP interception,
 strict request envelope bounds (model pin, token caps, payload size <= 16KB),
-streaming chunking, typed structured extraction with _Extraction schema,
+streaming chunking, typed structured extraction with FixtureExtraction schema,
 clean resource lifecycle closure, refusal semantics, and 4 negative checks:
 1. Outbound socket connection blocked fail-closed.
 2. Unpinned target URL / model refused before network dispatch.
@@ -26,7 +26,31 @@ _SCRIPTS_DIR = Path(__file__).resolve().parent
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
-from assemble_hosted import checked_path, verify_manifest  # noqa: E402
+from assemble_hosted import checked_path, verify_manifest
+from verify_hosted_package import test_runtime_dependency_closure
+
+# Audit hooks cover connect/connect_ex and DNS before any optional SDK imports.
+# Numeric loopback is needed for Windows asyncio's internal socket pair only.
+OFFLINE_GUARD = """
+import sys
+def offline_audit(event, args):
+    if event in ('socket.connect', 'socket.getaddrinfo', 'socket.sendto'):
+        target = args[0] if event == 'socket.getaddrinfo' else args[1]
+        host = target[0] if isinstance(target, tuple) else target
+        if host not in ('127.0.0.1', '::1'):
+            raise RuntimeError('Outbound socket connection blocked during offline verification')
+sys.addaudithook(offline_audit)
+"""
+
+IMPORT_GUARD = """
+if 'PACKAGE' in globals():
+    import importlib.metadata as metadata
+    for name, module in tuple(sys.modules.items()):
+        if name == 'borrowed_steps' or name.startswith('borrowed_steps.'):
+            assert Path(module.__file__).resolve().is_relative_to(PACKAGE), 'Import escaped package'
+    for distribution in metadata.distributions():
+        assert Path(distribution.locate_file('')).resolve().is_relative_to(Path(sys.prefix).resolve()), 'Dependency escaped runtime'
+"""
 
 
 def clean_environment() -> dict[str, str]:
@@ -46,7 +70,7 @@ def run_isolated_code(
     with tempfile.TemporaryDirectory(prefix="bs025-verify-") as outside:
         full_env = {**clean_environment(), **(env or {})}
         result = subprocess.run(
-            [str(python), "-I", "-B", "-c", code],
+            [str(python), "-I", "-B", "-c", OFFLINE_GUARD + code + IMPORT_GUARD],
             cwd=outside,
             env=full_env,
             capture_output=True,
@@ -63,7 +87,7 @@ def require_success(result: subprocess.CompletedProcess[str], label: str) -> Non
     if result.returncode != 0:
         err = result.stderr.strip() or result.stdout.strip()
         last_line = err.splitlines()[-1] if err else f"exit code {result.returncode}"
-        raise AssertionError(f"[{label}] failed: {last_line}\nOutput:\n{err}")
+        raise AssertionError(f"[{label}] failed: {last_line}")
 
 
 def verify_adapter_streaming_and_bounds(python: Path, package: Path) -> None:
@@ -79,12 +103,6 @@ PACKAGE = Path({str(package)!r})
 sys.path.insert(0, str(PACKAGE))
 
 # Socket blocking: allow only loopback self-pipe for Windows asyncio
-_orig_connect = socket.socket.connect
-def _block_socket(self, address, *args, **kwargs):
-    if isinstance(address, tuple) and address[0] in ("127.0.0.1", "::1", "localhost"):
-        return _orig_connect(self, address, *args, **kwargs)
-    raise RuntimeError("Outbound socket connection blocked during offline verification")
-socket.socket.connect = _block_socket
 
 import httpx
 from borrowed_steps.infrastructure.groq_model import (
@@ -185,7 +203,7 @@ asyncio.run(main())
 
 
 def verify_adapter_structured_output(python: Path, package: Path) -> None:
-    """Exercise structured extraction with _Extraction schema, wire params, and parse handling."""
+    """Exercise structured extraction with FixtureExtraction schema, wire params, and parse handling."""
     code = f"""
 import asyncio
 import json
@@ -197,12 +215,6 @@ from pydantic import BaseModel, Field
 PACKAGE = Path({str(package)!r})
 sys.path.insert(0, str(PACKAGE))
 
-_orig_connect = socket.socket.connect
-def _block_socket(self, address, *args, **kwargs):
-    if isinstance(address, tuple) and address[0] in ("127.0.0.1", "::1", "localhost"):
-        return _orig_connect(self, address, *args, **kwargs)
-    raise RuntimeError("Outbound socket connection blocked during offline verification")
-socket.socket.connect = _block_socket
 
 import httpx
 from borrowed_steps.infrastructure.groq_model import (
@@ -215,7 +227,7 @@ from borrowed_steps.infrastructure.groq_model import (
     GroqModel,
 )
 
-class _Extraction(BaseModel):
+class FixtureExtraction(BaseModel):
     borrower_label: str | None = Field(default=None)
     equipment_kind: str | None = Field(default=None)
     pickup_location: str | None = Field(default=None)
@@ -265,10 +277,10 @@ async def main():
     model = GroqModel(api_key="gsk_dummy_test_key", transport=httpx.MockTransport(mock_handler))
     prompt = [{{"role": "user", "content": [{{"text": "Priya S needs crutches"}}]}}]
 
-    results = [res async for res in model.structured_output(_Extraction, prompt)]
+    results = [res async for res in model.structured_output(FixtureExtraction, prompt)]
     assert len(results) == 1
     extracted_obj = results[0]["output"]
-    assert isinstance(extracted_obj, _Extraction)
+    assert isinstance(extracted_obj, FixtureExtraction)
     assert extracted_obj.borrower_label == "Priya S"
     assert extracted_obj.equipment_kind == "crutches"
     assert extracted_obj.pickup_location == "Adyar centre"
@@ -296,7 +308,7 @@ async def main():
 
     bad_model = GroqModel(api_key="gsk_dummy_test_key", transport=httpx.MockTransport(bad_handler))
     try:
-        async for _ in bad_model.structured_output(_Extraction, prompt):
+        async for _ in bad_model.structured_output(FixtureExtraction, prompt):
             pass
         raise AssertionError("Expected ValueError for unparseable structured output")
     except ValueError:
@@ -372,6 +384,7 @@ try:
 except GroqEnvelopeRefusedError:
     pass
 
+asyncio.run(model.aclose())
 print("PASS_REFUSALS")
 """
     res = run_isolated_code(python, code)
@@ -389,12 +402,6 @@ from pathlib import Path
 PACKAGE = Path({str(package)!r})
 sys.path.insert(0, str(PACKAGE))
 
-_orig_connect = socket.socket.connect
-def _block_socket(self, address, *args, **kwargs):
-    if isinstance(address, tuple) and address[0] in ("127.0.0.1", "::1", "localhost"):
-        return _orig_connect(self, address, *args, **kwargs)
-    raise RuntimeError("Outbound socket connection blocked during offline verification")
-socket.socket.connect = _block_socket
 
 s = socket.socket()
 try:
@@ -496,15 +503,11 @@ mod_path = Path(groq_model.__file__).resolve()
 # Prove that module was loaded from PACKAGE, not from repo dev checkout
 assert mod_path.is_relative_to(PACKAGE), f"Import escaped package: {{mod_path}}"
 
-# Simulate outside module detection:
-fake_external_path = Path(r"D:/Work/other_checkout/services/agent/src/borrowed_steps/infrastructure/groq_model.py")
-assert not fake_external_path.resolve().is_relative_to(PACKAGE), "Path detection logic failed"
-
-print("PASS_NEGATIVE_4_DEV_CHECKOUT_FORBIDDEN")
+# Deliberately inject an outside source identity; the shared postlude must reject it.
+groq_model.__file__ = str(PACKAGE.parent / 'outside_checkout' / 'groq_model.py')
 """
     res4 = run_isolated_code(python, code_neg4)
-    require_success(res4, "negative_4_dev_checkout_forbidden")
-    assert "PASS_NEGATIVE_4_DEV_CHECKOUT_FORBIDDEN" in res4.stdout
+    assert res4.returncode != 0 and "Import escaped package" in res4.stderr
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -538,6 +541,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     # 1. Verify manifest before tests
     print("\n[Step 1/6] Verifying package manifest before test execution...")
     manifest_pre = verify_manifest(package)
+    test_runtime_dependency_closure(python, package)
     total_files = manifest_pre["total_files"]
     total_bytes = manifest_pre["total_uncompressed_bytes"]
     print(f"PASS manifest verified ({total_files} files, {total_bytes} bytes)")
@@ -547,8 +551,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     verify_adapter_streaming_and_bounds(python, package)
     print("PASS adapter streaming translation and envelope bounds verified")
 
-    # 3. Exercise structured extraction with _Extraction schema
-    print("\n[Step 3/6] Verifying adapter structured output (_Extraction)...")
+    # 3. Exercise structured extraction with FixtureExtraction schema
+    print("\n[Step 3/6] Verifying adapter structured output (FixtureExtraction)...")
     verify_adapter_structured_output(python, package)
     print("PASS adapter structured extraction and parse handling verified")
 

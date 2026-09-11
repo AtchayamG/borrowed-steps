@@ -1,5 +1,14 @@
 # Local hosted package
 
+Latest independent review: see docs/BS-025_ACCEPTANCE.md. The adapter verifier
+now enforces shared network/import guards and exact runtime closure. Its schema
+is a synthetic FixtureExtraction, not the production extraction schema.
+The PostgreSQL smoke expects accepted schema3. Omitting --pg-url explicitly
+skips database verification; Codex's acceptance ran it with a disposable database.
+Run scripts/verify_hosted_groq.py with explicit --package-dir and --python-exe.
+Portable pytest packaging regressions do not require an ignored staging folder.
+Historical worker measurements below are superseded where this acceptance differs.
+
 This packages the current disabled-assistant app and Groq transport adapter closure.
 It is not a Vercel deployment or platform build. Use Python 3.12 and a Node version
 compatible with the locked Vite version (independently tested with Node 22.22.3).

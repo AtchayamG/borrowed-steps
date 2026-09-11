@@ -1,4 +1,11 @@
-## BS-025 Staged Groq Adapter Runtime Closure & Verification
+## Latest: BS-025 accepted by Codex after direct repair
+STATUS: COMPLETED
+Read docs/BS-025_ACCEPTANCE.md. Fresh runtime/assembly, isolated adapter and
+disabled app checks, real disposable PostgreSQL smoke,24 packaging tests pass.
+No production edits, live calls, deployment or spend. Global admission and hosted
+interpreter integration remain pending; public assistant disabled.
+
+## Historical: BS-025 Staged Groq Adapter Runtime Closure & Verification
 
 TASK_ID: BS-025
 STATUS: READY_FOR_REVIEW

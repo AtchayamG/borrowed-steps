@@ -310,7 +310,7 @@ def test_real_postgresql_smoke(
             sql.SQL("CREATE DATABASE {}").format(sql.Identifier(disposable_db_name))
         )
     try:
-        migration_script = f"from borrowed_steps.infrastructure.postgres_migrations import apply_migrations; assert apply_migrations({disposable_db_url!r}) == 2"
+        migration_script = f"from borrowed_steps.infrastructure.postgres_migrations import apply_migrations; assert apply_migrations({disposable_db_url!r}) == 3"
         require_success(
             run_child(python_exe, package_dir, migration_script, allow_db=True)
         )
