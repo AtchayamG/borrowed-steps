@@ -2,9 +2,9 @@
 
 A community mobility-equipment lending workspace. Volunteers register needs, allocate an available item, confirm pickup and return, and record an inspection before the item circulates again.
 
-**Status: M2B accepted locally; public deployment pending.** The current application uses React 18, FastAPI and a persistent local SQLite database. The optional Strands/Ollama assistant creates advisory intake drafts. Background coordination records in-app pickup and return reminders; it sends no email or SMS.
+**Status: hosted release candidate accepted locally; public deployment is being verified.** The application uses React 18, FastAPI and a persistent PostgreSQL store in hosted mode. The optional Strands/Groq assistant creates advisory intake drafts; the deterministic structured workflow remains available when inference is disabled. Background coordination records in-app pickup and return reminders; it sends no email or SMS.
 
-Public hosting must run on free hosted infrastructure independently of the developer's computer. The database, scheduler and inference provider for that deployment remain undecided. See [M3 hosted direction](docs/M3_HOSTED_DIRECTION.md).
+The hosted package is designed for free Vercel Hobby + Neon Free + Groq Free operation independently of the developer's computer. Hosted mode requires explicit configuration (`BS_RUNTIME=hosted`, `BS_STORE=postgres`, `BS_DATABASE_URL`, `BS_ALLOWED_ORIGINS`, `BS_COOKIE_SECURE=1`, and `BS_TASKS_ENABLED=0`). Set `BS_ASSISTANT_ENABLED=1` and `BS_GROQ_API_KEY` only when the real Groq adapter is available. See [hosted setup and verification](docs/HOSTED_PACKAGE_SETUP.md) and [hosted acceptance](docs/BS-028_ACCEPTANCE.md).
 
 ## Human decisions
 
@@ -50,15 +50,16 @@ Configuration defaults:
 
 | Variable | Default / purpose |
 | --- | --- |
-| `BS_DB_PATH` | `data/borrowed_steps.db`, relative to backend working directory |
+| `BS_DATABASE_URL` | Hosted PostgreSQL URL; requires TLS and an explicit public host |
+| `BS_DB_PATH` | Local-only SQLite path, `data/borrowed_steps.db` |
 | `BS_ALLOWED_ORIGINS` | `http://127.0.0.1:5173,http://localhost:5173`; mutation Origin allowlist |
 | `BS_COOKIE_SECURE` | `false` for local HTTP |
 | `BS_TASKS_ENABLED` | `true`; owned background coordination thread |
 | `BS_ASSISTANT_ENABLED` | `false`; structured workflow remains available |
 | `BS_ASSISTANT_HOST` | `http://127.0.0.1:11434`; pinned local assistant host |
-| `BS_ASSISTANT_MODEL` | `llama3.2:3b`; pinned local assistant model |
+| `BS_ASSISTANT_MODEL` | `openai/gpt-oss-20b` in hosted Groq mode; `llama3.2:3b` locally |
 
-The assistant is optional and its successful output must include verified tool provenance. The accepted live proof is historical evidence, not a claim that inference is running now. All 29 historical project probe allocations are closed; these instructions authorize no new probes or paid services.
+The assistant is optional and its successful output must include verified provider and tool provenance. Hosted enablement never silently falls back to fixtures. The local acceptance record documents the exact test evidence; public provider evidence is recorded separately after deployment. No paid service is required.
 
 ## Checks and evidence
 
