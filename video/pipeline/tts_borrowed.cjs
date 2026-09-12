@@ -1,6 +1,6 @@
 const { spawnSync } = require('child_process');
 const fs = require('fs'), path = require('path');
-const D = __dirname, VO = path.join(D, 'vo'), EDGE = 'C:/Users/Atchayam/AppData/Local/Programs/Python/Python312/Scripts/edge-tts.exe';
+const D = __dirname, VO = path.join(D, 'vo2'), EDGE = 'C:/Users/Atchayam/AppData/Local/Programs/Python/Python312/Scripts/edge-tts.exe';
 const segs = JSON.parse(fs.readFileSync(path.join(D, 'narration.json'), 'utf8'));
 fs.rmSync(VO, { recursive: true, force: true }); fs.mkdirSync(VO, { recursive: true });
 const dur = f => parseFloat((spawnSync('ffprobe',['-v','error','-show_entries','format=duration','-of','csv=p=0',f],{encoding:'utf8'}).stdout||'0').trim()) || 0;
