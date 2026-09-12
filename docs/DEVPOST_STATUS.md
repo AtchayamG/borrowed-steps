@@ -11,4 +11,4 @@ Borrowed Steps was submitted to the Agents for Humans Hackathon on 2026-09-12.
 
 The submission includes the live hosted workflow, human approval gate, Strands + Groq advisory assistant, and free-tier Vercel/Neon deployment evidence.
 
-The earlier uploads were superseded before the deadline by the synchronized 2:40 master. The replacement explicitly covers the lending problem, intended volunteers and borrowers, the human-approved fix, live workflow evidence, architecture, and release links. Devpost project details now point to `JcVixnFTDqk`.
+The earlier uploads were superseded and permanently removed before the deadline. The synchronized 2:40 master explicitly covers the lending problem, intended volunteers and borrowers, the human-approved fix, live workflow evidence, architecture, and release links. Devpost project details now point to `JcVixnFTDqk`.
