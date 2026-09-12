@@ -1,9 +1,9 @@
 # BS-028 independent integration acceptance
 
 Date: 2026-09-12
-Status: COMPLETED — accepted locally; public release remains pending.
+Status: COMPLETED — local and hosted release candidate verified.
 Worker implementation: 0be967b, base db67213.
-Reviewer configured mode: ASTRA_HIGH (user confirmed).
+Reviewer configured mode: ASTRA_MAX (user confirmed).
 Serving identity is not independently exposed.
 
 ## Review outcome
@@ -52,10 +52,9 @@ without local source roots also failed; the explicit-source command above passed
 
 ## Remaining release work
 
-This acceptance proves local integration, not public platform operation. Vercel Linux
-build/CDN routing, free-account headroom, Neon production provisioning/TLS/migrations,
-deployed provider proof, actual scheduled runs, public browser workflow/persistence,
-and final product/security review are still pending. No live URL is claimed.
+The hosted release verification below adds public platform operation, Neon
+provisioning/TLS/migrations, deployed provider proof, and anonymous persistence.
+Scheduled runs and final product/security review remain release gates.
 
 Next order, per user: finish Borrowed Steps live release, create and accept its
 LumaLoad-process video, submit and verify Devpost; only then start Benchbook, then

@@ -2,9 +2,9 @@
 
 A community mobility-equipment lending workspace. Volunteers register needs, allocate an available item, confirm pickup and return, and record an inspection before the item circulates again.
 
-**Status: hosted release candidate accepted locally; public deployment is being verified.** The application uses React 18, FastAPI and a persistent PostgreSQL store in hosted mode. The optional Strands/Groq assistant creates advisory intake drafts; the deterministic structured workflow remains available when inference is disabled. Background coordination records in-app pickup and return reminders; it sends no email or SMS.
+**Status: hosted release candidate live and verified.** The public deployment is [borrowed-steps.vercel.app](https://borrowed-steps.vercel.app) and uses React 18, FastAPI, Neon Free PostgreSQL and Groq Free. The optional Strands/Groq assistant creates advisory intake drafts; the deterministic structured workflow remains available when inference is disabled. Background coordination records in-app pickup and return reminders; it sends no email or SMS.
 
-The hosted package is designed for free Vercel Hobby + Neon Free + Groq Free operation independently of the developer's computer. Hosted mode requires explicit configuration (`BS_RUNTIME=hosted`, `BS_STORE=postgres`, `BS_DATABASE_URL`, `BS_ALLOWED_ORIGINS`, `BS_COOKIE_SECURE=1`, and `BS_TASKS_ENABLED=0`). Set `BS_ASSISTANT_ENABLED=1` and `BS_GROQ_API_KEY` only when the real Groq adapter is available. See [hosted setup and verification](docs/HOSTED_PACKAGE_SETUP.md) and [hosted acceptance](docs/BS-028_ACCEPTANCE.md).
+The hosted package is designed for free Vercel Hobby + Neon Free + Groq Free operation independently of the developer's computer. Hosted mode requires explicit configuration (`BS_RUNTIME=hosted`, `BS_STORE=postgres`, `BS_DATABASE_URL`, `BS_ALLOWED_ORIGINS`, `BS_COOKIE_SECURE=1`, and `BS_TASKS_ENABLED=0`). Set `BS_ASSISTANT_ENABLED=1` and `BS_GROQ_API_KEY` only when the real Groq adapter is available. See [hosted setup and verification](docs/HOSTED_PACKAGE_SETUP.md) and [hosted acceptance](docs/BS-028_ACCEPTANCE.md) for the verified live workflow.
 
 ## Human decisions
 
