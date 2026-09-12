@@ -61,3 +61,28 @@ Next order, per user: finish Borrowed Steps live release, create and accept its
 LumaLoad-process video, submit and verify Devpost; only then start Benchbook, then
 Schoolbag. Final complete-product/repository/deployment/video/submission reviews
 require ASTRA_MAX under the user's manual mode rules.
+
+## Hosted release verification (2026-09-12)
+
+Public URL: https://borrowed-steps.vercel.app (Vercel Hobby, project `borrowed-steps`).
+The deployment uses Neon Free PostgreSQL and Groq Free credentials stored only as
+Vercel production secrets. The database URL keeps `sslmode=verify-full`, the bundled
+certifi CA file, and an explicit public IPv4 route for Vercel's serverless runtime.
+
+- `GET /api/health`: HTTP 200, `status=ok`, `milestone=M3`, `agent_mode=strands_groq`.
+- `POST /api/workspaces` with an empty JSON body: HTTP 201; returned a secure
+  `bs_session` cookie and a seeded snapshot containing three equipment rows.
+- The temporary release database probe was removed before this deployment; the same
+  path now returns HTTP 404.
+- Live Neon SQL verification reports schema version 4 and four applied migrations.
+- Deployment `dpl_Ch99rUGy7WXyeUZmWJaethRteqeX` completed READY on Vercel.
+
+The direct runtime regression after the hosted fix is **63 passed, 19 skipped** for
+the PostgreSQL store, hosted configuration, and hosted runtime tests; ruff and
+explicit-source mypy both pass. The source fix is committed as `14069ea`.
+
+- Real hosted assistant check: `POST /api/intake/interpret` returned HTTP 200 with
+  provenance `framework=strands`, `provider=groq`, `model=openai/gpt-oss-20b`, and
+  the grounded wheelchair draft for the synthetic Priya S scenario. A first
+  concurrent attempt returned the intentional `429 ASSISTANT_BUSY`; after the
+  bounded admission window cleared, the retry succeeded.
