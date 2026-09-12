@@ -18,6 +18,8 @@ Three rules hold this module together:
 
 from __future__ import annotations
 
+import ipaddress
+import socket
 from datetime import UTC, datetime
 from urllib.parse import parse_qsl, urlsplit
 
@@ -58,8 +60,17 @@ def require_transport_security(database_url: str) -> None:
             parts.scheme in {"postgres", "postgresql"}
             and bool(host)
             and not parts.fragment
-            and set(query) <= {"sslmode", "sslrootcert", "channel_binding"}
+            and set(query) <= {"sslmode", "sslrootcert", "channel_binding", "hostaddr"}
         )
+        hostaddr = query.get("hostaddr")
+        hostaddr_ok = False
+        if hostaddr:
+            try:
+                parsed_hostaddr = ipaddress.ip_address(hostaddr)
+                hostaddr_ok = parsed_hostaddr.version == 4 and parsed_hostaddr.is_global
+            except ValueError:
+                hostaddr_ok = False
+        valid = valid and (not hostaddr or hostaddr_ok)
         secure = host in {"127.0.0.1", "localhost", "::1"} or query.get("sslmode") == "verify-full"
     except ValueError:
         valid = secure = False
@@ -366,8 +377,21 @@ def _connect(database_url: str) -> psycopg.Connection[TupleRow]:
     would be released before the work it guards.
     """
     require_transport_security(database_url)
+    parts = urlsplit(database_url)
+    hostaddr = None
+    if parts.hostname and parts.hostname not in {"127.0.0.1", "localhost", "::1"}:
+        try:
+            addresses = socket.getaddrinfo(
+                parts.hostname, parts.port or 5432, socket.AF_INET, socket.SOCK_STREAM
+            )
+            hostaddr = addresses[0][4][0] if addresses else None
+        except OSError:
+            hostaddr = None
+    connect_url = database_url
+    if hostaddr is not None and "hostaddr=" not in connect_url:
+        connect_url += ("&" if "?" in connect_url else "?") + f"hostaddr={hostaddr}"
     return psycopg.connect(
-        database_url,
+        connect_url,
         autocommit=False,
         connect_timeout=_CONNECT_TIMEOUT_S,
         prepare_threshold=None,

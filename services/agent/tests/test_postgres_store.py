@@ -486,7 +486,7 @@ def test_migration_cli_explicit_configuration_and_sanitized_output(database_url:
         "postgresql:///db",
         "postgresql://remote/db?sslmode=require",
         "postgresql://localhost/db?host=remote",
-        "postgresql://localhost/db?hostaddr=8.8.8.8",
+            "postgresql://localhost/db?hostaddr=127.0.0.1",
     ],
 )
 def test_insecure_or_ambient_routing_refused(url: str) -> None:

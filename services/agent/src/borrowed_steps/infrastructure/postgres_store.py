@@ -30,10 +30,12 @@ whether the database is ready.
 
 from __future__ import annotations
 
+import socket
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from typing import Any
+from urllib.parse import urlsplit
 
 import psycopg
 from psycopg import errors as pg_errors
@@ -490,17 +492,31 @@ class PostgresStore:
             self._connect_timeout_s if self._connect_timeout_s is not None else _CONNECT_TIMEOUT_S
         )
         timeout = connect_timeout_s if connect_timeout_s is not None else fallback_timeout
+        parts = urlsplit(self._database_url)
+        hostaddr = None
+        if parts.hostname and parts.hostname not in {"127.0.0.1", "localhost", "::1"}:
+            try:
+                addresses = socket.getaddrinfo(
+                    parts.hostname, parts.port or 5432, socket.AF_INET, socket.SOCK_STREAM
+                )
+                hostaddr = addresses[0][4][0] if addresses else None
+            except OSError:
+                hostaddr = None
+        connect_url = self._database_url
+        if hostaddr is not None and "hostaddr=" not in connect_url:
+            connect_url += ("&" if "?" in connect_url else "?") + f"hostaddr={hostaddr}"
+        options = (
+            f"-c statement_timeout={self._statement_timeout_ms}"
+            if self._statement_timeout_ms is not None
+            else ""
+        )
         return psycopg.connect(
-            self._database_url,
+            connect_url,
             autocommit=False,
             connect_timeout=timeout,
             prepare_threshold=None,
             row_factory=dict_row,
-            options=(
-                f"-c statement_timeout={self._statement_timeout_ms}"
-                if self._statement_timeout_ms is not None
-                else ""
-            ),
+            options=options,
         )
 
     def check_schema(self) -> None:
