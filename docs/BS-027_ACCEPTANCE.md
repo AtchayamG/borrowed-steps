@@ -1,7 +1,7 @@
 # BS-027 Acceptance — Hosted Groq Interpreter Boundary
 
-Date: 2026-09-12  
-Status: **ACCEPTED after bounded Codex review**  
+Date: 2026-09-12
+Status: **ACCEPTED after bounded Codex review**
 Worker: AGY (`worker/agy/BS-027`)
 
 BS-027 connects the accepted `GroqModel` transport and PostgreSQL
