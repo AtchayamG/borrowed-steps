@@ -26,7 +26,7 @@ import secrets
 import time
 from threading import Event
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import httpx
 from strands import Agent
@@ -76,6 +76,7 @@ from borrowed_steps.infrastructure.inference_admission import (
     AdmissionUnavailableError,
     InferenceAdmissionError,
     InferenceAdmissionStore,
+    validate_workspace_id,
 )
 from borrowed_steps.infrastructure.postgres_migrations import require_transport_security
 from borrowed_steps.infrastructure.strands_common import (
@@ -154,6 +155,9 @@ class StrandsGroqInterpreter(RequestInterpreter, CleanupOwner):
             msg = "database_url must be an explicit non-empty string"
             raise ValueError(msg)
         require_transport_security(database_url)
+
+        if type(max_tool_calls) is not int or not 1 <= max_tool_calls <= _DEFAULT_MAX_TOOL_CALLS:
+            raise ValueError("max_tool_calls must be between 1 and 2")
 
         if (
             type(max_model_requests) is not int
@@ -301,12 +305,9 @@ class StrandsGroqInterpreter(RequestInterpreter, CleanupOwner):
         inventory: InventoryReader,
         cancel: Event,
         *,
-        workspace_id: str | None = None,
         request_key: str | None = None,
         reservation_id: str | None = None,
         owner_id: str | None = None,
-        payload_hash: str | None = None,
-        request_key_hash: str | None = None,
     ) -> Interpretation:
         """Interpret intake text with admission reservation, two-stage Strands flow,
         and settlement.
@@ -320,55 +321,38 @@ class StrandsGroqInterpreter(RequestInterpreter, CleanupOwner):
             raise AssistantTimeoutError(msg)
 
         # 1. Resolve and validate input identity
-        resolved_workspace = workspace_id or getattr(inventory, "workspace_id", None)
+        resolved_workspace = getattr(inventory, "workspace_id", None)
         if not resolved_workspace or not isinstance(resolved_workspace, str):
             msg = "Missing or invalid workspace identity for admission reservation."
             raise AssistantUnavailableError(msg)
 
         try:
-            parsed_ws = UUID(resolved_workspace)
-            if parsed_ws.version != 4 or str(parsed_ws) != resolved_workspace:
-                raise ValueError("workspace_id must be canonical UUID4")
-        except (ValueError, TypeError, AttributeError):
-            msg = "Workspace identity must be canonical UUID4."
+            validate_workspace_id(resolved_workspace)
+        except InferenceAdmissionError:
+            msg = "Invalid workspace identity."
             raise AssistantUnavailableError(msg) from None
 
-        res_id = reservation_id or str(secrets.token_hex(16))
-        # Ensure canonical UUID4 string format for reservation_id and owner_id
+        res_id = str(uuid4()) if reservation_id is None else reservation_id
+        own_id = str(uuid4()) if owner_id is None else owner_id
         try:
-            parsed_res = UUID(res_id)
-            if parsed_res.version != 4 or str(parsed_res) != res_id:
-                import uuid
+            for identity in (res_id, own_id):
+                parsed = UUID(identity)
+                if parsed.version != 4 or str(parsed) != identity:
+                    raise ValueError("Invalid execution identity")
+        except (ValueError, TypeError, AttributeError):
+            raise AssistantUnavailableError("Invalid execution identity.") from None
 
-                res_id = str(uuid.uuid4())
-        except ValueError:
-            import uuid
-
-            res_id = str(uuid.uuid4())
-
-        own_id = owner_id or str(secrets.token_hex(16))
-        try:
-            parsed_own = UUID(own_id)
-            if parsed_own.version != 4 or str(parsed_own) != own_id:
-                import uuid
-
-                own_id = str(uuid.uuid4())
-        except ValueError:
-            import uuid
-
-            own_id = str(uuid.uuid4())
-
-        if payload_hash is None:
-            canonical_payload = json.dumps({"text": text}, sort_keys=True, separators=(",", ":"))
-            pay_hash = hashlib.sha256(canonical_payload.encode("utf-8")).hexdigest()
-        else:
-            pay_hash = payload_hash
-
-        if request_key_hash is None:
-            key_source = request_key if request_key is not None else res_id
-            req_hash = hashlib.sha256(key_source.encode("utf-8")).hexdigest()
-        else:
-            req_hash = request_key_hash
+        if type(text) is not str or not 1 <= len(text.strip()) <= 2000:
+            raise AssistantInvalidOutputError("Invalid intake text.")
+        text = text.strip()
+        if request_key is not None and (
+            type(request_key) is not str or not 1 <= len(request_key) <= 256
+        ):
+            raise AssistantUnavailableError("Invalid request key.")
+        canonical_payload = json.dumps({"text": text}, sort_keys=True, separators=(",", ":"))
+        pay_hash = hashlib.sha256(canonical_payload.encode("utf-8")).hexdigest()
+        key_source = request_key if request_key is not None else res_id
+        req_hash = hashlib.sha256(key_source.encode("utf-8")).hexdigest()
 
         # 2. Reserve admission BEFORE constructing any provider model
         reservation_req = AdmissionReservationRequest(
@@ -381,7 +365,9 @@ class StrandsGroqInterpreter(RequestInterpreter, CleanupOwner):
         )
 
         try:
-            self._admission_store.reserve(reservation_req)
+            # Cancellation may leave this bounded thread finishing its transaction.
+            # It never dispatches a provider; any surviving row stays active.
+            await asyncio.to_thread(self._admission_store.reserve, reservation_req)
         except AdmissionRefusedError as exc:
             msg_str = str(exc).lower()
             if "another operation is active" in msg_str:
@@ -405,8 +391,11 @@ class StrandsGroqInterpreter(RequestInterpreter, CleanupOwner):
             raise AssistantUnavailableError("Admission reservation failed.") from None
 
         # 3. Mark dispatched BEFORE constructing any provider model
+        if cancel.is_set():
+            raise AssistantTimeoutError("The interpretation was cancelled.")
         try:
-            self._admission_store.mark_dispatched(
+            await asyncio.to_thread(
+                self._admission_store.mark_dispatched,
                 reservation_id=res_id,
                 owner_id=own_id,
             )
@@ -418,13 +407,34 @@ class StrandsGroqInterpreter(RequestInterpreter, CleanupOwner):
             raise AssistantUnavailableError("Admission dispatch failed.") from None
 
         # 4. Construct GroqModel ONLY after admission is reserved and dispatched
-        model = GroqModel(
-            api_key=self._api_key,
-            max_sends=self._max_model_requests,
-            operation_deadline_seconds=self._deadline_seconds,
-            request_timeout_seconds=self._transport_timeout_seconds,
-            transport=self._transport,
-        )
+        if cancel.is_set():
+            raise AssistantTimeoutError("The interpretation was cancelled.")
+        try:
+            model = GroqModel(
+                api_key=self._api_key,
+                max_sends=self._max_model_requests,
+                operation_deadline_seconds=self._deadline_seconds,
+                request_timeout_seconds=self._transport_timeout_seconds,
+                transport=self._transport,
+            )
+        except Exception:
+            # Construction did not return an owned model, so no cleanup is
+            # required. Settle the known provider failure and retain the full
+            # reservation debit instead of leaving a permanently active row.
+            with contextlib.suppress(Exception):
+                await asyncio.to_thread(
+                    self._admission_store.finish,
+                    reservation_id=res_id,
+                    owner_id=own_id,
+                    state=AdmissionState.FAILED_CONFIRMED,
+                    cleanup_completed=True,
+                    actual_sends=0,
+                    actual_total_tokens=None,
+                    failure_code=AdmissionFailureCode.PROVIDER_FAILURE,
+                )
+            raise AssistantUnavailableError(
+                "The hosted interpretation service is not available."
+            ) from None
 
         telemetry = Telemetry(correlation_id=secrets.token_hex(8))
         diagnostic_holder: dict[str, Any] = {}
@@ -503,6 +513,8 @@ class StrandsGroqInterpreter(RequestInterpreter, CleanupOwner):
                 raise AssistantUnavailableError(msg)
 
             # Ground the extraction against original source
+            if model.sent < 1 or not 1 <= budget.successes <= self._max_tool_calls:
+                raise AssistantInvalidOutputError("Missing execution evidence.")
             interpretation = ground_extraction(
                 extraction,
                 text,
@@ -594,6 +606,11 @@ class StrandsGroqInterpreter(RequestInterpreter, CleanupOwner):
                     telemetry.reason = "cancelled_during_cleanup"
 
             cleanup_completed = close_error is None and not model.client_open
+            if cancel.is_set() and terminal_state == AdmissionState.SUCCEEDED:
+                terminal_state = AdmissionState.UNCERTAIN
+                terminal_failure_code = AdmissionFailureCode.CANCELLED
+                in_flight = AssistantTimeoutError("The interpretation was cancelled.")
+                telemetry.outcome, telemetry.reason = "interrupted", "cancelled_during_cleanup"
             if not cleanup_completed:
                 terminal_state = AdmissionState.UNCERTAIN
                 if terminal_failure_code is None:
@@ -611,14 +628,13 @@ class StrandsGroqInterpreter(RequestInterpreter, CleanupOwner):
 
             # Storage settlement: cancel/close completed BEFORE finish settlement
             try:
-                self._admission_store.finish(
+                await asyncio.to_thread(
+                    self._admission_store.finish,
                     reservation_id=res_id,
                     owner_id=own_id,
                     state=terminal_state,
                     cleanup_completed=cleanup_completed,
-                    actual_sends=model.sent
-                    if model.sent > 0
-                    else (1 if terminal_state == AdmissionState.SUCCEEDED else None),
+                    actual_sends=model.sent,
                     actual_total_tokens=None,
                     failure_code=terminal_failure_code,
                 )
@@ -628,9 +644,18 @@ class StrandsGroqInterpreter(RequestInterpreter, CleanupOwner):
                     telemetry.correlation_id,
                     type(fin_err).__name__,
                 )
+                if in_flight is None and cancelled_in_cleanup is None:
+                    raise AssistantUnavailableError(
+                        "Admission settlement is unconfirmed."
+                    ) from None
 
             if cancelled_in_cleanup is not None:
                 raise cancelled_in_cleanup
+
+            if terminal_state == AdmissionState.UNCERTAIN and isinstance(
+                in_flight, AssistantTimeoutError
+            ):
+                raise in_flight
 
             if close_error is not None and in_flight is None:
                 if isinstance(close_error, asyncio.CancelledError):

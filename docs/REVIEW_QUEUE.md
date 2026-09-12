@@ -1,7 +1,7 @@
-## Latest checkpoint: BS-027 ready for review (2026-09-12)
+## Latest checkpoint: BS-027 accepted after bounded review (2026-09-12)
 
 TASK_ID: BS-027
-STATUS: READY_FOR_REVIEW
+STATUS: ACCEPTED
 WORKER: AGY, senior backend developer
 MODEL: Gemini 3.8 Flash High
 EFFORT: HIGH
@@ -13,10 +13,12 @@ Implemented and verified the hosted Groq interpreter and admission integration b
 Connected GroqModel and PostgreSQL InferenceAdmissionStore via StrandsGroqInterpreter.
 Public assistant remains strictly disabled (BS_ASSISTANT_ENABLED=0).
 19 tests in test_strands_groq_interpreter.py and 100 full regression tests passed.
-All linters (ruff, mypy strict) clean.
+The focused interpreter/review suites pass (32 checks), and the full backend suite
+passes (595 passed, 107 skipped). Ruff, strict mypy, and diff checks are clean.
+The public assistant remains disabled; no live provider call or spend occurred.
 
-NEXT_CODEX_MODE: ASTRA_HIGH
-REASON: BS-027 ready for Codex review on branch `worker/agy/BS-027`.
+NEXT_CODEX_MODE: ASTRA_LIGHT
+REASON: BS-027 is accepted; prepare the next bounded release task.
 
 ## Historical checkpoint: BS-026 accepted after bounded repair (2026-09-12)
 

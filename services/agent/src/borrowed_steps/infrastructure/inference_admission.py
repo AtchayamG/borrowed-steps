@@ -98,6 +98,17 @@ def _is_hex64(value: str) -> bool:
     return all(c in "0123456789abcdef" for c in value)
 
 
+def validate_workspace_id(value: str) -> None:
+    """Accept real application IDs and existing UUID4 workspace fixtures.
+
+    The database foreign key still requires an actual workspace. Execution and
+    operator IDs remain UUID4; workspace IDs must not be rewritten to match them.
+    """
+    if type(value) is str and len(value) == 24 and all(c in "0123456789abcdef" for c in value):
+        return
+    _uuid(value)
+
+
 class InferenceAdmissionStore:
     """Short serialized SQL transactions; no transaction spans inference."""
 
@@ -134,7 +145,7 @@ class InferenceAdmissionStore:
 
     def reserve(self, request: AdmissionReservationRequest) -> DictRow:
         _uuid(request.reservation_id)
-        _uuid(request.workspace_id)
+        validate_workspace_id(request.workspace_id)
         _uuid(request.owner_id)
         if not _is_hex64(request.request_key_hash):
             raise InferenceAdmissionError("Invalid request key hash")
@@ -483,7 +494,7 @@ class InferenceAdmissionStore:
             ).fetchone()
 
     def get_by_request_key(self, workspace_id: str, request_key_hash: str) -> DictRow | None:
-        _uuid(workspace_id)
+        validate_workspace_id(workspace_id)
         if not _is_hex64(request_key_hash):
             raise InferenceAdmissionError("Invalid request key hash")
         with self._transaction(write=False) as conn:

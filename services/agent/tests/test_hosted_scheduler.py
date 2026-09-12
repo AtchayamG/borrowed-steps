@@ -181,7 +181,7 @@ def test_v1_to_v2_migration_preserves_business_records_and_exact_strings() -> No
 
         # Apply migration to current schema version
         new_version = apply_migrations(url)
-        assert new_version == EXPECTED_SCHEMA_VERSION == 3
+        assert new_version == EXPECTED_SCHEMA_VERSION == 4
 
         # Verify schema_migrations has version 1, 2 and 3
         with psycopg.connect(url) as conn:
@@ -191,7 +191,7 @@ def test_v1_to_v2_migration_preserves_business_records_and_exact_strings() -> No
                     "SELECT version FROM schema_migrations ORDER BY version"
                 ).fetchall()
             ]
-            assert versions == [1, 2, 3]
+            assert versions == [1, 2, 3, 4]
 
             # Verify scheduler_control table exists and has row id=1
             ctrl_row = conn.execute(

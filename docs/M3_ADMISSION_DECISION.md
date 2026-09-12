@@ -51,7 +51,9 @@ partial unique index allowing one active row. Workspace FK required. No DB
 transaction across inference. Follow accepted bounded connect/statement/lock
 timeouts and prepare_threshold=None. Retain existing migration lock.
 
-Input identity: canonical UUID4 workspace, owner execution, reservation IDs;
+Input identity: preserve the application workspace identifier (currently a
+24-character lowercase-hex ID; canonical UUID4 is also accepted for isolated
+fixtures), while owner execution and reservation IDs remain canonical UUID4;
 lowercase64-hex request_key_hash/payload_hash. Future authenticated HTTP code
 computes hashes server-side from bounded canonical inputs. No raw intake,
 headers, secrets or arbitrary reason text stored. Uniqueness(workspace,key_hash).

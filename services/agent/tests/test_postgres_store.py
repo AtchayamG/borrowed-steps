@@ -9,6 +9,7 @@ from collections.abc import Callable, Iterator
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from threading import Barrier
 from typing import TypeVar
 from uuid import uuid4
@@ -192,7 +193,7 @@ def test_lifecycle_sessions_and_persistence(store: PostgresStore, database_url: 
         **os.environ,
         "BS_CHILD_URL": database_url,
         "BS_CHILD_SESSION": session.id,
-        "PYTHONPATH": "src",
+        "PYTHONPATH": str(Path(__file__).resolve().parents[1] / "src"),
     }
     result = subprocess.run(
         [sys.executable, "-c", code],
@@ -442,12 +443,18 @@ def test_failed_migration_rolls_back_schema(
 
 
 def test_migration_cli_explicit_configuration_and_sanitized_output(database_url: str) -> None:
-    env = {**os.environ, "PYTHONPATH": "src"}
+    env = {
+        **os.environ,
+        "PYTHONPATH": str(Path(__file__).resolve().parents[1] / "src"),
+    }
     env.pop("BS_POSTGRES_ADMIN_URL", None)
 
     def run() -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            [sys.executable, "scripts/postgres_migrate.py"],
+            [
+                sys.executable,
+                str(Path(__file__).resolve().parents[1] / "scripts" / "postgres_migrate.py"),
+            ],
             env=env,
             capture_output=True,
             text=True,

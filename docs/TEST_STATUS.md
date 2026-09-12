@@ -1,9 +1,9 @@
-## Latest checkpoint: BS-027 ready for review (2026-09-12)
+## Latest checkpoint: BS-027 accepted after bounded review (2026-09-12)
 
 See `docs/workers/BS-027.md` and `services/agent/test-evidence/bs027/test_results.txt`.
-All 19 tests in `tests/test_strands_groq_interpreter.py` passed against disposable PostgreSQL
-and mock transport. All 100 tests across the full regression suite passed.
-Ruff check, ruff format --check, and strict mypy (36 source files) are completely clean.
+The focused interpreter and review suites pass (32 checks) against disposable PostgreSQL
+and mock transport. The complete backend suite is green: 595 passed, 107 skipped.
+Ruff check, ruff format --check, and strict mypy on changed source and tests are clean.
 Public assistant remains strictly disabled (`BS_ASSISTANT_ENABLED=0`).
 ₹0 spend, zero live calls, zero cloud mutations.
 

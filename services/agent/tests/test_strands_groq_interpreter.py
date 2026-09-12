@@ -348,7 +348,7 @@ def test_groq_model_never_created_on_invalid_workspace(monkeypatch: pytest.Monke
             return []
 
     with pytest.raises(
-        AssistantUnavailableError, match="Workspace identity must be canonical UUID4"
+        AssistantUnavailableError, match="Invalid workspace identity"
     ):
         asyncio.run(interpreter.interpret(SAMPLE_TEXT, BadInventory(), Event()))
 

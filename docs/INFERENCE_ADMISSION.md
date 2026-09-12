@@ -28,7 +28,7 @@ Migration V4 appends table `inference_admissions` to `services/agent/src/borrowe
 ```sql
 CREATE TABLE IF NOT EXISTS inference_admissions (
     reservation_id UUID PRIMARY KEY,
-    workspace_id UUID NOT NULL REFERENCES workspaces(id),
+    workspace_id TEXT NOT NULL REFERENCES workspaces(id),
     request_key_hash VARCHAR(64) NOT NULL,
     payload_hash VARCHAR(64) NOT NULL,
     owner_execution_id UUID NOT NULL,
@@ -89,7 +89,9 @@ Located at `services/agent/src/borrowed_steps/infrastructure/inference_admission
 ### B. Core Methods
 
 #### 1. `reserve(request: AdmissionReservationRequest) -> AdmissionRecord`
-- Verifies input types, formats (UUID4, 64-char lowercase hex).
+- Verifies input types and formats: application workspace IDs are the existing
+  24-character lowercase-hex form (canonical UUID4 is accepted for fixtures),
+  owner/reservation IDs are canonical UUID4, and hashes are 64-char lowercase hex.
 - Obtains transaction advisory lock `_ADMISSION_LOCK = 8_801_103_331_031`.
 - Enforces provider 429 15-minute global cooldown (`AdmissionRefusedError(CODE_PROVIDER_COOLDOWN_ACTIVE)`).
 - Enforces single active operation invariant across all workspaces (`AdmissionRefusedError(CODE_ANOTHER_OPERATION_ACTIVE)`).
@@ -135,7 +137,7 @@ store = InferenceAdmissionStore(db_url="postgresql://postgres@localhost:5432/app
 # 1. Acquire Admission Reservation
 req = AdmissionReservationRequest(
     reservation_id="550e8400-e29b-41d4-a716-446655440000",
-    workspace_id="11111111-2222-3333-4444-555555555555",
+    workspace_id="0123456789abcdef01234567",
     request_key_hash="a" * 64,
     payload_hash="b" * 64,
     owner_execution_id="22222222-3333-4444-5555-666666666666",

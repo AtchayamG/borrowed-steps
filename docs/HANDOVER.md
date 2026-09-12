@@ -1,4 +1,4 @@
-## Latest checkpoint: BS-027 ready for review (2026-09-12)
+## Latest checkpoint: BS-027 accepted after bounded review (2026-09-12)
 
 Read `docs/workers/BS-027.md`. Hosted Groq interpreter and admission integration
 boundary implemented and verified on branch `worker/agy/BS-027`. Connects accepted
@@ -9,8 +9,14 @@ HTTP 503 `ASSISTANT_DISABLED`. All 19 tests in `test_strands_groq_interpreter.py
 and all 100 regression tests passed. Ruff, mypy strict, and git diff are clean.
 ₹0 spend, zero live calls, zero cloud mutations.
 
-NEXT_CODEX_MODE: ASTRA_HIGH
-REASON: Hosted interpreter and admission boundary complete on branch `worker/agy/BS-027`; ready for Codex review.
+The bounded review repaired workspace-ID compatibility, preserved caller identity,
+moved synchronous admission calls off the event loop, and made provider and
+settlement failures fail closed. Full suite: 595 passed, 107 skipped; 32 focused
+hosted-boundary checks pass. Public assistant remains disabled; no live calls or
+spend occurred.
+
+NEXT_CODEX_MODE: ASTRA_LIGHT
+REASON: BS-027 is accepted; the next operation is a bounded hosted release task.
 
 ## Historical checkpoint: BS-026 accepted after bounded repair (2026-09-12)
 

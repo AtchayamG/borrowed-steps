@@ -403,7 +403,10 @@ def create_app(
             clock=services.clock,
             ids=services.ids,
         )
-        assistant = interpreter
+        # Hosted assistant activation is deliberately gated by settings. A test
+        # seam must not bypass the disabled public gate.
+        if resolved.assistant_enabled:
+            assistant = interpreter
         if assistant is None and resolved.assistant_enabled:
             assistant = _real_hosted_interpreter(resolved, services.clock)
 
