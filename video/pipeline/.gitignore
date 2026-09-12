@@ -1,0 +1,10 @@
+frames/
+vo/
+*.jpg
+*.mp3
+*.mp4
+*.txt
+arial.ttf
+manifest.json
+marks-mapped.json
+vo-layout.json

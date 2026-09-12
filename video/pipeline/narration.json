@@ -1,0 +1,10 @@
+[
+  { "id": "intro", "at": 0, "text": "Borrowed Steps is a human approved community equipment lending workflow for a real neighborhood inventory." },
+  { "id": "hosted", "at": 7, "text": "This is a live hosted release on Vercel Hobby, with Neon Free PostgreSQL and a zero spend deployment." },
+  { "id": "inventory", "at": 14, "text": "A volunteer starts a synthetic evaluation workspace and immediately sees available equipment, versions, and quarantined items." },
+  { "id": "workflow", "at": 22, "text": "The intake assistant is a read only Strands and Groq adapter. It prepares a structured draft, while the human remains in control." },
+  { "id": "request", "at": 30, "text": "A request records the borrower label, equipment kind, pickup location, and an explicit timezone aware due date." },
+  { "id": "approval", "at": 38, "text": "Allocation is a deliberate volunteer decision. The interface requires confirmation before a reservation is created." },
+  { "id": "audit", "at": 46, "text": "Pickup is confirmed in person, and every state transition is written to the audit stream with version and idempotency protection." },
+  { "id": "close", "at": 49.5, "text": "The deterministic path stays usable when the model is busy. Public code and the live release link are provided with this demo." }
+]
