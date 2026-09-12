@@ -48,6 +48,21 @@ describe("Hosted Intake Validation & UI Tests (BS-028)", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it("keeps the prefilled example in the future through judging", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-08T12:00:00Z"));
+    render(<IntakeAssistant agentMode="strands_groq" onApplyDraft={vi.fn()} />);
+    const input = screen.getByLabelText(
+      /Synthetic Intake Notes/i,
+    ) as HTMLTextAreaElement;
+    const dueAt = input.value.split(" by ").at(-1)!;
+    const remaining = Date.parse(dueAt) - Date.now();
+    expect(remaining).toBeGreaterThan(6 * 24 * 60 * 60 * 1000);
+    expect(remaining).toBeLessThan(8 * 24 * 60 * 60 * 1000);
+    expect(input.placeholder).toContain(dueAt);
   });
 
   describe("validateSnapshot agent_mode acceptance", () => {

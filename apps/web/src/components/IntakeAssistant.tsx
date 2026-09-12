@@ -1,7 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import type { IntakeDraft, IntakeProvenance, AgentMode } from "../types/api";
 import { api, ApiClientError } from "../api/client";
-import { isoToLocalInput } from "../utils/dateTime";
+import {
+  getDefaultDueDate,
+  isoToLocalInput,
+  localInputToIso,
+} from "../utils/dateTime";
 import { validateIntakeResponse } from "../utils/validation";
 
 interface IntakeAssistantProps {
@@ -32,8 +36,11 @@ export const IntakeAssistant: React.FC<IntakeAssistantProps> = ({
   onSessionExpired,
   onStartWorkspace,
 }) => {
+  const [exampleDueAt] = useState(() =>
+    localInputToIso(getDefaultDueDate()).replace(".000Z", "Z"),
+  );
   const [inputText, setInputText] = useState(
-    "Velachery resident Ananya R. requires a wheelchair pickup at Velachery Community Room by 2026-09-20T10:00:00Z",
+    `Velachery resident Ananya R. requires a wheelchair pickup at Velachery Community Room by ${exampleDueAt}`,
   );
   const [isInterpreting, setIsInterpreting] = useState(false);
   const [intakeError, setIntakeError] = useState<IntakeErrorState | null>(null);
@@ -410,7 +417,7 @@ export const IntakeAssistant: React.FC<IntakeAssistantProps> = ({
             }
           }}
           disabled={isInterpreting}
-          placeholder="Enter synthetic intake details... e.g.: Ananya R. requires a wheelchair pickup at Velachery Community Room by 2026-09-20T10:00:00Z"
+          placeholder={`Enter synthetic intake details... e.g.: Ananya R. requires a wheelchair pickup at Velachery Community Room by ${exampleDueAt}`}
           aria-describedby="intake-help"
           style={{ resize: "vertical", minHeight: "90px" }}
         />
@@ -426,10 +433,9 @@ export const IntakeAssistant: React.FC<IntakeAssistantProps> = ({
         >
           <span>
             &bull; <strong>Full ISO Datetime Required:</strong> Must provide a
-            complete timezone-aware datetime (e.g.{" "}
-            <code>2026-09-20T10:00:00Z</code>). Relative dates (e.g. 'next
-            week', 'tomorrow') cannot be resolved in this slice and require
-            human clarification.
+            complete timezone-aware datetime (e.g. <code>{exampleDueAt}</code>).
+            Relative dates (e.g. 'next week', 'tomorrow') cannot be resolved in
+            this slice and require human clarification.
           </span>
           <span>
             &bull; <strong>Synthetic Data Only:</strong> Testing purposes only;

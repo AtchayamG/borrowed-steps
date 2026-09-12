@@ -1,4 +1,20 @@
-## Latest worker return: BS-028 Bounded Hosted Release Candidate (2026-09-12)
+## Latest: BS-028 independently accepted locally (2026-09-12)
+
+TASK_ID: BS-028
+STATUS: COMPLETED
+Read docs/BS-028_ACCEPTANCE.md. Codex verified 718 backend tests (zero skips)
+and 124 frontend tests, static checks, build, and isolated package/adapter checks.
+The HTTP success proof now uses the real hosted factory; the example date stays
+in the future through judging. No provider calls, deployment, or spend.
+Public release is pending, not certified by these local tests.
+Next: final product audit, verified live deployment, video, then submission of
+Borrowed Steps before starting Benchbook.
+
+NEXT_CODEX_MODE: ASTRA_MAX
+REASON: The next phase is the user's required final complete-product audit and
+production verification, followed by final video and submission review.
+
+## Historical worker return: BS-028 Bounded Hosted Release Candidate (2026-09-12)
 
 TASK_ID: BS-028
 STATUS: READY_FOR_REVIEW

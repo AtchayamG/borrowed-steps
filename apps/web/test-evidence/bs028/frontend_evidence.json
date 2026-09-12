@@ -6,11 +6,7 @@
   "base_commit": "db67213",
   "branch": "worker/agy/BS-028",
   "component": "apps/web",
-  "agent_mode_support": [
-    "disabled",
-    "strands_ollama",
-    "strands_groq"
-  ],
+  "agent_mode_support": ["disabled", "strands_ollama", "strands_groq"],
   "provenance_support": [
     {
       "framework": "strands",

@@ -394,7 +394,9 @@ def test_hosted_intake_timeout_returns_504() -> None:
 # ===========================================================================
 
 
-def test_pg_hosted_intake_successful_flow_and_admission_settlement() -> None:
+def test_pg_hosted_intake_successful_flow_and_admission_settlement(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Full end-to-end hosted flow with real PostgreSQL and mock transport."""
     from test_strands_groq_interpreter import _make_success_mock_transport
 
@@ -402,19 +404,15 @@ def test_pg_hosted_intake_successful_flow_and_admission_settlement() -> None:
     with migrated_database(base_url) as url:
         clock = StubClock()
         transport = _make_success_mock_transport()
-        interpreter = StrandsGroqInterpreter(
-            api_key=DUMMY_KEY,
-            database_url=url,
-            clock=clock,
-            transport=transport,
-        )
+        # Exercise the production factory; intercept only physical HTTP sends.
+        monkeypatch.setattr(httpx, "AsyncHTTPTransport", lambda **kwargs: transport)
 
         settings = _make_hosted_settings(
             url,
             assistant_enabled=True,
             groq_api_key=DUMMY_KEY,
         )
-        app = create_app(settings, clock=clock, interpreter=interpreter)
+        app = create_app(settings, clock=clock)
         client = TestClient(app, base_url="https://example.com")
 
         # 1. Create workspace
