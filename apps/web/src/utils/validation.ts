@@ -316,20 +316,16 @@ export function validateIntakeResponse(data: unknown): IntakeInterpretResponse {
     );
   }
 
-  if (prov.provider !== "ollama") {
-    throw new ApiClientError(
-      502,
-      "ASSISTANT_INVALID_OUTPUT",
-      "Invalid model response: provenance provider must be 'ollama'.",
-      true,
-    );
-  }
+  const isOllamaTuple =
+    prov.provider === "ollama" && prov.model === "llama3.2:3b";
+  const isGroqTuple =
+    prov.provider === "groq" && prov.model === "openai/gpt-oss-20b";
 
-  if (prov.model !== "llama3.2:3b") {
+  if (!isOllamaTuple && !isGroqTuple) {
     throw new ApiClientError(
       502,
       "ASSISTANT_INVALID_OUTPUT",
-      "Invalid model response: provenance model must be 'llama3.2:3b'.",
+      "Invalid model response: provenance provider/model must be ('ollama', 'llama3.2:3b') or ('groq', 'openai/gpt-oss-20b').",
       true,
     );
   }
@@ -367,8 +363,8 @@ export function validateIntakeResponse(data: unknown): IntakeInterpretResponse {
     missing_fields: res.missing_fields as MissingField[],
     provenance: {
       framework: "strands",
-      provider: "ollama",
-      model: "llama3.2:3b",
+      provider: prov.provider as "ollama" | "groq",
+      model: prov.model as "llama3.2:3b" | "openai/gpt-oss-20b",
       inventory_tool_calls: prov.inventory_tool_calls as number,
       completed_at: prov.completed_at as string,
     },
@@ -451,7 +447,9 @@ export function validateSnapshot(data: unknown): Snapshot {
 
   if (
     typeof res.agent_mode !== "string" ||
-    !["disabled", "strands_ollama", "not_implemented"].includes(res.agent_mode)
+    !["disabled", "strands_ollama", "strands_groq", "not_implemented"].includes(
+      res.agent_mode,
+    )
   ) {
     throw new ApiClientError(
       502,

@@ -1,4 +1,29 @@
-## Latest checkpoint: BS-027 accepted after bounded review (2026-09-12)
+## Latest worker return: BS-028 Bounded Hosted Release Candidate (2026-09-12)
+
+See `docs/workers/BS-028.md`, `services/agent/test-evidence/bs028/test_results.txt`,
+and `apps/web/test-evidence/bs028/frontend_test_results.txt`.
+
+Backend Verification:
+- `tests/test_hosted_release_candidate.py`: 15 passed (health reporting, 503 disabled protection, parameter/session/CSRF validation, mocked Groq transport success with provenance, 409/429/502/503/504 error mappings, PostgreSQL admission settlement, 429 durable cooldown, cancellation slot retention, and constructor admission gating).
+- Hosted PostgreSQL suite: 122 passed, 0 failed across all 6 hosted test suites (`test_hosted_config.py`, `test_strands_groq_interpreter.py`, `test_hosted_release_candidate.py`, `test_inference_admission.py`, `test_hosted_groq_package.py`, `test_hosted_runtime.py`).
+- Static checks: `ruff check` (0 errors), `ruff format --check` (clean), `mypy` strict mode (0 errors in 37 files).
+
+Frontend Verification (`apps/web`):
+- `npm.cmd test -- --run`: 123 passed across 13 test suites (including 15 in `HostedIntake.test.tsx`).
+- `npm.cmd run typecheck`: clean (0 errors).
+- `npm.cmd run lint`: clean (0 errors).
+- `npm.cmd run format:check`: clean (0 errors).
+- `npm.cmd run build`: clean (0 errors, production build succeeds).
+
+Package & Adapter Verifiers:
+- `scripts/assemble_hosted.py --verify-repeat`: 42 files (596,267 bytes) bit-for-bit repeatable.
+- `scripts/verify_hosted_package.py`: ALL LOCAL CHECKS PASSED.
+- `scripts/verify_hosted_groq.py`: ALL BS-025 STAGED GROQ ADAPTER CHECKS PASSED (4 negative checks fail-closed).
+
+Zero live provider calls, zero credential discovery, zero cloud mutations, ₹0 / $0 spend.
+Public assistant remains strictly disabled by default (`BS_ASSISTANT_ENABLED=0`).
+
+## Historical checkpoint: BS-027 accepted after bounded review (2026-09-12)
 
 See `docs/workers/BS-027.md` and `services/agent/test-evidence/bs027/test_results.txt`.
 The focused interpreter and review suites pass (32 checks) against disposable PostgreSQL

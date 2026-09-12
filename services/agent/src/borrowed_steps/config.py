@@ -170,8 +170,12 @@ def validate_settings(settings: Settings) -> None:
             raise ValueError("Hosted runtime requires cookie_secure=True.")
         if settings.tasks_enabled is not False:
             raise ValueError("Hosted runtime requires tasks_enabled=False.")
-        if settings.assistant_enabled is not False:
-            raise ValueError("Hosted assistant is disabled in this increment.")
+        if settings.assistant_enabled and (
+            not settings.groq_api_key or not settings.groq_api_key.strip()
+        ):
+            raise ValueError(
+                "Hosted runtime requires an explicit groq_api_key when assistant is enabled."
+            )
         _validate_hosted_origins(settings.allowed_origins)
 
     if settings.task_tick_token is not None and not (
@@ -313,7 +317,9 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     raw_assistant = source.get("BS_ASSISTANT_ENABLED")
     assistant_enabled = _flag(raw_assistant, default=False)
     if raw_runtime == "hosted" and assistant_enabled:
-        raise ValueError("Hosted assistant is disabled in this increment.")
+        raw_groq_key_check = source.get("BS_GROQ_API_KEY")
+        if raw_groq_key_check is None or not raw_groq_key_check.strip():
+            raise ValueError("Hosted assistant requires an explicit BS_GROQ_API_KEY.")
 
     if raw_runtime == "hosted":
         raw_origins = source.get("BS_ALLOWED_ORIGINS")

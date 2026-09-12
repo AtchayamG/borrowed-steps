@@ -101,6 +101,7 @@ from borrowed_steps.isotime import normalise, to_iso
 
 __all__ = [
     "AGENT_MODE_DISABLED",
+    "AGENT_MODE_STRANDS_GROQ",
     "AGENT_MODE_STRANDS_OLLAMA",
     "MILESTONE",
     "MILESTONE_HOSTED",
@@ -117,6 +118,7 @@ MILESTONE_LOCAL = "M2B"
 MILESTONE_HOSTED = "M3"
 MILESTONE = MILESTONE_LOCAL
 AGENT_MODE_DISABLED = "disabled"
+AGENT_MODE_STRANDS_GROQ = "strands_groq"
 AGENT_MODE_STRANDS_OLLAMA = "strands_ollama"
 
 _IDEMPOTENCY_KEY_MIN = 8
@@ -379,7 +381,7 @@ def create_app(
         from borrowed_steps.infrastructure.postgres_store import PostgresStore
 
         store = PostgresStore(resolved.database_url)
-        agent_mode = AGENT_MODE_DISABLED
+        agent_mode = AGENT_MODE_STRANDS_GROQ if resolved.assistant_enabled else AGENT_MODE_DISABLED
         milestone = MILESTONE_HOSTED
     else:
         store = SqliteStore(resolved.db_path)

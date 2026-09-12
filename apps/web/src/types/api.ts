@@ -63,7 +63,8 @@ export interface CoordinationTask {
   created_at: string;
 }
 
-export type AgentMode = "disabled" | "strands_ollama" | "not_implemented";
+export type AgentMode =
+  "disabled" | "strands_ollama" | "strands_groq" | "not_implemented";
 
 export interface Snapshot {
   equipment: Equipment[];
@@ -103,8 +104,8 @@ export interface IntakeDraft {
 
 export interface IntakeProvenance {
   framework: "strands";
-  provider: "ollama";
-  model: "llama3.2:3b";
+  provider: "ollama" | "groq";
+  model: "llama3.2:3b" | "openai/gpt-oss-20b";
   inventory_tool_calls: number;
   completed_at: string;
 }

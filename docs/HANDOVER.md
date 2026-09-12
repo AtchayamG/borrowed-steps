@@ -1,4 +1,37 @@
-## Latest checkpoint: BS-027 accepted after bounded review (2026-09-12)
+## Latest worker return: BS-028 Bounded Hosted Release Candidate (2026-09-12)
+
+TASK_ID: BS-028
+STATUS: READY_FOR_REVIEW
+WORKER: AGY, senior full-stack/release engineer
+MODEL: Gemini 3.8 Flash High
+EFFORT: HIGH
+BRANCH: worker/agy/BS-028
+BASE_COMMIT: db67213
+PROPOSED_COMMIT_MSG: feat(hosted): complete hosted release candidate slice (BS-028)
+
+Read `docs/workers/BS-028.md`. Completed the largest safe release-candidate slice
+for Borrowed Steps:
+- Application seam wired in `app.py`: `POST /api/intake/interpret` routes to
+  `StrandsGroqInterpreter` when `BS_ASSISTANT_ENABLED=1`, `BS_RUNTIME=hosted`,
+  `BS_STORE=postgres`, and `BS_GROQ_API_KEY` is present.
+- Public assistant remains strictly disabled by default (`BS_ASSISTANT_ENABLED=0`),
+  returning HTTP 503 `ASSISTANT_DISABLED` without importing provider modules.
+- `/api/health` reports milestone `"M3"` and honest `agent_mode` (`"disabled"` or `"strands_groq"`).
+- Frontend (`apps/web`): accepts `agent_mode: "strands_groq"`; validates accepted
+  provenance tuples (`("strands", "groq", "openai/gpt-oss-20b")` and
+  `("strands", "ollama", "llama3.2:3b")`), rejecting any other with 502 `ASSISTANT_INVALID_OUTPUT`;
+  renders honest UI states (loading, disabled, busy 429, timeout 504, unavailable 503,
+  state conflict 409, grounded success) with duplicate submit mutex lock.
+- 122/122 backend tests passing across 6 hosted test suites on real PostgreSQL.
+- 123/123 frontend tests passing across 13 suites; lint, typecheck, format, and build 100% clean.
+- Reproducible Vercel package closure assembled (42 files, 596,267 bytes, repeatable);
+  `verify_hosted_package.py` and `verify_hosted_groq.py` pass cleanly.
+- Strict release gate: ₹0.00 spend, zero live calls, zero cloud mutations, no deployments or pushes.
+
+NEXT_CODEX_MODE: ASTRA_HIGH
+REASON: Hosted release candidate complete and verified across frontend and backend; ready for Codex review.
+
+## Historical checkpoint: BS-027 accepted after bounded review (2026-09-12)
 
 Read `docs/workers/BS-027.md`. Hosted Groq interpreter and admission integration
 boundary implemented and verified on branch `worker/agy/BS-027`. Connects accepted

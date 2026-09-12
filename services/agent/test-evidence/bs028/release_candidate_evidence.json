@@ -1,0 +1,79 @@
+{
+  "task_id": "BS-028",
+  "timestamp_utc": "2026-09-12T03:33:09.754275+00:00",
+  "worker": "AGY, senior full-stack/release engineer",
+  "model": "Gemini 3.8 Flash High",
+  "effort": "HIGH",
+  "base_commit": "db67213",
+  "branch": "worker/agy/BS-028",
+  "objective": "Complete the largest safe release-candidate slice for Borrowed Steps: wire POST /api/intake/interpret to StrandsGroqInterpreter under BS_ASSISTANT_ENABLED=1, keep public assistant disabled by default (503 ASSISTANT_DISABLED), update frontend types/validation/UI, ensure Vercel + Neon packaging reproducibility on free tier, and stop at Codex release gate.",
+  "release_gate_status": "STOPPED_AT_RELEASE_GATE (Codex controlled)",
+  "public_assistant_state": "DISABLED_BY_DEFAULT (BS_ASSISTANT_ENABLED=0)",
+  "spend": "INR 0.00 / USD 0.00",
+  "live_provider_calls": 0,
+  "credentials_discovered": 0,
+  "cloud_mutations": 0,
+  "backend_configuration": {
+    "runtime": "hosted",
+    "store": "postgres",
+    "assistant_provider": "groq",
+    "default_assistant_enabled": false,
+    "explicit_enable_flag": "BS_ASSISTANT_ENABLED=1",
+    "requires_api_key_when_enabled": true,
+    "zero_provider_import_when_disabled": true
+  },
+  "http_contract": {
+    "route": "POST /api/intake/interpret",
+    "agent_mode_enabled": "strands_groq",
+    "agent_mode_disabled": "disabled",
+    "milestone": "M3",
+    "provenance": {
+      "framework": "strands",
+      "provider": "groq",
+      "model": "openai/gpt-oss-20b"
+    },
+    "status_mappings": {
+      "401": "SESSION_REQUIRED",
+      "403": "ORIGIN_FORBIDDEN",
+      "409": "STATE_CONFLICT",
+      "422": "VALIDATION_ERROR",
+      "429": "ASSISTANT_BUSY",
+      "502": "ASSISTANT_INVALID_OUTPUT",
+      "503": "ASSISTANT_UNAVAILABLE / ASSISTANT_DISABLED",
+      "504": "ASSISTANT_TIMEOUT"
+    }
+  },
+  "admission_ledger_invariants": {
+    "table": "inference_admissions",
+    "reserve_and_dispatch_before_network": true,
+    "zero_transaction_across_inference": true,
+    "truthful_settlement_on_terminal_outcomes": true,
+    "slot_retention_on_cancellation_uncertainty": true,
+    "provider_429_cooldown_15m": true,
+    "provider_model_never_constructed_on_refused_admission": true
+  },
+  "packaging_verification": {
+    "platform": "deploy/vercel",
+    "serverless_entrypoint": "api/index.py (native FastAPI ASGI)",
+    "output_directory": "deploy/vercel/output_bs028",
+    "files_count": 42,
+    "source_assets_bytes": 596267,
+    "runtime_closure_packages": 60,
+    "python_version": "3.12.10",
+    "verify_hosted_package": "PASS",
+    "verify_hosted_groq": "PASS (4 negative checks pass fail-closed)"
+  },
+  "test_summary": {
+    "test_hosted_config.py": 58,
+    "test_strands_groq_interpreter.py": 25,
+    "test_hosted_release_candidate.py": 15,
+    "test_inference_admission.py": 18,
+    "test_hosted_groq_package.py": 7,
+    "test_hosted_runtime.py": 8,
+    "total_hosted_backend_tests_passed": 122,
+    "ruff_check": "passed",
+    "ruff_format": "passed",
+    "mypy_src": "passed",
+    "mypy_tests": "passed"
+  }
+}

@@ -1,0 +1,43 @@
+
+> borrowed-steps-web@0.1.0 test
+> vitest run --run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.0 [39m[90mD:/Work/Codex/Hackathon Projects/Agents For Humans/00_PROGRAM_CONTROL/worktrees/BS-028-agy/apps/web[39m
+
+ [32mâœ“[39m src/test/dateTime.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32mâœ“[39m src/test/CodexBS004R1TimestampRegression.test.ts [2m([22m[2m40 tests[22m[2m)[22m[32m 161[2mms[22m[39m
+ [32mâœ“[39m src/test/HostedIntake.test.tsx [2m([22m[2m15 tests[22m[2m)[22m[32m 294[2mms[22m[39m
+ [32mâœ“[39m src/test/CodexBS008Review.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 297[2mms[22m[39m
+ [32mâœ“[39m src/test/CodexBS004Review.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 339[2mms[22m[39m
+ [32mâœ“[39m src/test/M2AExtendedAcceptance.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 431[2mms[22m[39m
+ [32mâœ“[39m src/test/CodexR1Regression.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 639[2mms[22m[39m
+ [32mâœ“[39m src/test/M2AIntake.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 677[2mms[22m[39m
+   [32mâœ“[39m Borrowed Steps M2A â€” Human-Reviewed Intake Suggestion Tests [2m(8)[22m
+     [33m[2mâœ“[22m[39m Mocked-backend test: Successful draft -> review -> deliberate 'Use draft' -> separate explicit request submission[33m 304[2mms[22m[39m
+ [32mâœ“[39m src/test/CodexRegression.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 690[2mms[22m[39m
+   [32mâœ“[39m Codex Review Regressions (BS-002-R1) [2m(3)[22m
+     [33m[2mâœ“[22m[39m review: allocation dialog and selected input survive 409[33m 309[2mms[22m[39m
+ [32mâœ“[39m src/test/CodexR2Regression.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1042[2mms[22m[39m
+   [32mâœ“[39m Codex Review Regressions (BS-002-R2 / BS-002-R3) [2m(4)[22m
+     [33m[2mâœ“[22m[39m review R2: renders 422 refusal INSIDE allocation dialog without closing[33m 437[2mms[22m[39m
+     [33m[2mâœ“[22m[39m review R2: renders 422 refusal INSIDE loan pickup dialog without closing[33m 403[2mms[22m[39m
+ [32mâœ“[39m src/test/CoordinationM2B.test.tsx [2m([22m[2m18 tests[22m[2m)[22m[33m 1101[2mms[22m[39m
+   [32mâœ“[39m M2B Coordination Section & Validation Tests [2m(18)[22m
+     [32mâœ“[39m Integration & Lifecycle in App [2m(4)[22m
+       [33m[2mâœ“[22m[39m creates a PICKUP_DUE task when reservation is confirmed and updates Coordination view[33m 795[2mms[22m[39m
+ [32mâœ“[39m src/test/CorrectionScenarios.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1891[2mms[22m[39m
+   [32mâœ“[39m BS-002-R1 Extended Correction Verification [2m(4)[22m
+     [33m[2mâœ“[22m[39m verifies exact request body, headers and idempotency key format on intake and allocation[33m 900[2mms[22m[39m
+     [33m[2mâœ“[22m[39m prevents second mutation from overwriting an unresolved uncertain retry[33m 698[2mms[22m[39m
+ [32mâœ“[39m src/test/App.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 2982[2mms[22m[39m
+   [32mâœ“[39m Borrowed Steps M1 â€” Mocked-Backend Interface Tests [2m(10)[22m
+     [33m[2mâœ“[22m[39m Mocked-backend test: Validates structured request intake form with boundary conditions[33m 705[2mms[22m[39m
+     [33m[2mâœ“[22m[39m Mocked-backend test: Creates structured request and verifies server confirmation and fresh idempotency key[33m 529[2mms[22m[39m
+     [33m[2mâœ“[22m[39m Mocked-backend test: Full volunteer lifecycle: Allocate -> Pickup -> Return -> Inspect -> Available[33m 819[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m13 passed[39m[22m[90m (13)[39m
+[2m      Tests [22m [1m[32m123 passed[39m[22m[90m (123)[39m
+[2m   Start at [22m 09:03:11
+[2m   Duration [22m 5.39s[2m (environment 50%, tests 28%, setup 12%, transform 6%, import 3%)[22m
+

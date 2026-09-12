@@ -347,9 +347,7 @@ def test_groq_model_never_created_on_invalid_workspace(monkeypatch: pytest.Monke
         def kind_state_counts(self) -> list[InventoryCount]:
             return []
 
-    with pytest.raises(
-        AssistantUnavailableError, match="Invalid workspace identity"
-    ):
+    with pytest.raises(AssistantUnavailableError, match="Invalid workspace identity"):
         asyncio.run(interpreter.interpret(SAMPLE_TEXT, BadInventory(), Event()))
 
     assert not groq_model_created, "GroqModel must NEVER be created on invalid workspace"

@@ -1,4 +1,47 @@
-## Latest: BS-027 Hosted Groq Interpreter and Admission Integration Boundary
+## Latest: BS-028 AGY Bounded Hosted Release Candidate
+
+TASK_ID: BS-028
+STATUS: READY_FOR_REVIEW
+WORKER: AGY, senior full-stack/release engineer
+MODEL: Gemini 3.8 Flash High
+EFFORT: HIGH
+BRANCH: worker/agy/BS-028
+BASE_COMMIT: db67213
+PROPOSED_COMMIT_MSG: feat(hosted): complete hosted release candidate slice (BS-028)
+
+Completed the largest safe release-candidate slice for Borrowed Steps:
+connected hosted Groq/admission boundary to the existing REST contract and UI,
+verified the reproducible Vercel package, kept public assistant disabled by default,
+and stopped strictly at the Codex release gate.
+
+Key achievements & verifications:
+- Backend application seam in services/agent/src/borrowed_steps/interfaces/http/app.py:
+  - Exported AGENT_MODE_STRANDS_GROQ = "strands_groq".
+  - POST /api/intake/interpret is wired to StrandsGroqInterpreter when BS_ASSISTANT_ENABLED=1, BS_RUNTIME=hosted, BS_STORE=postgres, and BS_GROQ_API_KEY is present.
+  - Public assistant remains disabled by default (BS_ASSISTANT_ENABLED=0), returning 503 ASSISTANT_DISABLED without importing provider modules or constructing models.
+  - Public /api/health honestly reports milestone "M3" and agent_mode ("disabled" or "strands_groq").
+- Frontend contract hardening in apps/web:
+  - AgentMode accepts "strands_groq"; IntakeProvenance accepts valid tuples ("strands", "groq", "openai/gpt-oss-20b") and ("strands", "ollama", "llama3.2:3b").
+  - Mismatched or unexpected provenance tuples reject with 502 ASSISTANT_INVALID_OUTPUT.
+  - IntakeAssistant renders honest states: loading, disabled badge, busy (429), timeout (504), unavailable (503), state conflict (409), grounded success, with duplicate submit mutex locking.
+  - 15/15 tests passing in apps/web/src/test/HostedIntake.test.tsx; 123/123 tests passing across 13 suites; lint, typecheck, format:check, build 100% clean.
+- Disposable PostgreSQL verification:
+  - services/agent/tests/test_hosted_release_candidate.py: 15/15 tests passing.
+  - 122/122 tests passing across all 6 hosted test suites (test_hosted_config.py, test_strands_groq_interpreter.py, test_hosted_release_candidate.py, test_inference_admission.py, test_hosted_groq_package.py, test_hosted_runtime.py).
+  - ruff check (0 errors), ruff format --check (clean), mypy strict (0 errors in 37 files).
+- Reproducible packaging & verifiers:
+  - scripts/assemble_hosted.py --verify-repeat: 42 files, 596,267 bytes bit-for-bit repeatable.
+  - scripts/verify_hosted_package.py: ALL LOCAL CHECKS PASSED.
+  - scripts/verify_hosted_groq.py: ALL BS-025 STAGED GROQ ADAPTER CHECKS PASSED (4 negative checks fail-closed).
+- Zero live provider calls, zero credential discovery, zero cloud mutations, ₹0 / $0 spend.
+- Stopped strictly at Codex release gate; no live deployment or git push.
+
+Evidence: services/agent/test-evidence/bs028/release_candidate_evidence.json, services/agent/test-evidence/bs028/test_results.txt, apps/web/test-evidence/bs028/frontend_evidence.json, apps/web/test-evidence/bs028/frontend_test_results.txt
+Documentation: docs/workers/BS-028.md
+NEXT_CODEX_MODE: ASTRA_HIGH
+REASON: Hosted release candidate slice complete, all 122 backend tests and 123 frontend tests passing; ready for Codex review.
+
+## Historical: BS-027 Hosted Groq Interpreter and Admission Integration Boundary
 
 TASK_ID: BS-027
 STATUS: READY_FOR_REVIEW

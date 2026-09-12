@@ -144,7 +144,7 @@ def test_staged_import_and_config_refusal(python: Path, package: Path) -> None:
         ({}, "Missing BS_RUNTIME"),
         ({**env, "BS_RUNTIME": "local"}, "refusing local execution"),
         ({**env, "BS_TASKS_ENABLED": "1"}, "BS_TASKS_ENABLED=0"),
-        ({**env, "BS_ASSISTANT_ENABLED": "1"}, "Hosted assistant is disabled"),
+        ({**env, "BS_ASSISTANT_ENABLED": "1"}, "BS_GROQ_API_KEY"),
         (
             {k: v for k, v in env.items() if k != "BS_DATABASE_URL"},
             "requires an explicit BS_DATABASE_URL",

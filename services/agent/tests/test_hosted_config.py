@@ -69,7 +69,7 @@ def test_hosted_assistant_provider_defaults_to_groq() -> None:
         ("BS_DATABASE_URL", "", "BS_DATABASE_URL"),
         ("BS_COOKIE_SECURE", "0", "BS_COOKIE_SECURE"),
         ("BS_TASKS_ENABLED", "1", "BS_TASKS_ENABLED"),
-        ("BS_ASSISTANT_ENABLED", "1", "Hosted assistant is disabled"),
+        ("BS_ASSISTANT_ENABLED", "1", "BS_GROQ_API_KEY"),
         ("BS_STORE", "sqlite", "BS_STORE=postgres"),
         ("BS_ASSISTANT_PROVIDER", "ollama", "BS_ASSISTANT_PROVIDER=groq"),
         ("BS_RUNTIME", "cloud", "Invalid BS_RUNTIME"),
@@ -160,7 +160,7 @@ def test_direct_settings_construction_bypass_prevention() -> None:
             assistant_provider="groq",
         )
 
-    with pytest.raises(ValueError, match="Hosted assistant is disabled"):
+    with pytest.raises(ValueError, match="explicit groq_api_key"):
         Settings(
             db_path=Path("test.db"),
             allowed_origins=("https://borrowed-steps.example",),
@@ -172,6 +172,21 @@ def test_direct_settings_construction_bypass_prevention() -> None:
             assistant_enabled=True,
             assistant_provider="groq",
         )
+
+    valid_enabled_settings = Settings(
+        db_path=Path("test.db"),
+        allowed_origins=("https://borrowed-steps.example",),
+        cookie_secure=True,
+        runtime="hosted",
+        store="postgres",
+        database_url="postgresql://127.0.0.1/db",
+        tasks_enabled=False,
+        assistant_enabled=True,
+        assistant_provider="groq",
+        groq_api_key="gsk_synthetic_valid_key",
+    )
+    assert valid_enabled_settings.assistant_enabled is True
+    assert valid_enabled_settings.groq_api_key == "gsk_synthetic_valid_key"
 
     with pytest.raises(ValueError, match="explicit database_url"):
         Settings(
@@ -402,3 +417,23 @@ def test_task_tick_token_configuration_and_redaction() -> None:
     ]:
         with pytest.raises(ValueError, match="BS_TASK_TICK_TOKEN"):
             load_settings(dict(VALID_HOSTED_ENV, BS_TASK_TICK_TOKEN=invalid))
+
+
+def test_hosted_assistant_enabled_configuration() -> None:
+    env = dict(
+        VALID_HOSTED_ENV,
+        BS_ASSISTANT_ENABLED="1",
+        BS_GROQ_API_KEY="gsk_test_api_key_12345678",
+    )
+    settings = load_settings(env)
+    assert settings.runtime == "hosted"
+    assert settings.assistant_enabled is True
+    assert settings.groq_api_key == "gsk_test_api_key_12345678"
+    assert "gsk_test_api_key_12345678" not in repr(settings)
+    assert "gsk_test_api_key_12345678" not in str(settings)
+    validate_settings(settings)
+
+    # Missing or empty key when assistant enabled must fail closed
+    env_empty_key = dict(VALID_HOSTED_ENV, BS_ASSISTANT_ENABLED="1", BS_GROQ_API_KEY="   ")
+    with pytest.raises(ValueError, match="BS_GROQ_API_KEY"):
+        load_settings(env_empty_key)

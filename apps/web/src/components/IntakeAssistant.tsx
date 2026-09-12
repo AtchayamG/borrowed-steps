@@ -204,6 +204,15 @@ export const IntakeAssistant: React.FC<IntakeAssistantProps> = ({
           return;
         }
 
+        if (err.status === 409) {
+          setIntakeError({
+            status: 409,
+            code: err.code || "STATE_CONFLICT",
+            message: `Conflict (409 ${err.code}): ${err.message}`,
+          });
+          return;
+        }
+
         if (err.status === 422) {
           setIntakeError({
             status: 422,
@@ -289,7 +298,9 @@ export const IntakeAssistant: React.FC<IntakeAssistantProps> = ({
           className="header-badge"
           style={{ backgroundColor: "var(--indigo-700)" }}
         >
-          M2A Strands Assistant
+          {agentMode === "strands_groq"
+            ? "Hosted Groq Assistant"
+            : "M2A Strands Assistant"}
         </span>
       </div>
 
